@@ -20,6 +20,16 @@ compilation_database(
     ],
 )
 
+cc_library(
+    name = "qsopt-ex",
+    srcs = ["qsopt-ex/lib/libqsopt_ex.so"],
+    hdrs = ["qsopt-ex/include/qsopt_ex/QSopt_ex.h"],
+    copts = ["-Iqsopt-ex/include"],
+    visibility = [
+        "//dreal:__subpackages__",
+    ],
+)
+
 cc_binary(
     name = "libdreal.so",
     linkshared = 1,
