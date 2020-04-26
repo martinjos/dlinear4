@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "dreal/solver/sat_solver.h"
-#include "dreal/solver/theory_solver.h"
+#include "dreal/solver/linear_theory_solver.h"
 #include "dreal/util/scoped_vector.h"
 
 namespace dreal {
@@ -78,7 +78,7 @@ class Context::Impl {
   ScopedVector<Formula> stack_;
   SatSolver sat_solver_;
   std::unordered_set<Variable::Id> model_variables_;
-  TheorySolver theory_solver_;
+  LinearTheorySolver theory_solver_;
 
   // Stores the result of the latest checksat.
   // Note that if the checksat result was UNSAT, this box holds an empty box.
