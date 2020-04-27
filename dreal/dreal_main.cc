@@ -389,6 +389,14 @@ void MainProgram::ExtractOptions() {
   }
 }
 
+void MainProgram::Init() {
+  QSexactStart();
+}
+
+void MainProgram::DeInit() {
+  QSexactClear();
+}
+
 int MainProgram::Run() {
   if (opt_.isSet("--help")) {
     return 0;
@@ -419,12 +427,16 @@ int MainProgram::Run() {
   opt_.get("--format")->getString(format_opt);
   if (format_opt == "smt2" ||
       (format_opt == "auto" && (extension == "smt2" || opt_.isSet("--in")))) {
+    Init();
     RunSmt2(filename, config_, opt_.isSet("--debug-scanning"),
             opt_.isSet("--debug-parsing"));
+    DeInit();
   } else if (format_opt == "dr" ||
              (format_opt == "auto" && extension == "dr")) {
+    Init();
     RunDr(filename, config_, opt_.isSet("--debug-scanning"),
           opt_.isSet("--debug-parsing"));
+    DeInit();
   } else {
     cerr << "Unknown extension: " << filename << "\n" << endl;
     PrintUsage();

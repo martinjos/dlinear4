@@ -33,6 +33,8 @@ class MainProgram {
  private:
   void PrintUsage();
   void AddOptions();
+  void Init();
+  void DeInit();
   bool ValidateOptions();
 
   // Extracts options from `opt_` and construts `config_`.
