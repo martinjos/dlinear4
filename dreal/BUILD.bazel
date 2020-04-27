@@ -50,6 +50,7 @@ dreal_cc_binary(
         "//dreal/util:logging",
         "@ezoptionparser",
         "@fmt",
+        "//:qsopt-ex",
     ],
 )
 

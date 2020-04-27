@@ -6,6 +6,11 @@
 
 #include <fmt/format.h>
 
+#include <gmpxx.h>
+extern "C" {
+#include <qsopt_ex/QSopt_ex.h>
+}
+
 #include "dreal/dr/run.h"
 #include "dreal/smt2/run.h"
 #include "dreal/solver/config.h"
@@ -33,8 +38,9 @@ string get_version_string() {
   if (!repo_stat.empty()) {
     repo_stat = " (repository: " + repo_stat + ")";
   }
-  return fmt::format("v{} ({} Build){}", Context::version(), build_type,
-                                         repo_stat);
+  return fmt::format("v{} ({} Build){} (qsopt-ex: {})",
+                     Context::version(), build_type, repo_stat,
+                     QSopt_ex_repository_status());
 }
 }  // namespace
 
@@ -384,11 +390,11 @@ void MainProgram::ExtractOptions() {
 }
 
 int MainProgram::Run() {
-  if (opt_.isSet("--version")) {
-    cout << "dReal " << get_version_string() << endl;
+  if (opt_.isSet("--help")) {
     return 0;
   }
-  if (opt_.isSet("--help")) {
+  cout << "dReal " << get_version_string() << endl;
+  if (opt_.isSet("--version")) {
     return 0;
   }
   if (!is_options_all_valid_) {

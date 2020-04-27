@@ -23,7 +23,8 @@ compilation_database(
 cc_library(
     name = "qsopt-ex",
     srcs = ["qsopt-ex/lib/libqsopt_ex.so"],
-    hdrs = ["qsopt-ex/include/qsopt_ex/QSopt_ex.h"],
+    hdrs = glob(["qsopt-ex/include/qsopt_ex/*.h"]),
+    includes = ["qsopt-ex/include"],
     copts = ["-Iqsopt-ex/include"],
     visibility = [
         "//dreal:__subpackages__",
