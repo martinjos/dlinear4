@@ -16,6 +16,9 @@ build --force_pic
 build --strip=never
 build --strict_system_includes
 
+# Build stamp
+build --workspace_status_command=scripts/workspace_status.sh
+
 # Default test options.
 test --test_output=errors
 

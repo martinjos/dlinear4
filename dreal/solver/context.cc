@@ -96,6 +96,8 @@ Config& Context::mutable_config() { return impl_->mutable_config(); }
 
 string Context::version() { return DREAL_VERSION_STRING; }
 
+string Context::repository_status() { return DREAL_VERSION_REPOSTAT; }
+
 const Box& Context::box() const { return impl_->box(); }
 
 const Box& Context::get_model() const { return impl_->get_model(); }

@@ -21,6 +21,7 @@ genrule(
     tools = [
         "//tools:generate_version_header",
     ],
+    stamp = True,
 )
 
 dreal_cc_library(

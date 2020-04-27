@@ -29,7 +29,12 @@ string get_version_string() {
 #else
   const string build_type{"Release"};
 #endif
-  return fmt::format("v{} ({} Build)", Context::version(), build_type);
+  string repo_stat = Context::repository_status();
+  if (!repo_stat.empty()) {
+    repo_stat = " (repository: " + repo_stat + ")";
+  }
+  return fmt::format("v{} ({} Build){}", Context::version(), build_type,
+                                         repo_stat);
 }
 }  // namespace
 

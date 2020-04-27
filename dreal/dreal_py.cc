@@ -759,6 +759,8 @@ PYBIND11_MODULE(_dreal_py, m) {
                     })
       .def_property_readonly_static(
           "version", [](py::object /* self */) { return Context::version(); })
+      .def_property_readonly_static("repository_status",
+          [](py::object /* self */) { return Context::repository_status(); })
       .def_property_readonly("box", &Context::box);
 
   m.def("CheckSatisfiability",

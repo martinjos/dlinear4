@@ -107,6 +107,9 @@ class Context {
   /// Returns the version string.
   static std::string version();
 
+  /// Returns the repository status string.
+  static std::string repository_status();
+
   /// Returns the const reference to the asserted formulas.
   ///
   /// @note that the returned vector can be a proper subset of the

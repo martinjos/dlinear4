@@ -5,6 +5,7 @@ VERSION_ARRAY=( ${VERSION//./ } )
 MAJOR=${VERSION_ARRAY[0]}
 MINOR=${VERSION_ARRAY[1]}
 REVISION=${VERSION_ARRAY[2]}
+REPOSITORY_STATUS="$(cat bazel-out/stable-status.txt | grep '^STABLE_REPOSITORY_STATUS ' | cut -d' ' -f2-)"
 
 cat <<EOF
 #pragma once
@@ -13,4 +14,5 @@ cat <<EOF
 #define DREAL_VERSION_MAJOR    ${MAJOR}
 #define DREAL_VERSION_MINOR    ${MINOR}
 #define DREAL_VERSION_REVISION ${REVISION}
+#define DREAL_VERSION_REPOSTAT "${REPOSITORY_STATUS}"
 EOF
