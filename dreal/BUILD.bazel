@@ -32,6 +32,20 @@ dreal_cc_library(
     visibility = [":__subpackages__"],
 )
 
+dreal_cc_library(
+    name = "qsopt-ex",
+    hdrs = [
+        "qsopt_ex.h",
+    ],
+    visibility = [
+        "//:__pkg__",
+        "//dreal:__subpackages__",
+    ],
+    deps = [
+        "//:qsopt-ex",
+    ],
+)
+
 dreal_cc_binary(
     name = "dreal",
     srcs = [

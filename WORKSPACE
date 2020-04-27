@@ -54,6 +54,28 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/releases/download/0.0.1/rules_python-0.0.1.tar.gz",
 )
 
+# https://groups.google.com/forum/#!topic/bazel-discuss/Ndd820uaq2U
+new_local_repository(
+    name = "linux_libs",
+    path = "/usr/lib/x86_64-linux-gnu",
+    build_file_content = """
+
+cc_library(
+    name = "gmpxx",
+    srcs = ["libgmpxx.so"],
+    visibility = ["//visibility:public"],
+    deps = [":gmp"],
+)
+
+cc_library(
+    name = "gmp",
+    srcs = ["libgmp.so"],
+    visibility = ["//visibility:public"],
+)
+
+"""
+)
+
 load("@rules_python//python:repositories.bzl", "py_repositories")
 
 py_repositories()

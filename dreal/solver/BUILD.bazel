@@ -155,6 +155,7 @@ dreal_cc_library(
         "//dreal/util:timer",
         "//dreal/util:tseitin_cnfizer",
         "@picosat",
+        "//dreal:qsopt-ex",
     ],
 )
 

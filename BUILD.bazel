@@ -29,6 +29,9 @@ cc_library(
     visibility = [
         "//dreal:__subpackages__",
     ],
+    deps = [
+        "@linux_libs//:gmpxx",
+    ],
 )
 
 cc_binary(

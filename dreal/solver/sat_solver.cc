@@ -14,6 +14,19 @@ namespace dreal {
 using std::cout;
 using std::set;
 using std::vector;
+using std::pair;
+using std::make_pair;
+using qsopt_ex::mpq_QScreate_prob;
+using qsopt_ex::mpq_QSset_param;
+using qsopt_ex::mpq_QSfree_prob;
+using qsopt_ex::mpq_QSchange_coef;
+using qsopt_ex::mpq_QSget_rowcount;
+using qsopt_ex::mpq_QSnew_row;
+using qsopt_ex::mpq_QSget_colcount;
+using qsopt_ex::mpq_QSnew_col;
+using qsopt_ex::mpq_ILL_MINDOUBLE;  // mpq_NINFTY
+using qsopt_ex::mpq_ILL_MAXDOUBLE;  // mpq_INFTY
+using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
 
 SatSolver::SatSolver(const Config& config) : sat_{picosat_init()} {
   // Enable partial checks via picosat_deref_partial. See the call-site in
@@ -27,6 +40,9 @@ SatSolver::SatSolver(const Config& config) : sat_{picosat_init()} {
       sat_, static_cast<int>(config.sat_default_phase()));
   DREAL_LOG_DEBUG("SatSolver::Set Default Phase {}",
                   config.sat_default_phase());
+  qsx_prob_ = mpq_QScreate_prob(NULL, QS_MIN);
+  DREAL_ASSERT(qsx_prob_);
+  mpq_QSset_param(qsx_prob_, QS_PARAM_SIMPLEX_DISPLAY, 1);
 }
 
 SatSolver::SatSolver(const Config& config, const vector<Formula>& clauses)
@@ -34,7 +50,10 @@ SatSolver::SatSolver(const Config& config, const vector<Formula>& clauses)
   AddClauses(clauses);
 }
 
-SatSolver::~SatSolver() { picosat_reset(sat_); }
+SatSolver::~SatSolver() {
+  picosat_reset(sat_);
+  mpq_QSfree_prob(qsx_prob_);
+}
 
 void SatSolver::AddFormula(const Formula& f) {
   DREAL_LOG_DEBUG("SatSolver::AddFormula({})", f);
@@ -135,19 +154,19 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
       const auto it = var_to_formula_map.find(var);
       if (it != var_to_formula_map.end()) {
         DREAL_LOG_TRACE("SatSolver::CheckSat: Add theory literal {}{} to Model",
-                        model_i ? "" : "¬", var);
+                        model_i == 1 ? "" : "¬", var);
         auto& theory_model = model.second;
         theory_model.emplace_back(var, model_i == 1);
       } else if (tseitin_variables_.count(var.get_id()) == 0) {
         DREAL_LOG_TRACE(
             "SatSolver::CheckSat: Add Boolean literal {}{} to Model ",
-            model_i ? "" : "¬", var);
+            model_i == 1 ? "" : "¬", var);
         auto& boolean_model = model.first;
         boolean_model.emplace_back(var, model_i == 1);
       } else {
         DREAL_LOG_TRACE(
             "SatSolver::CheckSat: Skip {}{} which is a temporary variable.",
-            model_i ? "" : "¬", var);
+            model_i == 1 ? "" : "¬", var);
       }
     }
     DREAL_LOG_DEBUG("SatSolver::CheckSat() Found a model.");
@@ -164,6 +183,8 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
 }
 
 void SatSolver::Pop() {
+  // FIXME: disabled for QSopt_ex changes
+  throw DREAL_RUNTIME_ERROR("SatSolver::Pop() currently unsupported");
   DREAL_LOG_DEBUG("SatSolver::Pop()");
   tseitin_variables_.pop();
   to_sym_var_.pop();
@@ -173,11 +194,96 @@ void SatSolver::Pop() {
 }
 
 void SatSolver::Push() {
+  // FIXME: disabled for QSopt_ex changes
+  throw DREAL_RUNTIME_ERROR("SatSolver::Push() currently unsupported");
   DREAL_LOG_DEBUG("SatSolver::Push()");
   picosat_push(sat_);
   to_sat_var_.push();
   to_sym_var_.push();
   tseitin_variables_.push();
+}
+
+void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
+                              const mpq_class& value) {
+  const auto it = to_qsx_col_.find(var.get_id());
+  if (it == to_qsx_col_.end()) {
+    throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
+  }
+  mpq_t c_value;
+  mpq_init(c_value);
+  mpq_set(c_value, value.get_mpq_t());
+  mpq_QSchange_coef(qsx_prob_, qsx_row, it->second, c_value);
+  mpq_clear(c_value);
+}
+
+void SatSolver::AddLiteral(const Variable& var, bool truth) {
+    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
+    picosat_add(sat_, truth ? to_sat_var_[var.get_id()]
+                            : -to_sat_var_[var.get_id()]);
+    const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
+    const auto it = var_to_formula_map.find(var);
+    if (it == var_to_formula_map.end()) {
+      // Boolean variable - no need to involve theory solver
+      return;
+    }
+    // Theory formula
+    Formula formula = it->second;
+    if (!truth) {
+      if (is_not_equal_to(formula)) {
+        formula = get_lhs_expression(formula) == get_rhs_expression(formula);
+      } else if (is_greater_than(formula)) {
+        formula = get_lhs_expression(formula) <= get_rhs_expression(formula);
+      } else if (is_less_than(formula)) {
+        formula = get_lhs_expression(formula) >= get_rhs_expression(formula);
+      } else {
+        throw DREAL_RUNTIME_ERROR("Negation of formula {} not supported", formula);
+      }
+    }
+    Expression expr;
+    if (is_equal_to(formula)) {
+      expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
+      qsx_sense_.push_back('E');
+    } else if (is_greater_than_or_equal_to(formula)) {
+      expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
+      qsx_sense_.push_back('G');
+    } else if (is_less_than_or_equal_to(formula)) {
+      expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
+      qsx_sense_.push_back('L');
+    } else {
+        throw DREAL_RUNTIME_ERROR("Formula {} not supported", formula);
+    }
+    const int qsx_row{mpq_QSget_rowcount(qsx_prob_)};
+    mpq_QSnew_row(qsx_prob_, mpq_NINFTY, 'G', NULL);  // Inactive
+    qsx_rhs_.push_back(0);
+    if (is_constant(expr)) {
+      qsx_rhs_.back() = -get_constant_value(expr);
+    } else if (is_variable(expr)) {
+      SetQSXVarCoef(qsx_row, get_variable(expr), 1);
+    } else if (is_multiplication(expr)) {
+      std::map<Expression,Expression> map = get_base_to_exponent_map_in_multiplication(expr);
+      if (map.size() != 1
+       || !is_variable(map.begin()->first)
+       || !is_constant(map.begin()->second)
+       || get_constant_value(map.begin()->second) != 1) {
+        throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
+      }
+      SetQSXVarCoef(qsx_row,
+                    get_variable(map.begin()->first),
+                    get_constant_in_multiplication(expr));
+    } else if (is_addition(expr)) {
+      const std::map<Expression,double>& map = get_expr_to_coeff_map_in_addition(expr);
+      for (const pair<Expression,double>& pair : map) {
+        if (!is_variable(pair.first)) {
+          throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
+        }
+        SetQSXVarCoef(qsx_row, get_variable(pair.first), pair.second);
+      }
+      qsx_rhs_.back() = -get_constant_in_addition(expr);
+    } else {
+        throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
+    }
+    to_qsx_row_.emplace(make_pair(make_pair(var.get_id(), truth), qsx_row));
+    from_qsx_row_.emplace(make_pair(qsx_row, make_pair(var, truth)));
 }
 
 void SatSolver::AddLiteral(const Formula& f) {
@@ -186,16 +292,12 @@ void SatSolver::AddLiteral(const Formula& f) {
   if (is_variable(f)) {
     // f = b
     const Variable& var{get_variable(f)};
-    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
-    // Add l = b
-    picosat_add(sat_, to_sat_var_[var.get_id()]);
+    AddLiteral(var, true);
   } else {
     // f = ¬b
     DREAL_ASSERT(is_negation(f) && is_variable(get_operand(f)));
     const Variable& var{get_variable(get_operand(f))};
-    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
-    // Add l = ¬b
-    picosat_add(sat_, -to_sat_var_[var.get_id()]);
+    AddLiteral(var, false);
   }
 }
 
@@ -223,5 +325,13 @@ void SatSolver::MakeSatVar(const Variable& var) {
   to_sat_var_.insert(var.get_id(), sat_var);
   to_sym_var_.insert(sat_var, var);
   DREAL_LOG_DEBUG("SatSolver::MakeSatVar({} ↦ {})", var, sat_var);
+  // And then to the QSopt_ex problem & maps.
+  const int qsx_col{mpq_QSget_colcount(qsx_prob_)};
+  int status = mpq_QSnew_col(qsx_prob_, mpq_zeroLpNum, mpq_NINFTY, mpq_INFTY,
+                             var.get_name().c_str());
+  DREAL_ASSERT(!status);
+  to_qsx_col_.emplace(make_pair(var.get_id(), qsx_col));
+  from_qsx_col_.emplace(make_pair(qsx_col, var));
+  DREAL_LOG_DEBUG("SatSolver::MakeSatVar({} ↦ qsopt-ex: {})", var, qsx_col);
 }
 }  // namespace dreal

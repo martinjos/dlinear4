@@ -4,6 +4,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 #include "./picosat.h"
 
@@ -14,6 +15,7 @@
 #include "dreal/util/scoped_unordered_map.h"
 #include "dreal/util/scoped_unordered_set.h"
 #include "dreal/util/tseitin_cnfizer.h"
+#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 
@@ -95,6 +97,9 @@ class SatSolver {
   // @pre @p f is either a Boolean variable or a negation of Boolean
   // variable.
   void AddLiteral(const Formula& f);
+  void AddLiteral(const Variable& var, bool truth);
+
+  void SetQSXVarCoef(int qsx_row, const Variable& var, const mpq_class& value);
 
   // Add a clause @p f to sat solver.
   void DoAddClause(const Formula& f);
@@ -115,6 +120,23 @@ class SatSolver {
   /// Set of temporary Boolean variables introduced by Tseitin
   /// transformations.
   ScopedUnorderedSet<Variable::Id> tseitin_variables_;
+
+  // Exact LP solver (QSopt_ex)
+  qsopt_ex::mpq_QSprob qsx_prob_;
+
+  // Map symbolic::Variable <-> int (column in QSopt_ex problem).
+  // We don't used the scoped version because we'd like to be sure that we
+  // won't create duplicate columns.  No two Variable objects ever have the
+  // same Id.
+  std::map<Variable::Id, int> to_qsx_col_;
+  std::map<int, Variable> from_qsx_col_;
+
+  // Map (symbolic::Variable, bool) <-> int (row in QSopt_ex problem).
+  std::map<std::pair<Variable::Id, bool>, int> to_qsx_row_;
+  std::map<int, Literal> from_qsx_row_;
+
+  std::vector<mpq_class> qsx_rhs_;
+  std::vector<char> qsx_sense_;
 
   /// @note We found an issue when picosat_deref_partial is used with
   /// picosat_pop. When this variable is true, we use `picosat_deref`
