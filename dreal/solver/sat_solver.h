@@ -97,8 +97,15 @@ class SatSolver {
   // @pre @p f is either a Boolean variable or a negation of Boolean
   // variable.
   void AddLiteral(const Formula& f);
-  void AddLiteral(const Variable& var, bool truth);
 
+  // Add a linear literal to the linear solver
+  void AddLinearLiteral(const Variable& var, bool truth);
+
+  // Add a variable to the linear solver
+  void AddLinearVariable(const Variable& var);
+
+  // Set the variable's coefficient for the given constraint row in the linear
+  // solver
   void SetQSXVarCoef(int qsx_row, const Variable& var, const mpq_class& value);
 
   // Add a clause @p f to sat solver.

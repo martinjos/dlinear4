@@ -216,18 +216,23 @@ void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
   mpq_clear(c_value);
 }
 
-void SatSolver::AddLiteral(const Variable& var, bool truth) {
-    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
-    picosat_add(sat_, truth ? to_sat_var_[var.get_id()]
-                            : -to_sat_var_[var.get_id()]);
+void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
-    const auto it = var_to_formula_map.find(var);
+    const auto it = var_to_formula_map.find(formulaVar);
     if (it == var_to_formula_map.end()) {
       // Boolean variable - no need to involve theory solver
       return;
     }
+    const auto it2 = to_qsx_row_.find(make_pair(formulaVar.get_id(), truth));
+    if (it2 != to_qsx_row_.end()) {
+      // Found.
+      return;
+    }
     // Theory formula
     Formula formula = it->second;
+    for (const Variable& var : formula.GetFreeVariables()) {
+      AddLinearVariable(var);
+    }
     if (!truth) {
       if (is_not_equal_to(formula)) {
         formula = get_lhs_expression(formula) == get_rhs_expression(formula);
@@ -282,8 +287,10 @@ void SatSolver::AddLiteral(const Variable& var, bool truth) {
     } else {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
     }
-    to_qsx_row_.emplace(make_pair(make_pair(var.get_id(), truth), qsx_row));
-    from_qsx_row_.emplace(make_pair(qsx_row, make_pair(var, truth)));
+    to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
+    from_qsx_row_.emplace(make_pair(qsx_row, make_pair(formulaVar, truth)));
+    DREAL_LOG_DEBUG("SatSolver::AddLinearLiteral({}{} ↦ {})",
+                    truth ? "" : "¬", it->second, qsx_row);
 }
 
 void SatSolver::AddLiteral(const Formula& f) {
@@ -292,12 +299,18 @@ void SatSolver::AddLiteral(const Formula& f) {
   if (is_variable(f)) {
     // f = b
     const Variable& var{get_variable(f)};
-    AddLiteral(var, true);
+    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
+    // Add l = b
+    picosat_add(sat_, to_sat_var_[var.get_id()]);
+    AddLinearLiteral(var, true);
   } else {
     // f = ¬b
     DREAL_ASSERT(is_negation(f) && is_variable(get_operand(f)));
     const Variable& var{get_variable(get_operand(f))};
-    AddLiteral(var, false);
+    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
+    // Add l = ¬b
+    picosat_add(sat_, -to_sat_var_[var.get_id()]);
+    AddLinearLiteral(var, false);
   }
 }
 
@@ -325,13 +338,20 @@ void SatSolver::MakeSatVar(const Variable& var) {
   to_sat_var_.insert(var.get_id(), sat_var);
   to_sym_var_.insert(sat_var, var);
   DREAL_LOG_DEBUG("SatSolver::MakeSatVar({} ↦ {})", var, sat_var);
-  // And then to the QSopt_ex problem & maps.
+}
+
+void SatSolver::AddLinearVariable(const Variable& var) {
+  auto it = to_qsx_col_.find(var.get_id());
+  if (it != to_qsx_col_.end()) {
+    // Found.
+    return;
+  }
   const int qsx_col{mpq_QSget_colcount(qsx_prob_)};
   int status = mpq_QSnew_col(qsx_prob_, mpq_zeroLpNum, mpq_NINFTY, mpq_INFTY,
                              var.get_name().c_str());
   DREAL_ASSERT(!status);
   to_qsx_col_.emplace(make_pair(var.get_id(), qsx_col));
   from_qsx_col_.emplace(make_pair(qsx_col, var));
-  DREAL_LOG_DEBUG("SatSolver::MakeSatVar({} ↦ qsopt-ex: {})", var, qsx_col);
+  DREAL_LOG_DEBUG("SatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
 }
 }  // namespace dreal
