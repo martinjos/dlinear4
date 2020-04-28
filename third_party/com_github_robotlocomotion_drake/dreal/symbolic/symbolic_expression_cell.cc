@@ -42,18 +42,18 @@ using std::setprecision;
 using std::string;
 
 namespace {
-bool is_integer(const double v) {
+bool is_integer(const mpq_class v) {
   // v should be in [int_min, int_max].
   if (!((numeric_limits<int>::lowest() <= v) &&
         (v <= numeric_limits<int>::max()))) {
     return false;
   }
 
-  double intpart;  // dummy variable
-  return modf(v, &intpart) == 0.0;
+  mpz_class f{v};
+  return v == f;
 }
 
-bool is_non_negative_integer(const double v) {
+bool is_non_negative_integer(const mpq_class v) {
   return (v >= 0) && is_integer(v);
 }
 
@@ -61,9 +61,9 @@ bool is_non_negative_integer(const double v) {
 // polynomial-convertible or not. This function is used in the
 // constructor of ExpressionAdd.
 bool determine_polynomial(
-    const std::map<Expression, double>& term_to_coeff_map) {
+    const std::map<Expression, mpq_class>& term_to_coeff_map) {
   return all_of(term_to_coeff_map.begin(), term_to_coeff_map.end(),
-                [](const pair<const Expression, double>& p) {
+                [](const pair<const Expression, mpq_class>& p) {
                   return p.first.is_polynomial();
                 });
 }
@@ -71,9 +71,9 @@ bool determine_polynomial(
 // Determines if the summation represented by term_to_coeff_map includes an ITE
 // expression or not. This function is used in the constructor of ExpressionAdd.
 bool determine_include_ite(
-    const std::map<Expression, double>& term_to_coeff_map) {
+    const std::map<Expression, mpq_class>& term_to_coeff_map) {
   return any_of(term_to_coeff_map.begin(), term_to_coeff_map.end(),
-                [](const pair<const Expression, double>& p) {
+                [](const pair<const Expression, mpq_class>& p) {
                   return p.first.include_ite();
                 });
 }
@@ -94,7 +94,7 @@ bool determine_polynomial(
                   if (!base.is_polynomial() || !is_constant(exponent)) {
                     return false;
                   }
-                  const double e{get_constant_value(exponent)};
+                  const mpq_class e{get_constant_value(exponent)};
                   return is_non_negative_integer(e);
                 });
 }
@@ -121,7 +121,7 @@ bool determine_polynomial(const Expression& base, const Expression& exponent) {
   if (!(base.is_polynomial() && is_constant(exponent))) {
     return false;
   }
-  const double e{get_constant_value(exponent)};
+  const mpq_class e{get_constant_value(exponent)};
   return is_non_negative_integer(e);
 }
 
@@ -138,11 +138,11 @@ Expression ExpandMultiplication(const Expression& e1, const Expression& e2) {
   if (is_addition(e1)) {
     //   (c0 + c1 * e_{1,1} + ... + c_n * e_{1, n}) * e2
     // = c0 * e2 + c1 * e_{1,1} * e2 + ... + c_n * e_{1,n} * e2
-    const double c0{get_constant_in_addition(e1)};
+    const mpq_class c0{get_constant_in_addition(e1)};
     Expression ret{ExpandMultiplication(c0, e2)};
     for (const auto& p : get_expr_to_coeff_map_in_addition(e1)) {
       const Expression& e_1_i{p.first};
-      const double c_i{p.second};
+      const mpq_class c_i{p.second};
       ret += ExpandMultiplication(c_i, e_1_i, e2);
     }
     return ret;
@@ -150,11 +150,11 @@ Expression ExpandMultiplication(const Expression& e1, const Expression& e2) {
   if (is_addition(e2)) {
     //   e1 * (c0 + c1 * e_{2,1} + ... + c_n * e_{2, n})
     // = e1 * c0 + e1 * c1 * e_{2,1} + ... + e1 * c_n * e_{2,n}
-    const double c0{get_constant_in_addition(e2)};
+    const mpq_class c0{get_constant_in_addition(e2)};
     Expression ret{ExpandMultiplication(e1, c0)};
     for (const auto& p : get_expr_to_coeff_map_in_addition(e2)) {
       const Expression& e_2_i{p.first};
-      const double c_i{p.second};
+      const mpq_class c_i{p.second};
       ret += ExpandMultiplication(e1, c_i, e_2_i);
     }
     return ret;
@@ -196,11 +196,11 @@ Expression ExpandPow(const Expression& base, const Expression& exponent) {
   if (!is_addition(base) || !is_constant(exponent)) {
     return pow(base, exponent);
   }
-  const double e{get_constant_value(exponent)};
+  const mpq_class e{get_constant_value(exponent)};
   if (e <= 0 || !is_integer(e)) {
     return pow(base, exponent);
   }
-  const int n{static_cast<int>(e)};
+  const int n{static_cast<int>(e.get_num().get_si())};
   return ExpandPow(base, n);
 }
 }  // anonymous namespace
@@ -239,8 +239,8 @@ bool UnaryExpressionCell::Less(const ExpressionCell& e) const {
   return e_.Less(unary_e.e_);
 }
 
-double UnaryExpressionCell::Evaluate(const Environment& env) const {
-  const double v{e_.Evaluate(env)};
+mpq_class UnaryExpressionCell::Evaluate(const Environment& env) const {
+  const mpq_class v{e_.Evaluate(env)};
   return DoEvaluate(v);
 }
 
@@ -275,9 +275,9 @@ bool BinaryExpressionCell::Less(const ExpressionCell& e) const {
   return e2_.Less(binary_e.e2_);
 }
 
-double BinaryExpressionCell::Evaluate(const Environment& env) const {
-  const double v1{e1_.Evaluate(env)};
-  const double v2{e2_.Evaluate(env)};
+mpq_class BinaryExpressionCell::Evaluate(const Environment& env) const {
+  const mpq_class v1{e1_.Evaluate(env)};
+  const mpq_class v2{e2_.Evaluate(env)};
   return DoEvaluate(v1, v2);
 }
 
@@ -318,7 +318,7 @@ bool ExpressionVar::Less(const ExpressionCell& e) const {
   return var_.less(static_cast<const ExpressionVar&>(e).var_);
 }
 
-double ExpressionVar::Evaluate(const Environment& env) const {
+mpq_class ExpressionVar::Evaluate(const Environment& env) const {
   Environment::const_iterator const it{env.find(var_)};
   if (it != env.cend()) {
     assert(!std::isnan(it->second));
@@ -352,8 +352,8 @@ Expression ExpressionVar::Differentiate(const Variable& x) const {
 
 ostream& ExpressionVar::Display(ostream& os) const { return os << var_; }
 
-ExpressionConstant::ExpressionConstant(const double v)
-    : ExpressionCell{ExpressionKind::Constant, hash<double>{}(v), true, false,
+ExpressionConstant::ExpressionConstant(const mpq_class v)
+    : ExpressionCell{ExpressionKind::Constant, hash<mpq_class>{}(v), true, false,
                      Variables{}},
       v_{v} {
   assert(!std::isnan(v));
@@ -371,7 +371,7 @@ bool ExpressionConstant::Less(const ExpressionCell& e) const {
   return v_ < static_cast<const ExpressionConstant&>(e).v_;
 }
 
-double ExpressionConstant::Evaluate(const Environment&) const {
+mpq_class ExpressionConstant::Evaluate(const Environment&) const {
   assert(!std::isnan(v_));
   return v_;
 }
@@ -390,7 +390,7 @@ Expression ExpressionConstant::Differentiate(const Variable&) const {
 
 ostream& ExpressionConstant::Display(ostream& os) const {
   ostringstream oss;
-  oss << setprecision(numeric_limits<double>::max_digits10) << v_;
+  oss << v_;
   return os << oss.str();
 }
 
@@ -413,7 +413,7 @@ bool ExpressionNaN::Less(const ExpressionCell& e) const {
   return false;
 }
 
-double ExpressionNaN::Evaluate(const Environment&) const {
+mpq_class ExpressionNaN::Evaluate(const Environment&) const {
   throw runtime_error("NaN is detected during Symbolic computation.");
 }
 
@@ -432,10 +432,10 @@ Expression ExpressionNaN::Differentiate(const Variable&) const {
 
 ostream& ExpressionNaN::Display(ostream& os) const { return os << "NaN"; }
 
-ExpressionAdd::ExpressionAdd(const double constant,
-                             map<Expression, double> expr_to_coeff_map)
+ExpressionAdd::ExpressionAdd(const mpq_class constant,
+                             map<Expression, mpq_class> expr_to_coeff_map)
     : ExpressionCell{ExpressionKind::Add,
-                     hash_combine(hash<double>{}(constant), expr_to_coeff_map),
+                     hash_combine(hash<mpq_class>{}(constant), expr_to_coeff_map),
                      determine_polynomial(expr_to_coeff_map),
                      determine_include_ite(expr_to_coeff_map),
                      ExtractVariables(expr_to_coeff_map)},
@@ -445,7 +445,7 @@ ExpressionAdd::ExpressionAdd(const double constant,
 }
 
 Variables ExpressionAdd::ExtractVariables(
-    const std::map<Expression, double>& expr_to_coeff_map) {
+    const std::map<Expression, mpq_class>& expr_to_coeff_map) {
   Variables ret{};
   for (const auto& p : expr_to_coeff_map) {
     ret.insert(p.first.GetVariables());
@@ -464,8 +464,8 @@ bool ExpressionAdd::EqualTo(const ExpressionCell& e) const {
   return equal(expr_to_coeff_map_.cbegin(), expr_to_coeff_map_.cend(),
                add_e.expr_to_coeff_map_.cbegin(),
                add_e.expr_to_coeff_map_.cend(),
-               [](const pair<const Expression, double>& p1,
-                  const pair<const Expression, double>& p2) {
+               [](const pair<const Expression, mpq_class>& p1,
+                  const pair<const Expression, mpq_class>& p2) {
                  return p1.first.EqualTo(p2.first) && p1.second == p2.second;
                });
 }
@@ -485,8 +485,8 @@ bool ExpressionAdd::Less(const ExpressionCell& e) const {
   return lexicographical_compare(
       expr_to_coeff_map_.cbegin(), expr_to_coeff_map_.cend(),
       add_e.expr_to_coeff_map_.cbegin(), add_e.expr_to_coeff_map_.cend(),
-      [](const pair<const Expression, double>& p1,
-         const pair<const Expression, double>& p2) {
+      [](const pair<const Expression, mpq_class>& p1,
+         const pair<const Expression, mpq_class>& p2) {
         const Expression& term1{p1.first};
         const Expression& term2{p2.first};
         if (term1.Less(term2)) {
@@ -495,16 +495,16 @@ bool ExpressionAdd::Less(const ExpressionCell& e) const {
         if (term2.Less(term1)) {
           return false;
         }
-        const double coeff1{p1.second};
-        const double coeff2{p2.second};
+        const mpq_class coeff1{p1.second};
+        const mpq_class coeff2{p2.second};
         return coeff1 < coeff2;
       });
 }
 
-double ExpressionAdd::Evaluate(const Environment& env) const {
+mpq_class ExpressionAdd::Evaluate(const Environment& env) const {
   return accumulate(
       expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(), constant_,
-      [&env](const double init, const pair<const Expression, double>& p) {
+      [&env](const mpq_class init, const pair<const Expression, mpq_class>& p) {
         return init + p.first.Evaluate(env) * p.second;
       });
 }
@@ -515,7 +515,7 @@ Expression ExpressionAdd::Expand() {
   Expression ret{constant_};
   for (const auto& p : expr_to_coeff_map_) {
     const Expression& e_i{p.first};
-    const double c_i{p.second};
+    const mpq_class c_i{p.second};
     ret += ExpandMultiplication(e_i.Expand(), c_i);
   }
   return ret;
@@ -526,7 +526,7 @@ Expression ExpressionAdd::Substitute(const ExpressionSubstitution& expr_subst,
   Expression ret{constant_};
   for (const auto& p : expr_to_coeff_map_) {
     const Expression& e_i{p.first};
-    const double c_i{p.second};
+    const mpq_class c_i{p.second};
     ret += e_i.Substitute(expr_subst, formula_subst) * c_i;
   }
   return ret;
@@ -539,7 +539,7 @@ Expression ExpressionAdd::Differentiate(const Variable& x) const {
   Expression ret{Expression::Zero()};
   for (const auto& p : expr_to_coeff_map_) {
     const Expression& e_i{p.first};
-    const double c_i{p.second};
+    const mpq_class c_i{p.second};
     ret += c_i * e_i.Differentiate(x);
   }
   return ret;
@@ -550,7 +550,7 @@ ostream& ExpressionAdd::Display(ostream& os) const {
   bool print_plus{false};
   os << "(";
   if (constant_ != 0.0) {
-    os << setprecision(numeric_limits<double>::max_digits10) << constant_;
+    os << constant_;
     print_plus = true;
   }
   for (auto& p : expr_to_coeff_map_) {
@@ -562,7 +562,7 @@ ostream& ExpressionAdd::Display(ostream& os) const {
 }
 
 ostream& ExpressionAdd::DisplayTerm(ostream& os, const bool print_plus,
-                                    const double coeff,
+                                    const mpq_class coeff,
                                     const Expression& term) const {
   assert(coeff != 0.0);
   if (coeff > 0.0) {
@@ -585,7 +585,7 @@ ostream& ExpressionAdd::DisplayTerm(ostream& os, const bool print_plus,
 }
 
 ExpressionAddFactory::ExpressionAddFactory(
-    const double constant, map<Expression, double> expr_to_coeff_map)
+    const mpq_class constant, map<Expression, mpq_class> expr_to_coeff_map)
     : get_expression_is_called_{false},
       constant_{constant},
       expr_to_coeff_map_{std::move(expr_to_coeff_map)} {}
@@ -595,7 +595,7 @@ ExpressionAddFactory::ExpressionAddFactory(const ExpressionAdd* const ptr)
 
 ExpressionAddFactory& ExpressionAddFactory::AddExpression(const Expression& e) {
   if (is_constant(e)) {
-    const double v{get_constant_value(e)};
+    const mpq_class v{get_constant_value(e)};
     return AddConstant(v);
   }
   if (is_addition(e)) {
@@ -603,7 +603,7 @@ ExpressionAddFactory& ExpressionAddFactory::AddExpression(const Expression& e) {
     return Add(to_addition(e));
   }
   if (is_multiplication(e)) {
-    const double constant{get_constant_in_multiplication(e)};
+    const mpq_class constant{get_constant_in_multiplication(e)};
     if (constant != 1.0) {
       // Instead of adding (1.0 * (constant * b1^t1 ... bn^tn)),
       // add (constant, 1.0 * b1^t1 ... bn^tn).
@@ -656,19 +656,19 @@ Expression ExpressionAddFactory::GetExpression() {
       new ExpressionAdd(constant_, std::move(expr_to_coeff_map_))};
 }
 
-ExpressionAddFactory& ExpressionAddFactory::AddConstant(const double constant) {
+ExpressionAddFactory& ExpressionAddFactory::AddConstant(const mpq_class constant) {
   constant_ += constant;
   return *this;
 }
 
-ExpressionAddFactory& ExpressionAddFactory::AddTerm(const double coeff,
+ExpressionAddFactory& ExpressionAddFactory::AddTerm(const mpq_class coeff,
                                                     const Expression& term) {
   assert(!is_constant(term));
 
   const auto it(expr_to_coeff_map_.find(term));
   if (it != expr_to_coeff_map_.end()) {
     // Case1: term is already in the map
-    double& this_coeff{it->second};
+    mpq_class& this_coeff{it->second};
     this_coeff += coeff;
     if (this_coeff == 0.0) {
       // If the coefficient becomes zero, remove the entry.
@@ -685,17 +685,17 @@ ExpressionAddFactory& ExpressionAddFactory::AddTerm(const double coeff,
 }
 
 ExpressionAddFactory& ExpressionAddFactory::AddMap(
-    const map<Expression, double>& expr_to_coeff_map) {
+    const map<Expression, mpq_class>& expr_to_coeff_map) {
   for (const auto& p : expr_to_coeff_map) {
     AddTerm(p.second, p.first);
   }
   return *this;
 }
 
-ExpressionMul::ExpressionMul(const double constant,
+ExpressionMul::ExpressionMul(const mpq_class constant,
                              map<Expression, Expression> base_to_exponent_map)
     : ExpressionCell{ExpressionKind::Mul,
-                     hash_combine(hash<double>{}(constant),
+                     hash_combine(hash<mpq_class>{}(constant),
                                   base_to_exponent_map),
                      determine_polynomial(base_to_exponent_map),
                      determine_include_ite(base_to_exponent_map),
@@ -764,12 +764,15 @@ bool ExpressionMul::Less(const ExpressionCell& e) const {
       });
 }
 
-double ExpressionMul::Evaluate(const Environment& env) const {
+mpq_class ExpressionMul::Evaluate(const Environment& env) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
   return accumulate(
       base_to_exponent_map_.begin(), base_to_exponent_map_.end(), constant_,
-      [&env](const double init, const pair<const Expression, Expression>& p) {
+      [&env](const mpq_class init, const pair<const Expression, Expression>& p) {
         return init * std::pow(p.first.Evaluate(env), p.second.Evaluate(env));
       });
+#endif
 }
 
 Expression ExpressionMul::Expand() {
@@ -845,7 +848,7 @@ ostream& ExpressionMul::Display(ostream& os) const {
   bool print_mul{false};
   os << "(";
   if (constant_ != 1.0) {
-    os << setprecision(numeric_limits<double>::max_digits10) << constant_;
+    os << constant_;
     print_mul = true;
   }
   for (auto& p : base_to_exponent_map_) {
@@ -874,7 +877,7 @@ ostream& ExpressionMul::DisplayTerm(ostream& os, const bool print_mul,
 }
 
 ExpressionMulFactory::ExpressionMulFactory(
-    const double constant, map<Expression, Expression> base_to_exponent_map)
+    const mpq_class constant, map<Expression, Expression> base_to_exponent_map)
     : get_expression_is_called_{false},
       constant_{constant},
       base_to_exponent_map_{std::move(base_to_exponent_map)} {}
@@ -895,7 +898,7 @@ ExpressionMulFactory& ExpressionMulFactory::AddExpression(const Expression& e) {
     return AddTerm(get_first_argument(e), get_second_argument(e));
   }
   // Add e^1
-  return AddTerm(e, Expression{1.0});
+  return AddTerm(e, Expression{1});
 }
 
 ExpressionMulFactory& ExpressionMulFactory::Add(
@@ -935,7 +938,7 @@ Expression ExpressionMulFactory::GetExpression() {
       new ExpressionMul(constant_, std::move(base_to_exponent_map_))};
 }
 
-ExpressionMulFactory& ExpressionMulFactory::AddConstant(const double constant) {
+ExpressionMulFactory& ExpressionMulFactory::AddConstant(const mpq_class constant) {
   constant_ *= constant;
   return *this;
 }
@@ -948,7 +951,7 @@ ExpressionMulFactory& ExpressionMulFactory::AddTerm(
   if (is_pow(base) && is_constant(exponent)) {
     const Expression& e2{get_second_argument(base)};
     if (is_constant(e2)) {
-      const double e2_value{get_constant_value(e2)};
+      const mpq_class e2_value{get_constant_value(e2)};
       if (is_integer(e2_value)) {
         // If base = pow(e1, e2) and both of e2 and exponent are
         // integers, then add (e1, e2 * exponent).
@@ -1019,36 +1022,36 @@ namespace {
 // but it's desirable to simplify the expression into `2xy / z`.
 class DivExpandVisitor {
  public:
-  Expression Simplify(const Expression& e, const double n) const {
+  Expression Simplify(const Expression& e, const mpq_class n) const {
     return VisitExpression<Expression>(this, e, n);
   }
 
  private:
-  Expression VisitAddition(const Expression& e, const double n) const {
+  Expression VisitAddition(const Expression& e, const mpq_class n) const {
     // e =  (c₀ + ∑ᵢ (cᵢ * eᵢ)) / n
     //   => c₀/n + ∑ᵢ (cᵢ / n * eᵢ)
-    const double constant{get_constant_in_addition(e)};
+    const mpq_class constant{get_constant_in_addition(e)};
     ExpressionAddFactory factory(constant / n, {});
-    for (const pair<const Expression, double>& p :
+    for (const pair<const Expression, mpq_class>& p :
          get_expr_to_coeff_map_in_addition(e)) {
-      factory.AddExpression(p.second / n * p.first);
+      factory.AddExpression(Expression(p.second / n) * p.first);
     }
     return factory.GetExpression();
   }
-  Expression VisitMultiplication(const Expression& e, const double n) const {
+  Expression VisitMultiplication(const Expression& e, const mpq_class n) const {
     // e =  (c₀ * ∏ᵢ (bᵢ * eᵢ)) / n
     //   => c₀ / n * ∏ᵢ (bᵢ * eᵢ)
     return ExpressionMulFactory{get_constant_in_multiplication(e) / n,
                                 get_base_to_exponent_map_in_multiplication(e)}
         .GetExpression();
   }
-  Expression VisitDivision(const Expression& e, const double n) const {
+  Expression VisitDivision(const Expression& e, const mpq_class n) const {
     const Expression& e1{get_first_argument(e)};
     const Expression& e2{get_second_argument(e)};
     if (is_constant(e2)) {
       // e =  (e₁ / m) / n
       //   => Simplify `e₁ / (n * m)`
-      const double m{get_constant_value(e2)};
+      const mpq_class m{get_constant_value(e2)};
       return Simplify(e1, m * n);
     } else {
       // e =  (e₁ / e₂) / n
@@ -1056,75 +1059,75 @@ class DivExpandVisitor {
       return Simplify(e1, n) / e2;
     }
   }
-  Expression VisitVariable(const Expression& e, const double n) const {
+  Expression VisitVariable(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitConstant(const Expression& e, const double n) const {
+  Expression VisitConstant(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitLog(const Expression& e, const double n) const {
+  Expression VisitLog(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitPow(const Expression& e, const double n) const {
+  Expression VisitPow(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitAbs(const Expression& e, const double n) const {
+  Expression VisitAbs(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitExp(const Expression& e, const double n) const {
+  Expression VisitExp(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitSqrt(const Expression& e, const double n) const {
+  Expression VisitSqrt(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitSin(const Expression& e, const double n) const {
+  Expression VisitSin(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitCos(const Expression& e, const double n) const {
+  Expression VisitCos(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitTan(const Expression& e, const double n) const {
+  Expression VisitTan(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitAsin(const Expression& e, const double n) const {
+  Expression VisitAsin(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitAcos(const Expression& e, const double n) const {
+  Expression VisitAcos(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitAtan(const Expression& e, const double n) const {
+  Expression VisitAtan(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitAtan2(const Expression& e, const double n) const {
+  Expression VisitAtan2(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitSinh(const Expression& e, const double n) const {
+  Expression VisitSinh(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitCosh(const Expression& e, const double n) const {
+  Expression VisitCosh(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitTanh(const Expression& e, const double n) const {
+  Expression VisitTanh(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitMin(const Expression& e, const double n) const {
+  Expression VisitMin(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitMax(const Expression& e, const double n) const {
+  Expression VisitMax(const Expression& e, const mpq_class n) const {
     return e / n;
   }
-  Expression VisitIfThenElse(const Expression& e, const double n) const {
+  Expression VisitIfThenElse(const Expression& e, const mpq_class n) const {
     return e / n;
   }
   Expression VisitUninterpretedFunction(const Expression& e,
-                                        const double n) const {
+                                        const mpq_class n) const {
     return e / n;
   }
 
   // Makes VisitExpression a friend of this class so that VisitExpression can
   // use its private methods.
   friend Expression dreal::drake::symbolic::VisitExpression<Expression>(
-      const DivExpandVisitor*, const Expression&, const double&);
+      const DivExpandVisitor*, const Expression&, const mpq_class&);
 };
 }  // namespace
 
@@ -1172,7 +1175,7 @@ ostream& ExpressionDiv::Display(ostream& os) const {
             << ")";
 }
 
-double ExpressionDiv::DoEvaluate(const double v1, const double v2) const {
+mpq_class ExpressionDiv::DoEvaluate(const mpq_class v1, const mpq_class v2) const {
   if (v2 == 0.0) {
     ostringstream oss;
     oss << "Division by zero: " << v1 << " / " << v2;
@@ -1185,7 +1188,7 @@ double ExpressionDiv::DoEvaluate(const double v1, const double v2) const {
 ExpressionLog::ExpressionLog(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Log, e, false} {}
 
-void ExpressionLog::check_domain(const double v) {
+void ExpressionLog::check_domain(const mpq_class v) {
   if (!(v >= 0)) {
     ostringstream oss;
     oss << "log(" << v << ") : numerical argument out of domain. " << v
@@ -1225,9 +1228,12 @@ ostream& ExpressionLog::Display(ostream& os) const {
   return os << "log(" << get_argument() << ")";
 }
 
-double ExpressionLog::DoEvaluate(const double v) const {
+mpq_class ExpressionLog::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
   check_domain(v);
   return std::log(v);
+#endif
 }
 
 ExpressionAbs::ExpressionAbs(const Expression& e)
@@ -1268,7 +1274,7 @@ ostream& ExpressionAbs::Display(ostream& os) const {
   return os << "abs(" << get_argument() << ")";
 }
 
-double ExpressionAbs::DoEvaluate(const double v) const { return std::fabs(v); }
+mpq_class ExpressionAbs::DoEvaluate(const mpq_class v) const { return abs(v); }
 
 ExpressionExp::ExpressionExp(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Exp, e, false} {}
@@ -1304,12 +1310,15 @@ ostream& ExpressionExp::Display(ostream& os) const {
   return os << "exp(" << get_argument() << ")";
 }
 
-double ExpressionExp::DoEvaluate(const double v) const { return std::exp(v); }
+mpq_class ExpressionExp::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::exp(v);
+}
 
 ExpressionSqrt::ExpressionSqrt(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Sqrt, e, false} {}
 
-void ExpressionSqrt::check_domain(const double v) {
+void ExpressionSqrt::check_domain(const mpq_class v) {
   if (!(v >= 0)) {
     ostringstream oss;
     oss << "sqrt(" << v << ") : numerical argument out of domain. " << v
@@ -1350,17 +1359,20 @@ ostream& ExpressionSqrt::Display(ostream& os) const {
   return os << "sqrt(" << get_argument() << ")";
 }
 
-double ExpressionSqrt::DoEvaluate(const double v) const {
+mpq_class ExpressionSqrt::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
   check_domain(v);
   return std::sqrt(v);
+#endif
 }
 
 ExpressionPow::ExpressionPow(const Expression& e1, const Expression& e2)
     : BinaryExpressionCell{ExpressionKind::Pow, e1, e2,
                            determine_polynomial(e1, e2)} {}
 
-void ExpressionPow::check_domain(const double v1, const double v2) {
-  if (std::isfinite(v1) && (v1 < 0.0) && std::isfinite(v2) && !is_integer(v2)) {
+void ExpressionPow::check_domain(const mpq_class v1, const mpq_class v2) {
+  if ((v1 < 0.0) && !is_integer(v2)) {
     ostringstream oss;
     oss << "pow(" << v1 << ", " << v2
         << ") : numerical argument out of domain. " << v1
@@ -1400,9 +1412,12 @@ ostream& ExpressionPow::Display(ostream& os) const {
             << ")";
 }
 
-double ExpressionPow::DoEvaluate(const double v1, const double v2) const {
+mpq_class ExpressionPow::DoEvaluate(const mpq_class v1, const mpq_class v2) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
   check_domain(v1, v2);
   return std::pow(v1, v2);
+#endif
 }
 
 ExpressionSin::ExpressionSin(const Expression& e)
@@ -1439,7 +1454,10 @@ ostream& ExpressionSin::Display(ostream& os) const {
   return os << "sin(" << get_argument() << ")";
 }
 
-double ExpressionSin::DoEvaluate(const double v) const { return std::sin(v); }
+mpq_class ExpressionSin::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::sin(v);
+}
 
 ExpressionCos::ExpressionCos(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Cos, e, false} {}
@@ -1475,7 +1493,10 @@ ostream& ExpressionCos::Display(ostream& os) const {
   return os << "cos(" << get_argument() << ")";
 }
 
-double ExpressionCos::DoEvaluate(const double v) const { return std::cos(v); }
+mpq_class ExpressionCos::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::cos(v);
+}
 
 ExpressionTan::ExpressionTan(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Tan, e, false} {}
@@ -1511,12 +1532,15 @@ ostream& ExpressionTan::Display(ostream& os) const {
   return os << "tan(" << get_argument() << ")";
 }
 
-double ExpressionTan::DoEvaluate(const double v) const { return std::tan(v); }
+mpq_class ExpressionTan::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::tan(v);
+}
 
 ExpressionAsin::ExpressionAsin(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Asin, e, false} {}
 
-void ExpressionAsin::check_domain(const double v) {
+void ExpressionAsin::check_domain(const mpq_class v) {
   if (!((v >= -1.0) && (v <= 1.0))) {
     ostringstream oss;
     oss << "asin(" << v << ") : numerical argument out of domain. " << v
@@ -1557,15 +1581,18 @@ ostream& ExpressionAsin::Display(ostream& os) const {
   return os << "asin(" << get_argument() << ")";
 }
 
-double ExpressionAsin::DoEvaluate(const double v) const {
+mpq_class ExpressionAsin::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
   check_domain(v);
   return std::asin(v);
+#endif
 }
 
 ExpressionAcos::ExpressionAcos(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Acos, e, false} {}
 
-void ExpressionAcos::check_domain(const double v) {
+void ExpressionAcos::check_domain(const mpq_class v) {
   if (!((v >= -1.0) && (v <= 1.0))) {
     ostringstream oss;
     oss << "acos(" << v << ") : numerical argument out of domain. " << v
@@ -1606,9 +1633,12 @@ ostream& ExpressionAcos::Display(ostream& os) const {
   return os << "acos(" << get_argument() << ")";
 }
 
-double ExpressionAcos::DoEvaluate(const double v) const {
+mpq_class ExpressionAcos::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
   check_domain(v);
   return std::acos(v);
+#endif
 }
 
 ExpressionAtan::ExpressionAtan(const Expression& e)
@@ -1646,7 +1676,10 @@ ostream& ExpressionAtan::Display(ostream& os) const {
   return os << "atan(" << get_argument() << ")";
 }
 
-double ExpressionAtan::DoEvaluate(const double v) const { return std::atan(v); }
+mpq_class ExpressionAtan::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::atan(v);
+}
 
 ExpressionAtan2::ExpressionAtan2(const Expression& e1, const Expression& e2)
     : BinaryExpressionCell{ExpressionKind::Atan2, e1, e2, false} {}
@@ -1690,8 +1723,9 @@ ostream& ExpressionAtan2::Display(ostream& os) const {
             << ")";
 }
 
-double ExpressionAtan2::DoEvaluate(const double v1, const double v2) const {
-  return std::atan2(v1, v2);
+mpq_class ExpressionAtan2::DoEvaluate(const mpq_class v1, const mpq_class v2) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::atan2(v1, v2);
 }
 
 ExpressionSinh::ExpressionSinh(const Expression& e)
@@ -1729,7 +1763,10 @@ ostream& ExpressionSinh::Display(ostream& os) const {
   return os << "sinh(" << get_argument() << ")";
 }
 
-double ExpressionSinh::DoEvaluate(const double v) const { return std::sinh(v); }
+mpq_class ExpressionSinh::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::sinh(v);
+}
 
 ExpressionCosh::ExpressionCosh(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Cosh, e, false} {}
@@ -1766,7 +1803,10 @@ ostream& ExpressionCosh::Display(ostream& os) const {
   return os << "cosh(" << get_argument() << ")";
 }
 
-double ExpressionCosh::DoEvaluate(const double v) const { return std::cosh(v); }
+mpq_class ExpressionCosh::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::cosh(v);
+}
 
 ExpressionTanh::ExpressionTanh(const Expression& e)
     : UnaryExpressionCell{ExpressionKind::Tanh, e, false} {}
@@ -1803,7 +1843,10 @@ ostream& ExpressionTanh::Display(ostream& os) const {
   return os << "tanh(" << get_argument() << ")";
 }
 
-double ExpressionTanh::DoEvaluate(const double v) const { return std::tanh(v); }
+mpq_class ExpressionTanh::DoEvaluate(const mpq_class v) const {
+  throw runtime_error("Not implemented");  // Because of mpq_class
+  //return std::tanh(v);
+}
 
 ExpressionMin::ExpressionMin(const Expression& e1, const Expression& e2)
     : BinaryExpressionCell{ExpressionKind::Min, e1, e2, false} {}
@@ -1848,7 +1891,7 @@ ostream& ExpressionMin::Display(ostream& os) const {
             << ")";
 }
 
-double ExpressionMin::DoEvaluate(const double v1, const double v2) const {
+mpq_class ExpressionMin::DoEvaluate(const mpq_class v1, const mpq_class v2) const {
   return std::min(v1, v2);
 }
 
@@ -1895,7 +1938,7 @@ ostream& ExpressionMax::Display(ostream& os) const {
             << ")";
 }
 
-double ExpressionMax::DoEvaluate(const double v1, const double v2) const {
+mpq_class ExpressionMax::DoEvaluate(const mpq_class v1, const mpq_class v2) const {
   return std::max(v1, v2);
 }
 
@@ -1950,7 +1993,7 @@ bool ExpressionIfThenElse::Less(const ExpressionCell& e) const {
   return e_else_.Less(ite_e.e_else_);
 }
 
-double ExpressionIfThenElse::Evaluate(const Environment& env) const {
+mpq_class ExpressionIfThenElse::Evaluate(const Environment& env) const {
   if (f_cond_.Evaluate(env)) {
     return e_then_.Evaluate(env);
   }
@@ -2024,7 +2067,7 @@ bool ExpressionUninterpretedFunction::Less(const ExpressionCell& e) const {
   return variables_ < uf_e.variables_;
 }
 
-double ExpressionUninterpretedFunction::Evaluate(const Environment&) const {
+mpq_class ExpressionUninterpretedFunction::Evaluate(const Environment&) const {
   throw runtime_error("Uninterpreted-function expression cannot be evaluated.");
 }
 

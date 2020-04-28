@@ -20,7 +20,7 @@ class Variable {
   /** Supported types of symbolic variables. */
   // TODO(soonho-tri): refines the following descriptions.
   enum class Type {
-    CONTINUOUS,  ///< A CONTINUOUS variable takes a `double` value.
+    CONTINUOUS,  ///< A CONTINUOUS variable takes a `mpq_class` value.
     INTEGER,     ///< An INTEGER variable takes an `int` value.
     BINARY,      ///< A BINARY variable takes an integer value from {0, 1}.
     BOOLEAN,     ///< A BOOLEAN variable takes a `bool` value.

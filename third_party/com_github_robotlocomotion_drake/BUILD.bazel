@@ -38,6 +38,9 @@ cc_library(
     ],
     includes = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        "//dreal:gmp",
+    ],
 )
 
 cc_test(

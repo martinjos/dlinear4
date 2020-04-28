@@ -34,6 +34,9 @@ dreal_cc_library(
 
 dreal_cc_library(
     name = "qsopt-ex",
+    srcs = [
+        "qsopt_ex.cc",
+    ],
     hdrs = [
         "qsopt_ex.h",
     ],
@@ -43,6 +46,22 @@ dreal_cc_library(
     ],
     deps = [
         "//:qsopt-ex",
+    ],
+)
+
+dreal_cc_library(
+    name = "gmp",
+    srcs = [
+        "gmp.cc",
+    ],
+    hdrs = [
+        "gmp.h",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "@linux_libs//:gmpxx",
     ],
 )
 

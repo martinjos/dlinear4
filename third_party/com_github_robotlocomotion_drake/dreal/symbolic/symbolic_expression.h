@@ -17,13 +17,15 @@
 #include "dreal/symbolic/symbolic_variable.h"
 #include "dreal/symbolic/symbolic_variables.h"
 
+#include "dreal/gmp.h"
+
 namespace dreal {
 namespace drake {
 namespace symbolic {
 
 /** Kinds of symbolic expressions. */
 enum class ExpressionKind {
-  Constant,               ///< floating-point constant (double)
+  Constant,               ///< rational constant (mpq_class)
   Var,                    ///< variable
   Add,                    ///< addition (+)
   Mul,                    ///< multiplication (*)
@@ -101,7 +103,7 @@ using FormulaSubstitution =
 Its syntax tree is as follows:
 
 @verbatim
-    E := Var | Constant(double)
+    E := Var | Constant(mpq_class)
        | E + ... + E | E * ... * E | E / E | log(E)
        | abs(E) | exp(E) | sqrt(E) | pow(E, E) | sin(E) | cos(E) | tan(E)
        | asin(E) | acos(E) | atan(E) | atan2(E, E) | sinh(E) | cosh(E) | tanh(E)
@@ -170,9 +172,11 @@ class Expression {
   /** Default constructor. It constructs Zero(). */
   Expression();
 
-  /** Constructs a constant (floating-point). */
+  /** Constructs a constant (rational). */
   // NOLINTNEXTLINE(runtime/explicit): This conversion is desirable.
-  Expression(double d);
+  Expression(mpq_class d);
+  // NOLINTNEXTLINE(runtime/explicit): This conversion is desirable.
+  Expression(int i);
   /** Constructs an expression from @p var.
    * @pre @p var is neither a dummy nor a BOOLEAN variable.
    */
@@ -229,7 +233,7 @@ class Expression {
   /** Evaluates under a given environment (by default, an empty environment).
    *  @throws std::runtime_error if NaN is detected during evaluation.
    */
-  double Evaluate(const Environment& env = Environment{}) const;
+  mpq_class Evaluate(const Environment& env = Environment{}) const;
 
   /** Partially evaluates this expression using an environment @p
    * env. Internally, this method promotes @p env into a substitution
@@ -480,7 +484,7 @@ class Expression {
   friend class ExpressionCell;
 
  private:
-  static ExpressionCell* make_cell(double d);
+  static ExpressionCell* make_cell(mpq_class d);
 
   explicit Expression(ExpressionCell* ptr);
 
@@ -560,10 +564,10 @@ void swap(Expression& a, Expression& b);
 
 std::ostream& operator<<(std::ostream& os, const Expression& e);
 
-/** Checks if @p e is a floating-point constant expression. */
+/** Checks if @p e is a rational constant expression. */
 bool is_constant(const Expression& e);
-/** Checks if @p e is a floating-point constant expression representing @p v. */
-bool is_constant(const Expression& e, double v);
+/** Checks if @p e is a rational constant expression representing @p v. */
+bool is_constant(const Expression& e, mpq_class v);
 /** Checks if @p e is 0.0. */
 bool is_zero(const Expression& e);
 /** Checks if @p e is 1.0. */
@@ -621,10 +625,10 @@ bool is_if_then_else(const Expression& e);
 /** Checks if @p e is an uninterpreted-function expression. */
 bool is_uninterpreted_function(const Expression& e);
 
-/** Returns the constant value of the floating-point constant expression @p e.
- *  @pre @p e is either a floating-point constant or real constant expression.
+/** Returns the constant value of the rational constant expression @p e.
+ *  @pre @p e is either a rational constant or real constant expression.
  */
-double get_constant_value(const Expression& e);
+mpq_class get_constant_value(const Expression& e);
 /** Returns the embedded variable in the variable expression @p e.
  *  @pre @p e is a variable expression.
  */
@@ -645,19 +649,19 @@ const Expression& get_second_argument(const Expression& e);
  *  given 7 + 2 * x + 3 * y, it returns 7.
  *  @pre @p e is an addition expression.
  */
-double get_constant_in_addition(const Expression& e);
+mpq_class get_constant_in_addition(const Expression& e);
 /** Returns the map from an expression to its coefficient in the addition
  *  expression @p e. For instance, given 7 + 2 * x + 3 * y, the return value
  *  maps 'x' to 2 and 'y' to 3.
  *  @pre @p e is an addition expression.
  */
-const std::map<Expression, double>& get_expr_to_coeff_map_in_addition(
+const std::map<Expression, mpq_class>& get_expr_to_coeff_map_in_addition(
     const Expression& e);
 /** Returns the constant part of the multiplication expression @p e. For
  *  instance, given 7 * x^2 * y^3, it returns 7.
  *  @pre @p e is a multiplication expression.
  */
-double get_constant_in_multiplication(const Expression& e);
+mpq_class get_constant_in_multiplication(const Expression& e);
 /** Returns the map from a base expression to its exponent expression in the
  * multiplication expression @p e. For instance, given 7 * x^2 * y^3 * z^x, the
  * return value maps 'x' to 2, 'y' to 3, and 'z' to 'x'.
@@ -731,6 +735,6 @@ struct hash<dreal::drake::symbolic::Expression> {
 /* Provides std::numeric_limits<dreal::drake::symbolic::Expression>. */
 template <>
 struct numeric_limits<dreal::drake::symbolic::Expression>
-    : public numeric_limits<double> {};
+    : public numeric_limits<mpq_class> {};
 
 }  // namespace std

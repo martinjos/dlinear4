@@ -36,14 +36,14 @@ bool operator<(ExpressionKind k1, ExpressionKind k2) {
 namespace {
 
 // Returns true if @p v is represented by `int`.
-bool is_integer(const double v) {
+bool is_integer(const mpq_class v) {
   // v should be in [int_min, int_max].
   if (!((std::numeric_limits<int>::lowest() <= v) &&
         (v <= std::numeric_limits<int>::max()))) {
     return false;
   }
-  double intpart;  // dummy variable
-  return modf(v, &intpart) == 0.0;
+  mpz_class f{v};
+  return v == f;
 }
 
 // Negates an addition expression.
@@ -113,10 +113,7 @@ Expression::Expression() : Expression{Zero().ptr_} {}
 Expression::Expression(const Variable& var)
     : Expression{new ExpressionVar(var)} {}
 
-ExpressionCell* Expression::make_cell(const double d) {
-  if (std::isnan(d)) {
-    return Expression::NaN().ptr_;
-  }
+ExpressionCell* Expression::make_cell(const mpq_class d) {
   if (d == 0.0) {
     return Expression::Zero().ptr_;
   } else if (d == 1.0) {
@@ -130,7 +127,9 @@ ExpressionCell* Expression::make_cell(const double d) {
   }
 }
 
-Expression::Expression(const double d) : Expression{make_cell(d)} {}
+Expression::Expression(const mpq_class d) : Expression{make_cell(d)} {}
+
+Expression::Expression(const int i) : Expression{make_cell(mpq_class(i, 1))} {}
 
 Expression::Expression(ExpressionCell* ptr) : ptr_{ptr} {
   assert(ptr_ != nullptr);
@@ -221,7 +220,7 @@ bool Expression::include_ite() const {
   return ptr_->include_ite();
 }
 
-double Expression::Evaluate(const Environment& env) const {
+mpq_class Expression::Evaluate(const Environment& env) const {
   assert(ptr_ != nullptr);
   return ptr_->Evaluate(env);
 }
@@ -231,7 +230,7 @@ Expression Expression::EvaluatePartial(const Environment& env) const {
     return *this;
   }
   ExpressionSubstitution subst;
-  for (const pair<const Variable, double>& p : env) {
+  for (const pair<const Variable, mpq_class>& p : env) {
     subst.emplace(p.first, p.second);
   }
   return Substitute(subst);
@@ -325,7 +324,7 @@ Expression& operator+=(Expression& lhs, const Expression& rhs) {
   }
   // Simplification: Expression(c1) + Expression(c2) => Expression(c1 + c2)
   if (is_constant(lhs) && is_constant(rhs)) {
-    return lhs = get_constant_value(lhs) + get_constant_value(rhs);
+    return lhs = Expression(get_constant_value(lhs) + get_constant_value(rhs));
   }
 
   // Simplification: flattening. To build a new expression, we use
@@ -614,8 +613,8 @@ Expression& operator/=(Expression& lhs, const Expression& rhs) {
   }
   // Simplification: Expression(c1) / Expression(c2) => Expression(c1 / c2)
   if (is_constant(lhs) && is_constant(rhs)) {
-    const double v1{get_constant_value(lhs)};
-    const double v2{get_constant_value(rhs)};
+    const mpq_class v1{get_constant_value(lhs)};
+    const mpq_class v2{get_constant_value(rhs)};
     if (v2 == 0.0) {
       ostringstream oss{};
       oss << "Division by zero: " << v1 << "/" << v2;
@@ -665,9 +664,12 @@ Expression Prod(const std::vector<Expression>& expressions) {
 Expression log(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    const double v{get_constant_value(e)};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
+    const mpq_class v{get_constant_value(e)};
     ExpressionLog::check_domain(v);
     return Expression{std::log(v)};
+#endif
   }
   return Expression{new ExpressionLog(e)};
 }
@@ -675,7 +677,7 @@ Expression log(const Expression& e) {
 Expression abs(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::fabs(get_constant_value(e))};
+    return Expression{abs(get_constant_value(e))};
   }
   return Expression{new ExpressionAbs(e)};
 }
@@ -683,7 +685,8 @@ Expression abs(const Expression& e) {
 Expression exp(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::exp(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::exp(get_constant_value(e))};
   }
   return Expression{new ExpressionExp(e)};
 }
@@ -691,9 +694,12 @@ Expression exp(const Expression& e) {
 Expression sqrt(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    const double v{get_constant_value(e)};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
+    const mpq_class v{get_constant_value(e)};
     ExpressionSqrt::check_domain(v);
     return Expression{std::sqrt(v)};
+#endif
   }
   // Simplification: sqrt(pow(x, 2)) => abs(x)
   if (is_pow(e)) {
@@ -707,12 +713,15 @@ Expression sqrt(const Expression& e) {
 Expression pow(const Expression& e1, const Expression& e2) {
   // Simplification
   if (is_constant(e2)) {
-    const double v2{get_constant_value(e2)};
+    const mpq_class v2{get_constant_value(e2)};
     if (is_constant(e1)) {
+      throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
       // Constant folding
-      const double v1{get_constant_value(e1)};
+      const mpq_class v1{get_constant_value(e1)};
       ExpressionPow::check_domain(v1, v2);
       return Expression{std::pow(v1, v2)};
+#endif
     }
     // pow(E, 0) => 1
     // TODO(soonho-tri): This simplification is not sound since it cancels `E`
@@ -730,11 +739,11 @@ Expression pow(const Expression& e1, const Expression& e2) {
     //
     // only if both of exponent and e2 are integers.
     const Expression& exponent{get_second_argument(e1)};
-    const double v1{get_constant_value(exponent)};
-    const double v2{get_constant_value(e2)};
+    const mpq_class v1{get_constant_value(exponent)};
+    const mpq_class v2{get_constant_value(e2)};
     if (is_integer(v1) && is_integer(v2)) {
       const Expression& base{get_first_argument(e1)};
-      return Expression{new ExpressionPow(base, v1 * v2)};
+      return Expression{new ExpressionPow(base, Expression(v1 * v2))};
     }
   }
   return Expression{new ExpressionPow(e1, e2)};
@@ -743,7 +752,8 @@ Expression pow(const Expression& e1, const Expression& e2) {
 Expression sin(const Expression& e) {
   // simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::sin(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::sin(get_constant_value(e))};
   }
   return Expression{new ExpressionSin(e)};
 }
@@ -751,7 +761,8 @@ Expression sin(const Expression& e) {
 Expression cos(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::cos(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::cos(get_constant_value(e))};
   }
 
   return Expression{new ExpressionCos(e)};
@@ -760,7 +771,8 @@ Expression cos(const Expression& e) {
 Expression tan(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::tan(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::tan(get_constant_value(e))};
   }
   return Expression{new ExpressionTan(e)};
 }
@@ -768,9 +780,12 @@ Expression tan(const Expression& e) {
 Expression asin(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    const double v{get_constant_value(e)};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
+    const mpq_class v{get_constant_value(e)};
     ExpressionAsin::check_domain(v);
     return Expression{std::asin(v)};
+#endif
   }
   return Expression{new ExpressionAsin(e)};
 }
@@ -778,9 +793,12 @@ Expression asin(const Expression& e) {
 Expression acos(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    const double v{get_constant_value(e)};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
+    const mpq_class v{get_constant_value(e)};
     ExpressionAcos::check_domain(v);
     return Expression{std::acos(v)};
+#endif
   }
   return Expression{new ExpressionAcos(e)};
 }
@@ -788,7 +806,8 @@ Expression acos(const Expression& e) {
 Expression atan(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::atan(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::atan(get_constant_value(e))};
   }
   return Expression{new ExpressionAtan(e)};
 }
@@ -796,8 +815,11 @@ Expression atan(const Expression& e) {
 Expression atan2(const Expression& e1, const Expression& e2) {
   // Simplification: constant folding.
   if (is_constant(e1) && is_constant(e2)) {
+    throw runtime_error("Not implemented");  // Because of mpq_class
+#if 0
     return Expression{
         std::atan2(get_constant_value(e1), get_constant_value(e2))};
+#endif
   }
   return Expression{new ExpressionAtan2(e1, e2)};
 }
@@ -805,7 +827,8 @@ Expression atan2(const Expression& e1, const Expression& e2) {
 Expression sinh(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::sinh(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::sinh(get_constant_value(e))};
   }
   return Expression{new ExpressionSinh(e)};
 }
@@ -813,7 +836,8 @@ Expression sinh(const Expression& e) {
 Expression cosh(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::cosh(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::cosh(get_constant_value(e))};
   }
   return Expression{new ExpressionCosh(e)};
 }
@@ -821,7 +845,8 @@ Expression cosh(const Expression& e) {
 Expression tanh(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
-    return Expression{std::tanh(get_constant_value(e))};
+    throw runtime_error("Not implemented");  // Because of mpq_class
+    //return Expression{std::tanh(get_constant_value(e))};
   }
   return Expression{new ExpressionTanh(e)};
 }
@@ -868,7 +893,7 @@ Expression uninterpreted_function(const string& name, const Variables& vars) {
 }
 
 bool is_constant(const Expression& e) { return is_constant(*e.ptr_); }
-bool is_constant(const Expression& e, const double v) {
+bool is_constant(const Expression& e, const mpq_class v) {
   return is_constant(e) && (to_constant(e)->get_value() == v);
 }
 bool is_zero(const Expression& e) { return is_constant(e, 0.0); }
@@ -904,7 +929,7 @@ bool is_uninterpreted_function(const Expression& e) {
   return is_uninterpreted_function(*e.ptr_);
 }
 
-double get_constant_value(const Expression& e) {
+mpq_class get_constant_value(const Expression& e) {
   return to_constant(e)->get_value();
 }
 const Variable& get_variable(const Expression& e) {
@@ -919,14 +944,14 @@ const Expression& get_first_argument(const Expression& e) {
 const Expression& get_second_argument(const Expression& e) {
   return to_binary(e)->get_second_argument();
 }
-double get_constant_in_addition(const Expression& e) {
+mpq_class get_constant_in_addition(const Expression& e) {
   return to_addition(e)->get_constant();
 }
-const map<Expression, double>& get_expr_to_coeff_map_in_addition(
+const map<Expression, mpq_class>& get_expr_to_coeff_map_in_addition(
     const Expression& e) {
   return to_addition(e)->get_expr_to_coeff_map();
 }
-double get_constant_in_multiplication(const Expression& e) {
+mpq_class get_constant_in_multiplication(const Expression& e) {
   return to_multiplication(e)->get_constant();
 }
 const map<Expression, Expression>& get_base_to_exponent_map_in_multiplication(
