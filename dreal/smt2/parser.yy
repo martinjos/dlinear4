@@ -373,16 +373,9 @@ term:           TK_TRUE { $$ = new Term(Formula::True()); }
             $$ = $5;
         }
         |       DOUBLE {
-            const Box::Interval i{StringToInterval(*$1)};
             const double parsed{std::stod(*$1)};
             delete $1;
-            if (i.diam() == 0) {
-                // point => floating-point constant expression.
-                $$ = new Term{i.mid()};
-            } else {
-                // interval => real constant expression.
-                $$ = new Term{real_constant(i.lb(), i.ub(), i.lb() == parsed)};
-            }
+            $$ = new Term{parsed};
         }
         |       HEXFLOAT { $$ = new Term{$1}; }
         |       INT { $$ = new Term{convert_int64_to_double($1)}; }

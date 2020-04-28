@@ -14,8 +14,8 @@ bool is_simple_relational(const Formula& f) {
   }
   const Expression& lhs{get_lhs_expression(f)};
   const Expression& rhs{get_rhs_expression(f)};
-  return ((is_constant(lhs) || is_real_constant(lhs)) && is_variable(rhs)) ||
-         (is_variable(lhs) && (is_constant(rhs) || is_real_constant(rhs)));
+  return (is_constant(lhs) && is_variable(rhs)) ||
+         (is_variable(lhs) && is_constant(rhs));
 }
 
 bool is_neq(const Formula& f, const bool polarity = true) {

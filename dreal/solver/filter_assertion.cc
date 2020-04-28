@@ -29,24 +29,6 @@ FilterAssertionResult UpdateBoundsViaEquality(const Variable& var,
   return FilterAssertionResult::FilteredWithChange;
 }
 
-// Constrains the @p box with `box[var] == [lb, ub]`.
-FilterAssertionResult UpdateBoundsViaEquality(const Variable& var,
-                                              const double new_lb,
-                                              const double new_ub,
-                                              Box* const box) {
-  Box::Interval& intv{(*box)[var]};
-  const double old_lb{intv.lb()};
-  const double old_ub{intv.ub()};
-  if (old_lb == new_lb && old_ub == new_ub) {
-    return FilterAssertionResult::FilteredWithoutChange;
-  }
-  intv &= Box::Interval{new_lb, new_ub};
-  if (intv.is_empty()) {
-    box->set_empty();
-  }
-  return FilterAssertionResult::FilteredWithChange;
-}
-
 // Constrains the @p box with ` box[var].lb() >= v`.
 FilterAssertionResult UpdateLowerBound(const Variable& var, const double new_lb,
                                        Box* const box) {
@@ -165,13 +147,6 @@ class AssertionFilter {
         const double v{get_constant_value(rhs)};
         return UpdateBoundsViaEquality(var, v, box);
       }
-      if (is_real_constant(rhs)) {
-        // var = [lb, ub]
-        const Variable& var{get_variable(lhs)};
-        const double lb{get_lb_of_real_constant(rhs)};
-        const double ub{get_ub_of_real_constant(rhs)};
-        return UpdateBoundsViaEquality(var, lb, ub, box);
-      }
     }
     if (is_variable(rhs)) {
       if (is_constant(lhs)) {
@@ -179,13 +154,6 @@ class AssertionFilter {
         const double v{get_constant_value(lhs)};
         const Variable& var{get_variable(rhs)};
         return UpdateBoundsViaEquality(var, v, box);
-      }
-      if (is_real_constant(lhs)) {
-        // [lb, ub] = var
-        const Variable& var{get_variable(rhs)};
-        const double lb{get_lb_of_real_constant(lhs)};
-        const double ub{get_ub_of_real_constant(lhs)};
-        return UpdateBoundsViaEquality(var, lb, ub, box);
       }
     }
     return FilterAssertionResult::NotFiltered;
@@ -212,16 +180,6 @@ class AssertionFilter {
           return UpdateUpperBound(var, v, box);
         }
       }
-      if (is_real_constant(rhs)) {
-        const Variable& var{get_variable(lhs)};
-        if (polarity) {
-          // var > [lb, ub] => var > lb
-          return UpdateStrictLowerBound(var, get_lb_of_real_constant(rhs), box);
-        } else {
-          // !(var > [lb, ub]) => (var <= [lb, ub]) => (var <= ub)
-          return UpdateUpperBound(var, get_ub_of_real_constant(rhs), box);
-        }
-      }
     }
     if (is_variable(rhs)) {
       if (is_constant(lhs)) {
@@ -233,16 +191,6 @@ class AssertionFilter {
         } else {
           // !(v > var) => (v <= var)
           return UpdateLowerBound(var, v, box);
-        }
-      }
-      if (is_real_constant(lhs)) {
-        const Variable& var{get_variable(rhs)};
-        if (polarity) {
-          // [lb, ub] > var => ub > var
-          return UpdateStrictUpperBound(var, get_ub_of_real_constant(lhs), box);
-        } else {
-          // !([lb, ub] > var) => ([lb, ub] <= var) => (lb <= var)
-          return UpdateLowerBound(var, get_lb_of_real_constant(lhs), box);
         }
       }
     }
@@ -265,16 +213,6 @@ class AssertionFilter {
           return UpdateStrictUpperBound(var, v, box);
         }
       }
-      if (is_real_constant(rhs)) {
-        const Variable& var{get_variable(lhs)};
-        if (polarity) {
-          // var >= [lb, ub] => var >= lb
-          return UpdateLowerBound(var, get_lb_of_real_constant(rhs), box);
-        } else {
-          // !(var >= v) => (var < [lb, ub]) => (var < ub)
-          return UpdateStrictUpperBound(var, get_ub_of_real_constant(rhs), box);
-        }
-      }
     }
     if (is_variable(rhs)) {
       if (is_constant(lhs)) {
@@ -286,16 +224,6 @@ class AssertionFilter {
         } else {
           // !(v >= var) => (v < var)
           return UpdateStrictLowerBound(var, v, box);
-        }
-      }
-      if (is_real_constant(lhs)) {
-        const Variable& var{get_variable(rhs)};
-        if (polarity) {
-          // [lb, ub] >= var => ub >= var
-          return UpdateUpperBound(var, get_ub_of_real_constant(lhs), box);
-        } else {
-          // !([lb, ub] >= var) => ([lb, ub] < var) => (lb < var)
-          return UpdateStrictLowerBound(var, get_lb_of_real_constant(lhs), box);
         }
       }
     }

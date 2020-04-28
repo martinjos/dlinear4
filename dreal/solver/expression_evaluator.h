@@ -22,7 +22,6 @@ class ExpressionEvaluator {
   Box::Interval Visit(const Expression& e, const Box& box) const;
   static Box::Interval VisitVariable(const Expression& e, const Box& box);
   static Box::Interval VisitConstant(const Expression& e, const Box& box);
-  static Box::Interval VisitRealConstant(const Expression& e, const Box& box);
   Box::Interval VisitAddition(const Expression& e, const Box& box) const;
   Box::Interval VisitMultiplication(const Expression& e, const Box& box) const;
   Box::Interval VisitDivision(const Expression& e, const Box& box) const;

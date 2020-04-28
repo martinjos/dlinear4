@@ -24,7 +24,6 @@ namespace symbolic {
 /** Kinds of symbolic expressions. */
 enum class ExpressionKind {
   Constant,               ///< floating-point constant (double)
-  RealConstant,           ///< real constant (represented by an interval)
   Var,                    ///< variable
   Add,                    ///< addition (+)
   Mul,                    ///< multiplication (*)
@@ -57,7 +56,6 @@ bool operator<(ExpressionKind k1, ExpressionKind k2);
 
 class ExpressionCell;                   // In symbolic_expression_cell.h
 class ExpressionConstant;               // In symbolic_expression_cell.h
-class ExpressionRealConstant;           // In symbolic_expression_cell.h
 class ExpressionVar;                    // In symbolic_expression_cell.h
 class UnaryExpressionCell;              // In symbolic_expression_cell.h
 class BinaryExpressionCell;             // In symbolic_expression_cell.h
@@ -103,7 +101,7 @@ using FormulaSubstitution =
 Its syntax tree is as follows:
 
 @verbatim
-    E := Var | Constant(double) | RealConstant(double, double)
+    E := Var | Constant(double)
        | E + ... + E | E * ... * E | E / E | log(E)
        | abs(E) | exp(E) | sqrt(E) | pow(E, E) | sin(E) | cos(E) | tan(E)
        | asin(E) | acos(E) | atan(E) | atan2(E, E) | sinh(E) | cosh(E) | tanh(E)
@@ -354,8 +352,6 @@ class Expression {
   /// ub]. @p use_lb_as_representative is used to select its
   /// representative value. If it is true, @p lb is used. Otherwise,
   /// @p ub is used.
-  friend Expression real_constant(double lb, double ub,
-                                  bool use_lb_as_representative);
   friend Expression log(const Expression& e);
   friend Expression abs(const Expression& e);
   friend Expression exp(const Expression& e);
@@ -421,7 +417,6 @@ class Expression {
   friend void swap(Expression& a, Expression& b) { std::swap(a.ptr_, b.ptr_); }
 
   friend bool is_constant(const Expression& e);
-  friend bool is_real_constant(const Expression& e);
   friend bool is_variable(const Expression& e);
   friend bool is_addition(const Expression& e);
   friend bool is_multiplication(const Expression& e);
@@ -451,7 +446,6 @@ class Expression {
   // header. These functions are declared in
   // symbolic/symbolic_expression_cell.h header.
   friend const ExpressionConstant* to_constant(const Expression& e);
-  friend const ExpressionRealConstant* to_real_constant(const Expression& e);
   friend const ExpressionVar* to_variable(const Expression& e);
   friend const UnaryExpressionCell* to_unary(const Expression& e);
   friend const BinaryExpressionCell* to_binary(const Expression& e);
@@ -531,7 +525,6 @@ Expression Sum(const std::vector<Expression>& expressions);
 /// @note When `expressions` is an empty vector, it returns Expression::One().
 Expression Prod(const std::vector<Expression>& expressions);
 
-Expression real_constant(double lb, double ub, bool use_lb_as_representative);
 Expression log(const Expression& e);
 Expression abs(const Expression& e);
 Expression exp(const Expression& e);
@@ -571,8 +564,6 @@ std::ostream& operator<<(std::ostream& os, const Expression& e);
 bool is_constant(const Expression& e);
 /** Checks if @p e is a floating-point constant expression representing @p v. */
 bool is_constant(const Expression& e, double v);
-/** Checks if @p e is a real constant expression. */
-bool is_real_constant(const Expression& e);
 /** Checks if @p e is 0.0. */
 bool is_zero(const Expression& e);
 /** Checks if @p e is 1.0. */
@@ -634,14 +625,6 @@ bool is_uninterpreted_function(const Expression& e);
  *  @pre @p e is either a floating-point constant or real constant expression.
  */
 double get_constant_value(const Expression& e);
-/** Returns the lower-bound of the floating-point constant expression @p e.
- *  @pre @p e is a real constant expression.
- */
-double get_lb_of_real_constant(const Expression& e);
-/** Returns the upper-bound of the floating-point constant expression @p e.
- *  @pre @p e is a real constant expression.
- */
-double get_ub_of_real_constant(const Expression& e);
 /** Returns the embedded variable in the variable expression @p e.
  *  @pre @p e is a variable expression.
  */

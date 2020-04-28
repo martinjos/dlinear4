@@ -61,7 +61,6 @@ class IbexConverter {
   const ibex::ExprNode* Visit(const Expression& e);
   const ibex::ExprNode* VisitVariable(const Expression& e);
   const ibex::ExprNode* VisitConstant(const Expression& e);
-  const ibex::ExprNode* VisitRealConstant(const Expression& e);
   const ibex::ExprNode* VisitAddition(const Expression& e);
   const ibex::ExprNode* VisitMultiplication(const Expression& e);
   const ibex::ExprNode* VisitDivision(const Expression& e);

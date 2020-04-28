@@ -662,12 +662,6 @@ Expression Prod(const std::vector<Expression>& expressions) {
   return f.GetExpression();
 }
 
-Expression real_constant(const double lb, const double ub,
-                         const bool use_lb_as_representative) {
-  return Expression{
-      new ExpressionRealConstant(lb, ub, use_lb_as_representative)};
-}
-
 Expression log(const Expression& e) {
   // Simplification: constant folding.
   if (is_constant(e)) {
@@ -877,7 +871,6 @@ bool is_constant(const Expression& e) { return is_constant(*e.ptr_); }
 bool is_constant(const Expression& e, const double v) {
   return is_constant(e) && (to_constant(e)->get_value() == v);
 }
-bool is_real_constant(const Expression& e) { return is_real_constant(*e.ptr_); }
 bool is_zero(const Expression& e) { return is_constant(e, 0.0); }
 bool is_one(const Expression& e) { return is_constant(e, 1.0); }
 bool is_neg_one(const Expression& e) { return is_constant(e, -1.0); }
@@ -912,14 +905,7 @@ bool is_uninterpreted_function(const Expression& e) {
 }
 
 double get_constant_value(const Expression& e) {
-  return is_constant(e) ? to_constant(e)->get_value()
-                        : to_real_constant(e)->get_value();
-}
-double get_lb_of_real_constant(const Expression& e) {
-  return to_real_constant(e)->get_lb();
-}
-double get_ub_of_real_constant(const Expression& e) {
-  return to_real_constant(e)->get_ub();
+  return to_constant(e)->get_value();
 }
 const Variable& get_variable(const Expression& e) {
   return to_variable(e)->get_variable();

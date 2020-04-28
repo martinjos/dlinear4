@@ -25,7 +25,6 @@ class IfThenElseEliminator {
   Expression Visit(const Expression& e, const Formula& guard);
   Expression VisitVariable(const Expression& e, const Formula& guard);
   Expression VisitConstant(const Expression& e, const Formula& guard);
-  Expression VisitRealConstant(const Expression& e, const Formula& guard);
   Expression VisitAddition(const Expression& e, const Formula& guard);
   Expression VisitMultiplication(const Expression& e, const Formula& guard);
   Expression VisitDivision(const Expression& e, const Formula& guard);

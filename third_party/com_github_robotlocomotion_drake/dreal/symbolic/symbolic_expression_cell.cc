@@ -394,56 +394,6 @@ ostream& ExpressionConstant::Display(ostream& os) const {
   return os << oss.str();
 }
 
-ExpressionRealConstant::ExpressionRealConstant(const double lb, const double ub,
-                                               bool use_lb_as_representative)
-    : ExpressionCell{ExpressionKind::RealConstant, hash<double>{}(lb), true,
-                     false, Variables{}},
-      lb_{lb},
-      ub_{ub},
-      use_lb_as_representative_{use_lb_as_representative} {
-  assert(!std::isnan(lb_));
-  assert(!std::isnan(ub_));
-  assert(lb < ub_);
-  assert(std::nextafter(lb, std::numeric_limits<double>::infinity()) == ub);
-}
-
-bool ExpressionRealConstant::EqualTo(const ExpressionCell& e) const {
-  // Expression::EqualTo guarantees the following assertion.
-  assert(get_kind() == e.get_kind());
-  const auto& r = static_cast<const ExpressionRealConstant&>(e);
-  return lb_ == r.lb_ && ub_ == r.ub_ &&
-         use_lb_as_representative_ == r.use_lb_as_representative_;
-}
-
-bool ExpressionRealConstant::Less(const ExpressionCell& e) const {
-  // Expression::Less guarantees the following assertion.
-  assert(get_kind() == e.get_kind());
-  return get_value() <
-         static_cast<const ExpressionRealConstant&>(e).get_value();
-}
-
-double ExpressionRealConstant::Evaluate(const Environment&) const {
-  return get_value();
-}
-
-Expression ExpressionRealConstant::Expand() { return GetExpression(); }
-
-Expression ExpressionRealConstant::Substitute(const ExpressionSubstitution&,
-                                              const FormulaSubstitution&) {
-  return GetExpression();
-}
-
-Expression ExpressionRealConstant::Differentiate(const Variable&) const {
-  return Expression::Zero();
-}
-
-ostream& ExpressionRealConstant::Display(ostream& os) const {
-  ostringstream oss;
-  oss << setprecision(numeric_limits<double>::max_digits10) << "[" << lb_
-      << ", " << ub_ << "]";
-  return os << oss.str();
-}
-
 ExpressionNaN::ExpressionNaN()
     : ExpressionCell{ExpressionKind::NaN, 41, false, false, Variables{}} {
   // ExpressionCell constructor calls hash_combine(ExpressionKind::NaN, 41) to
@@ -1110,9 +1060,6 @@ class DivExpandVisitor {
     return e / n;
   }
   Expression VisitConstant(const Expression& e, const double n) const {
-    return e / n;
-  }
-  Expression VisitRealConstant(const Expression& e, const double n) const {
     return e / n;
   }
   Expression VisitLog(const Expression& e, const double n) const {
@@ -2132,9 +2079,6 @@ ostream& ExpressionUninterpretedFunction::Display(ostream& os) const {
 bool is_constant(const ExpressionCell& c) {
   return c.get_kind() == ExpressionKind::Constant;
 }
-bool is_real_constant(const ExpressionCell& c) {
-  return c.get_kind() == ExpressionKind::RealConstant;
-}
 bool is_variable(const ExpressionCell& c) {
   return c.get_kind() == ExpressionKind::Var;
 }
@@ -2211,15 +2155,6 @@ const ExpressionConstant* to_constant(const ExpressionCell* const expr_ptr) {
 }
 const ExpressionConstant* to_constant(const Expression& e) {
   return to_constant(e.ptr_);
-}
-
-const ExpressionRealConstant* to_real_constant(
-    const ExpressionCell* const expr_ptr) {
-  assert(is_real_constant(*expr_ptr));
-  return static_cast<const ExpressionRealConstant*>(expr_ptr);
-}
-const ExpressionRealConstant* to_real_constant(const Expression& e) {
-  return to_real_constant(e.ptr_);
 }
 
 const ExpressionVar* to_variable(const ExpressionCell* const expr_ptr) {

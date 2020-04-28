@@ -32,7 +32,6 @@ class PrefixPrinter {
  private:
   std::ostream& VisitVariable(const Expression& e);
   std::ostream& VisitConstant(const Expression& e);
-  std::ostream& VisitRealConstant(const Expression& e);
   std::ostream& VisitAddition(const Expression& e);
   std::ostream& VisitMultiplication(const Expression& e);
   std::ostream& VisitDivision(const Expression& e);

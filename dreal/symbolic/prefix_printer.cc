@@ -36,12 +36,6 @@ ostream& PrefixPrinter::VisitConstant(const Expression& e) {
   return os_ << get_constant_value(e);
 }
 
-ostream& PrefixPrinter::VisitRealConstant(const Expression& e) {
-  const double mid{get_lb_of_real_constant(e) / 2.0 +
-                   get_ub_of_real_constant(e) / 2.0};
-  return os_ << mid;
-}
-
 ostream& PrefixPrinter::VisitUnaryFunction(const std::string& name,
                                            const Expression& e) {
   os_ << "(" << name << " ";

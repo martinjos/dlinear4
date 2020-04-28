@@ -216,10 +216,8 @@ void Context::Impl::DeclareVariable(const Variable& v,
 
 void Context::Impl::SetDomain(const Variable& v, const Expression& lb,
                               const Expression& ub) {
-  const double lb_fp =
-      is_real_constant(lb) ? get_lb_of_real_constant(lb) : lb.Evaluate();
-  const double ub_fp =
-      is_real_constant(ub) ? get_ub_of_real_constant(ub) : ub.Evaluate();
+  const double lb_fp = lb.Evaluate();
+  const double ub_fp = ub.Evaluate();
   SetInterval(v, lb_fp, ub_fp);
 }
 

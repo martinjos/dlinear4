@@ -84,11 +84,6 @@ Expression IfThenElseEliminator::VisitConstant(const Expression& e,
   return e;
 }
 
-Expression IfThenElseEliminator::VisitRealConstant(const Expression& e,
-                                                   const Formula&) {
-  return e;
-}
-
 Expression IfThenElseEliminator::VisitAddition(const Expression& e,
                                                const Formula& guard) {
   // e = c₀ + ∑ᵢ cᵢ * eᵢ
