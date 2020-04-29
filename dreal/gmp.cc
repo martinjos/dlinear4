@@ -1,7 +1,7 @@
 /// @file gmp.cc
 ///
 
-#include "gmp.h"
+#include "dreal/gmp.h"
 
 namespace std {
 

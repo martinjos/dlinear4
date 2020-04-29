@@ -108,7 +108,7 @@ void Context::Impl::Assert(const Formula& f) {
     return;
   }
 #endif
-}
+}  // namespace dreal
 
 optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
                                           Box box,

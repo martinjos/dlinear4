@@ -28,6 +28,8 @@ using std::pair;
 using std::runtime_error;
 using std::string;
 using std::vector;
+using std::isinf;
+using std::isnan;
 
 bool operator<(ExpressionKind k1, ExpressionKind k2) {
   return static_cast<int>(k1) < static_cast<int>(k2);
@@ -127,9 +129,23 @@ ExpressionCell* Expression::make_cell(const mpq_class& d) {
   }
 }
 
+ExpressionCell* Expression::make_cell(const double d) {
+  if (isinf(d)) {
+    if (d > 0) {
+      return Expression::Infty().ptr_;
+    } else {
+      return Expression::NInfty().ptr_;
+    }
+  } else if (isnan(d)) {
+    return Expression::NaN().ptr_;
+  } else {
+    return make_cell(mpq_class(d));
+  }
+}
+
 Expression::Expression(const mpq_class& d) : Expression{make_cell(d)} {}
 
-Expression::Expression(const double d) : Expression{make_cell(mpq_class(d))} {}
+Expression::Expression(const double d) : Expression{make_cell(d)} {}
 
 Expression::Expression(ExpressionCell* ptr) : ptr_{ptr} {
   assert(ptr_ != nullptr);

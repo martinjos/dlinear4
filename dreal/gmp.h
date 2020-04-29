@@ -18,7 +18,7 @@ namespace std {
 
 template <>
 class hash<mpq_class> {
-public:
+ public:
     size_t operator()(const mpq_class& val) const;
 };
 

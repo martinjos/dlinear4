@@ -1,7 +1,7 @@
 /// @file qsopt_ex.cc
 ///
 
-#include "qsopt_ex.h"
+#include "dreal/qsopt_ex.h"
 
 using std::string;
 

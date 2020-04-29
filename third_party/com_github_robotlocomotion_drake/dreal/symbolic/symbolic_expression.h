@@ -490,6 +490,7 @@ class Expression {
 
  private:
   static ExpressionCell* make_cell(const mpq_class& d);
+  static ExpressionCell* make_cell(const double d);
 
   explicit Expression(ExpressionCell* ptr);
 

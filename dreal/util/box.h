@@ -20,7 +20,7 @@ class Box {
     Interval() : lb_(1), ub_(0) {}
     Interval(Interval&& other) noexcept;
     Interval(const Interval& other) : lb_(other.lb_), ub_(other.ub_) {}
-    Interval(const mpq_class& val) : lb_(val), ub_(val) {}
+    explicit Interval(const mpq_class& val) : lb_(val), ub_(val) {}
     Interval(const mpq_class& lb, const mpq_class& ub) : lb_(lb), ub_(ub) {
       DREAL_ASSERT(lb <= ub);
     }
@@ -30,7 +30,7 @@ class Box {
     mpq_class lb() const { return lb_; }
     mpq_class ub() const { return ub_; }
     mpq_class mid() const { return (lb_ + ub_) / 2; }
-    mpq_class diam() const { return ub_ - lb_; }
+    mpq_class diam() const { return is_empty() ? mpq_class(0) : mpq_class(ub_ - lb_); }
     std::pair<Interval, Interval> bisect(const mpq_class& p) const;
     bool operator==(const Interval& other) const { return lb_ == other.lb_ && ub_ == other.ub_; }
     bool operator!=(const Interval& other) const { return lb_ != other.lb_ || ub_ != other.ub_; }
@@ -39,6 +39,7 @@ class Box {
     // Mutators
     void set_empty() { lb_ = 1; ub_ = 0; }
     friend std::ostream& operator<<(std::ostream& os, const Interval& iv);
+
    private:
     mpq_class lb_, ub_;
   };

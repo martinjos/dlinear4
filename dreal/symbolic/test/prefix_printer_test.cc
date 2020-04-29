@@ -34,7 +34,7 @@ TEST_F(PrefixPrinterTest, Constant1) {
 
 TEST_F(PrefixPrinterTest, Constant2) {
   const Expression e{mpq_class(M_PI)};
-  EXPECT_EQ(ToPrefix(e), "3.141592653589793116");
+  EXPECT_EQ(ToPrefix(e), "(/ 884279719003555 281474976710656)");
 }
 
 TEST_F(PrefixPrinterTest, Addition) {

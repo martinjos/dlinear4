@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <set>
+#include <map>
 #include <utility>
 #include <vector>
 #include <unordered_map>
