@@ -49,6 +49,7 @@ enum class ExpressionKind {
   Max,                    ///< max
   IfThenElse,             ///< if then else
   NaN,                    ///< NaN
+  Infty,                  ///< infinity
   UninterpretedFunction,  ///< Uninterpreted function
   // TODO(soonho): add Integral
 };
@@ -107,7 +108,7 @@ Its syntax tree is as follows:
        | E + ... + E | E * ... * E | E / E | log(E)
        | abs(E) | exp(E) | sqrt(E) | pow(E, E) | sin(E) | cos(E) | tan(E)
        | asin(E) | acos(E) | atan(E) | atan2(E, E) | sinh(E) | cosh(E) | tanh(E)
-       | min(E, E) | max(E, E) | if_then_else(F, E, E) | NaN
+       | min(E, E) | max(E, E) | if_then_else(F, E, E) | NaN | infinity
        | uninterpreted_function(name, {v_1, ..., v_n})
 @endverbatim
 
@@ -174,9 +175,9 @@ class Expression {
 
   /** Constructs a constant (rational). */
   // NOLINTNEXTLINE(runtime/explicit): This conversion is desirable.
-  Expression(mpq_class d);
+  Expression(const mpq_class& d);
   // NOLINTNEXTLINE(runtime/explicit): This conversion is desirable.
-  Expression(int i);
+  Expression(const double d);
   /** Constructs an expression from @p var.
    * @pre @p var is neither a dummy nor a BOOLEAN variable.
    */
@@ -309,6 +310,10 @@ class Expression {
   static Expression E();
   /** Returns NaN (Not-a-Number). */
   static Expression NaN();
+  /** Returns positive infinity. */
+  static Expression Infty();
+  /** Returns negative infinity. */
+  static Expression NInfty();
 
   friend Expression operator+(const Expression& lhs, const Expression& rhs);
   friend Expression operator+(const Expression& lhs, Expression&& rhs);
@@ -484,7 +489,7 @@ class Expression {
   friend class ExpressionCell;
 
  private:
-  static ExpressionCell* make_cell(mpq_class d);
+  static ExpressionCell* make_cell(const mpq_class& d);
 
   explicit Expression(ExpressionCell* ptr);
 
@@ -567,7 +572,7 @@ std::ostream& operator<<(std::ostream& os, const Expression& e);
 /** Checks if @p e is a rational constant expression. */
 bool is_constant(const Expression& e);
 /** Checks if @p e is a rational constant expression representing @p v. */
-bool is_constant(const Expression& e, mpq_class v);
+bool is_constant(const Expression& e, const mpq_class& v);
 /** Checks if @p e is 0.0. */
 bool is_zero(const Expression& e);
 /** Checks if @p e is 1.0. */
@@ -578,6 +583,12 @@ bool is_neg_one(const Expression& e);
 bool is_two(const Expression& e);
 /** Checks if @p e is NaN. */
 bool is_nan(const Expression& e);
+/** Checks if @p e is positive or negative infinity. */
+bool is_infinite(const Expression& e);
+/** Checks if @p e is positive infinity. */
+bool is_infinity(const Expression& e);
+/** Checks if @p e is negative infinity. */
+bool is_negative_infinity(const Expression& e);
 /** Checks if @p e is a variable expression. */
 bool is_variable(const Expression& e);
 /** Checks if @p e is an addition expression. */

@@ -7,6 +7,9 @@
 #include "dreal/symbolic/symbolic_formula.h"
 #include "dreal/symbolic/symbolic_variable.h"
 
+#define EXPECT_MPQ_EQ_DOUBLE(mpq, d) EXPECT_DOUBLE_EQ((mpq).get_d(), d)
+#define EXPECT_MPQ_NEAR(mpq, d, tol) EXPECT_NEAR((mpq).get_d(), d, tol)
+
 namespace dreal {
 namespace drake {
 namespace symbolic {

@@ -30,8 +30,8 @@ namespace symbolic {
  *   // env maps var_x to 2.0 and var_y to 3.0
  *   const Environment env{{var_x, 2.0}, {var_y, 3.0}};
  *
- *   const mpq_class res1 = e1.Evaluate(env);  // x + y => 2.0 + 3.0 =>  5.0
- *   const mpq_class res2 = e2.Evaluate(env);  // x - y => 2.0 - 3.0 => -1.0
+ *   const mpq_class& res1 = e1.Evaluate(env);  // x + y => 2.0 + 3.0 =>  5.0
+ *   const mpq_class& res2 = e2.Evaluate(env);  // x - y => 2.0 - 3.0 => -1.0
  *   const bool res = f.Evaluate(env);  // x + y > x - y => 5.0 >= -1.0 => True
  * \endcode
  *

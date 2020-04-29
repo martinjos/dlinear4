@@ -36,7 +36,7 @@ bool operator<(ExpressionKind k1, ExpressionKind k2) {
 namespace {
 
 // Returns true if @p v is represented by `int`.
-bool is_integer(const mpq_class v) {
+bool is_integer(const mpq_class& v) {
   // v should be in [int_min, int_max].
   if (!((std::numeric_limits<int>::lowest() <= v) &&
         (v <= std::numeric_limits<int>::max()))) {
@@ -113,7 +113,7 @@ Expression::Expression() : Expression{Zero().ptr_} {}
 Expression::Expression(const Variable& var)
     : Expression{new ExpressionVar(var)} {}
 
-ExpressionCell* Expression::make_cell(const mpq_class d) {
+ExpressionCell* Expression::make_cell(const mpq_class& d) {
   if (d == 0.0) {
     return Expression::Zero().ptr_;
   } else if (d == 1.0) {
@@ -127,9 +127,9 @@ ExpressionCell* Expression::make_cell(const mpq_class d) {
   }
 }
 
-Expression::Expression(const mpq_class d) : Expression{make_cell(d)} {}
+Expression::Expression(const mpq_class& d) : Expression{make_cell(d)} {}
 
-Expression::Expression(const int i) : Expression{make_cell(mpq_class(i, 1))} {}
+Expression::Expression(const double d) : Expression{make_cell(mpq_class(d))} {}
 
 Expression::Expression(ExpressionCell* ptr) : ptr_{ptr} {
   assert(ptr_ != nullptr);
@@ -168,6 +168,16 @@ Expression Expression::E() {
 Expression Expression::NaN() {
   static const Expression nan{new ExpressionNaN()};
   return nan;
+}
+
+Expression Expression::Infty() {
+  static const Expression infty{new ExpressionInfty(1)};
+  return infty;
+}
+
+Expression Expression::NInfty() {
+  static const Expression ninfty{new ExpressionInfty(-1)};
+  return ninfty;
 }
 
 const Variables& Expression::GetVariables() const {
@@ -613,8 +623,8 @@ Expression& operator/=(Expression& lhs, const Expression& rhs) {
   }
   // Simplification: Expression(c1) / Expression(c2) => Expression(c1 / c2)
   if (is_constant(lhs) && is_constant(rhs)) {
-    const mpq_class v1{get_constant_value(lhs)};
-    const mpq_class v2{get_constant_value(rhs)};
+    const mpq_class& v1{get_constant_value(lhs)};
+    const mpq_class& v2{get_constant_value(rhs)};
     if (v2 == 0.0) {
       ostringstream oss{};
       oss << "Division by zero: " << v1 << "/" << v2;
@@ -666,7 +676,7 @@ Expression log(const Expression& e) {
   if (is_constant(e)) {
     throw runtime_error("Not implemented");  // Because of mpq_class
 #if 0
-    const mpq_class v{get_constant_value(e)};
+    const mpq_class& v{get_constant_value(e)};
     ExpressionLog::check_domain(v);
     return Expression{std::log(v)};
 #endif
@@ -696,7 +706,7 @@ Expression sqrt(const Expression& e) {
   if (is_constant(e)) {
     throw runtime_error("Not implemented");  // Because of mpq_class
 #if 0
-    const mpq_class v{get_constant_value(e)};
+    const mpq_class& v{get_constant_value(e)};
     ExpressionSqrt::check_domain(v);
     return Expression{std::sqrt(v)};
 #endif
@@ -713,12 +723,12 @@ Expression sqrt(const Expression& e) {
 Expression pow(const Expression& e1, const Expression& e2) {
   // Simplification
   if (is_constant(e2)) {
-    const mpq_class v2{get_constant_value(e2)};
+    const mpq_class& v2{get_constant_value(e2)};
     if (is_constant(e1)) {
       throw runtime_error("Not implemented");  // Because of mpq_class
 #if 0
       // Constant folding
-      const mpq_class v1{get_constant_value(e1)};
+      const mpq_class& v1{get_constant_value(e1)};
       ExpressionPow::check_domain(v1, v2);
       return Expression{std::pow(v1, v2)};
 #endif
@@ -739,8 +749,8 @@ Expression pow(const Expression& e1, const Expression& e2) {
     //
     // only if both of exponent and e2 are integers.
     const Expression& exponent{get_second_argument(e1)};
-    const mpq_class v1{get_constant_value(exponent)};
-    const mpq_class v2{get_constant_value(e2)};
+    const mpq_class& v1{get_constant_value(exponent)};
+    const mpq_class& v2{get_constant_value(e2)};
     if (is_integer(v1) && is_integer(v2)) {
       const Expression& base{get_first_argument(e1)};
       return Expression{new ExpressionPow(base, Expression(v1 * v2))};
@@ -782,7 +792,7 @@ Expression asin(const Expression& e) {
   if (is_constant(e)) {
     throw runtime_error("Not implemented");  // Because of mpq_class
 #if 0
-    const mpq_class v{get_constant_value(e)};
+    const mpq_class& v{get_constant_value(e)};
     ExpressionAsin::check_domain(v);
     return Expression{std::asin(v)};
 #endif
@@ -795,7 +805,7 @@ Expression acos(const Expression& e) {
   if (is_constant(e)) {
     throw runtime_error("Not implemented");  // Because of mpq_class
 #if 0
-    const mpq_class v{get_constant_value(e)};
+    const mpq_class& v{get_constant_value(e)};
     ExpressionAcos::check_domain(v);
     return Expression{std::acos(v)};
 #endif
@@ -893,7 +903,7 @@ Expression uninterpreted_function(const string& name, const Variables& vars) {
 }
 
 bool is_constant(const Expression& e) { return is_constant(*e.ptr_); }
-bool is_constant(const Expression& e, const mpq_class v) {
+bool is_constant(const Expression& e, const mpq_class& v) {
   return is_constant(e) && (to_constant(e)->get_value() == v);
 }
 bool is_zero(const Expression& e) { return is_constant(e, 0.0); }
@@ -901,6 +911,11 @@ bool is_one(const Expression& e) { return is_constant(e, 1.0); }
 bool is_neg_one(const Expression& e) { return is_constant(e, -1.0); }
 bool is_two(const Expression& e) { return is_constant(e, 2.0); }
 bool is_nan(const Expression& e) { return e.get_kind() == ExpressionKind::NaN; }
+bool is_infinite(const Expression& e) { return e.get_kind() == ExpressionKind::Infty; }
+bool is_infinity(const Expression& e) { return e.get_kind() == ExpressionKind::Infty
+                                           && ((ExpressionInfty&)e).GetSign() == 1; }
+bool is_negative_infinity(const Expression& e) { return e.get_kind() == ExpressionKind::Infty
+                                                     && ((ExpressionInfty&)e).GetSign() == -1; }
 bool is_variable(const Expression& e) { return is_variable(*e.ptr_); }
 bool is_addition(const Expression& e) { return is_addition(*e.ptr_); }
 bool is_multiplication(const Expression& e) {
