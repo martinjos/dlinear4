@@ -170,7 +170,7 @@ class DeltaStrengthenVisitor {
     Expression ret{get_constant_in_addition(e)};
     for (const auto& p : get_expr_to_coeff_map_in_addition(e)) {
       const Expression& e_i{p.first};
-      const double coeff{p.second};
+      const mpq_class& coeff{p.second};
       ret += coeff * Visit(e_i, delta);
     }
     return ret;

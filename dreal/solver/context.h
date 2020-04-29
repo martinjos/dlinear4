@@ -65,14 +65,14 @@ class Context {
   static void Exit();
 
   /// Asserts a formula minimizing a cost function @p f.
-  void Minimize(const Expression& f);
+  //void Minimize(const Expression& f);
 
   /// Asserts a formula encoding Pareto optimality with a given set of
   /// objective functions.
-  void Minimize(const std::vector<Expression>& functions);
+  //void Minimize(const std::vector<Expression>& functions);
 
   /// Asserts a formula maximizing a cost function @p f.
-  void Maximize(const Expression& f);
+  //void Maximize(const Expression& f);
 
   /// Pops @p n stacks.
   void Pop(int n);
@@ -87,7 +87,7 @@ class Context {
   void SetInfo(const std::string& key, const std::string& val);
 
   /// Sets the interval of @p v in the current box (top one in boxes_).
-  void SetInterval(const Variable& v, double lb, double ub);
+  void SetInterval(const Variable& v, const mpq_class& lb, const mpq_class& ub);
 
   /// Sets the current logic to be @p logic.
   void SetLogic(const Logic& logic);

@@ -57,9 +57,9 @@ OptionValue<bool>& Config::mutable_stack_left_box_first() {
   return stack_left_box_first_;
 }
 
-const Config::Brancher& Config::brancher() const { return brancher_.get(); }
+//const Config::Brancher& Config::brancher() const { return brancher_.get(); }
 
-OptionValue<Config::Brancher>& Config::mutable_brancher() { return brancher_; }
+//OptionValue<Config::Brancher>& Config::mutable_brancher() { return brancher_; }
 
 double Config::nlopt_ftol_rel() const { return nlopt_ftol_rel_.get(); }
 

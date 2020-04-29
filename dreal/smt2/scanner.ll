@@ -197,13 +197,13 @@ simple_symbol   {sym_begin}{sym_continue}*
 }
 
 [-+]?((([0-9]+)|([0-9]*\.?[0-9]+))([eE][-+]?[0-9]+)?)   {
-    yylval->doubleVal = new std::string(yytext, yyleng);
-    return token::DOUBLE;
+    yylval->rationalVal = new std::string(yytext, yyleng);
+    return token::RATIONAL;
 }
 
 [-+]?((([0-9]+)|([0-9]+\.)))                            {
-    yylval->doubleVal = new std::string(yytext, yyleng);
-    return token::DOUBLE;
+    yylval->rationalVal = new std::string(yytext, yyleng);
+    return token::RATIONAL;
 }
 
 [-+]?0[xX]({hex}+\.?|{hex}*\.{hex}+)([pP][-+]?[0-9]+)? {

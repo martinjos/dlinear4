@@ -82,7 +82,7 @@ dreal_cc_library(
         #"icp_seq.cc",
         #"relational_formula_evaluator.cc",
         #"relational_formula_evaluator.h",
-        "theory_solver.cc",
+        #"theory_solver.cc",
         "linear_theory_solver.cc",
     ],
     hdrs = [
@@ -92,7 +92,7 @@ dreal_cc_library(
         #"icp.h",
         #"icp_parallel.h",
         #"icp_seq.h",
-        "theory_solver.h",
+        #"theory_solver.h",
         "linear_theory_solver.h",
     ],
     visibility = [
@@ -247,14 +247,14 @@ dreal_cc_googletest(
     ],
 )
 
-dreal_cc_googletest(
-    name = "theory_solver_test",
-    tags = ["unit"],
-    deps = [
-        ":solver",
-        "//dreal/util:logging",
-    ],
-)
+#dreal_cc_googletest(
+#    name = "theory_solver_test",
+#    tags = ["unit"],
+#    deps = [
+#        ":solver",
+#        "//dreal/util:logging",
+#    ],
+#)
 
 # ----------------------
 # Header files to expose

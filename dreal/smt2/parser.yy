@@ -13,6 +13,10 @@
 #include "dreal/smt2/term.h"
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/math.h"
+#include "dreal/util/assert.h"
+#include "dreal/qsopt_ex.h"
+
+using dreal::qsopt_ex::StringToMpq;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -67,12 +71,12 @@
 {
     dreal::Sort               sortVal;
     std::int64_t              int64Val;
-    std::string*              doubleVal;
+    std::string*              rationalVal;
     double                    hexfloatVal;
     std::string*              stringVal;
     Term*                     termVal;
     std::vector<Term>*        termListVal;
-    std::tuple<Variable, double, double>* forallVariableVal;
+    std::tuple<Variable, Expression, Expression>* forallVariableVal;
     std::pair<Variables, Formula>*        forallVariablesVal;
     std::pair<std::string, Term>*              letBindVal;
     std::vector<std::pair<std::string, Term>>* letBindsVal;
@@ -97,7 +101,7 @@
 %token TK_MAXIMIZE TK_MINIMIZE
 
 %token                 END          0        "end of file"
-%token <doubleVal>     DOUBLE                "double"
+%token <rationalVal>   RATIONAL              "rational"
 %token <hexfloatVal>   HEXFLOAT              "hexfloat"
 %token <int64Val>      INT                   "int64"
 %token <stringVal>     SYMBOL                "symbol"
@@ -113,7 +117,7 @@
 %type <letBindsVal>   var_binding_list
 %type <letBindVal>    var_binding
 
-%destructor { delete $$; } DOUBLE SYMBOL KEYWORD STRING
+%destructor { delete $$; } RATIONAL SYMBOL KEYWORD STRING
 %destructor { delete $$; } term term_list variable_sort_list variable_sort var_binding_list var_binding
 
 %{
@@ -144,8 +148,8 @@ command:
         |       command_declare_fun
         |       command_exit
         |       command_get_model
-        |       command_maximize
-        |       command_minimize
+/*      |       command_maximize  */
+/*      |       command_minimize  */
         |       command_pop
         |       command_push
         |       command_set_info
@@ -200,6 +204,7 @@ command_get_model:
                 }
                 ;
 
+/*
 command_maximize: '(' TK_MAXIMIZE term ')' {
                       driver.mutable_context().Maximize($3->expression());
                       delete $3;
@@ -211,6 +216,7 @@ command_minimize: '(' TK_MINIMIZE term ')' {
                       delete $3;
                 }
                 ;
+*/
 
 command_set_info:
                 '(' TK_SET_INFO KEYWORD SYMBOL ')' {
@@ -227,7 +233,7 @@ command_set_info:
                     delete $3;
                     delete $4;
                 }
-        |       '(' TK_SET_INFO KEYWORD DOUBLE ')' {
+        |       '(' TK_SET_INFO KEYWORD RATIONAL ')' {
                     driver
                         .mutable_context()
                         .SetInfo(*$3, std::stod(*$4));
@@ -250,7 +256,7 @@ command_set_option:
                     delete $3;
                     delete $4;
                 }
-        |       '('TK_SET_OPTION KEYWORD DOUBLE ')' {
+        |       '('TK_SET_OPTION KEYWORD RATIONAL ')' {
                     driver
                         .mutable_context()
                         .SetOption(*$3, std::stod(*$4));
@@ -372,13 +378,13 @@ term:           TK_TRUE { $$ = new Term(Formula::True()); }
         |       '(' TK_LET enter_scope let_binding_list term exit_scope ')' {
             $$ = $5;
         }
-        |       DOUBLE {
-            const double parsed{std::stod(*$1)};
+        |       RATIONAL {
+            const mpq_class& rational{StringToMpq(*$1)};
             delete $1;
-            $$ = new Term{parsed};
+            $$ = new Term{rational};
         }
-        |       HEXFLOAT { $$ = new Term{$1}; }
-        |       INT { $$ = new Term{convert_int64_to_double($1)}; }
+/*      |       HEXFLOAT { $$ = new Term{$1}; }  */
+        |       INT { $$ = new Term{convert_int64_to_rational($1)}; }
         |       SYMBOL {
             try {
                 const Variable& var = driver.lookup_variable(*$1);
@@ -536,14 +542,16 @@ exit_scope: /* */ {
 variable_sort_list: /* empty list */ { $$ = new std::pair<Variables, Formula>(Variables{}, Formula::True()); }
         |       variable_sort variable_sort_list {
             const Variable& v = std::get<0>(*$1);
-            const double lb = std::get<1>(*$1);
-            const double ub = std::get<2>(*$1);
+            const Expression& lb = std::get<1>(*$1);
+            const Expression& ub = std::get<2>(*$1);
+            DREAL_ASSERT((is_negative_infinity(lb) || is_constant(lb))
+                      && (is_infinity(ub) || is_constant(ub)));
             $2->first.insert(v);
-            if (std::isfinite(lb)) {
-                $2->second = $2->second && (lb <= v);
+            if (!is_infinite(lb)) {
+                $2->second = $2->second && (get_constant_value(lb) <= v);
             }
-            if (std::isfinite(ub)) {
-                $2->second = $2->second && (v <= ub);
+            if (!is_infinite(ub)) {
+                $2->second = $2->second && (v <= get_constant_value(ub));
             }
             delete $1; $$ = $2;
         }
@@ -551,15 +559,15 @@ variable_sort_list: /* empty list */ { $$ = new std::pair<Variables, Formula>(Va
 
 variable_sort: '(' SYMBOL sort ')' {
             const Variable v = driver.RegisterVariable(*$2, $3);
-            const double inf = std::numeric_limits<double>::infinity();
-            $$ = new std::tuple<Variable, double, double>(v, -inf, inf);
+            $$ = new std::tuple<Variable, Expression, Expression>(
+                         v, Expression::NInfty(), Expression::Infty());
             delete $2;
         }
         |       '(' SYMBOL sort '[' term ',' term ']' ')' {
             const Variable v = driver.RegisterVariable(*$2, $3);
-            const double lb = $5->expression().Evaluate();
-            const double ub = $7->expression().Evaluate();
-            $$ = new std::tuple<Variable, double, double>(v, lb, ub);
+            const mpq_class& lb = $5->expression().Evaluate();
+            const mpq_class& ub = $7->expression().Evaluate();
+            $$ = new std::tuple<Variable, Expression, Expression>(v, lb, ub);
             delete $2;
             delete $5;
             delete $7;

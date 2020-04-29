@@ -2,7 +2,7 @@
 
 #include <ostream>
 
-#include "dreal/solver/brancher.h"
+//#include "dreal/solver/brancher.h"
 #include "dreal/util/box.h"
 #include "dreal/util/dynamic_bitset.h"
 #include "dreal/util/option_value.h"
@@ -18,8 +18,10 @@ class Config {
   Config& operator=(Config&&) = default;
   ~Config() = default;
 
+#if 0
   using Brancher = std::function<int(
       const Box& box, const DynamicBitset& bitset, Box* left, Box* right)>;
+#endif
 
   /// Returns the precision option.
   double precision() const;
@@ -72,10 +74,10 @@ class Config {
   OptionValue<bool>& mutable_stack_left_box_first();
 
   /// Returns the brancher.
-  const Brancher& brancher() const;
+  //const Brancher& brancher() const;
 
   /// Returns a mutable OptionValue for `brancher`.
-  OptionValue<Brancher>& mutable_brancher();
+  //OptionValue<Brancher>& mutable_brancher();
 
   /// @name NLopt Options
   ///
@@ -196,7 +198,7 @@ class Config {
   OptionValue<uint32_t> random_seed_{0};
 
   // Brancher to use. By default it uses `BranchLargestFirst`.
-  OptionValue<Brancher> brancher_{BranchLargestFirst};
+  //OptionValue<Brancher> brancher_{};
 };
 std::ostream& operator<<(std::ostream& os,
                          const Config::SatDefaultPhase& sat_default_phase);

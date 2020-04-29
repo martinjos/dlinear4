@@ -369,7 +369,7 @@ TEST_F(SymbolicTest, DestructiveUpdateUnaryMinus2) {
 
 TEST_F(SymbolicTest, DestructiveUpdateMultiplication1) {
   constexpr int N{1000};
-  Expression e{1.0};
+  Expression e{1};
   for (int i = 0; i < N; ++i) {
     e *= Variable("var_" + std::to_string(i));
   }
@@ -377,7 +377,7 @@ TEST_F(SymbolicTest, DestructiveUpdateMultiplication1) {
 
 TEST_F(SymbolicTest, DestructiveUpdateMultiplication2) {
   constexpr int N{1000};
-  Expression e{1.0};
+  Expression e{1};
   for (int i = 0; i < N; ++i) {
     e = std::move(e) * Variable("var_" + std::to_string(i));
   }
@@ -385,7 +385,7 @@ TEST_F(SymbolicTest, DestructiveUpdateMultiplication2) {
 
 TEST_F(SymbolicTest, DestructiveUpdateMultiplication3) {
   constexpr int N{1000};
-  Expression e{1.0};
+  Expression e{1};
   for (int i = 0; i < N; ++i) {
     e = Variable("var_" + std::to_string(i)) * std::move(e);
   }

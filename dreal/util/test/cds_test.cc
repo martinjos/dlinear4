@@ -36,8 +36,8 @@ GTEST_TEST(CdsTest, PriorityQueueInt) {
 GTEST_TEST(CdsTest, PriorityQueueBox) {
   struct BoxComparator {
     int operator()(const Box& b1, const Box& b2) {
-      const double diam1 = b1.MaxDiam().first;
-      const double diam2 = b2.MaxDiam().first;
+      const mpq_class& diam1 = b1.MaxDiam().first;
+      const mpq_class& diam2 = b2.MaxDiam().first;
       if (diam1 > diam2) {
         return 1;
       }

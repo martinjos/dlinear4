@@ -90,7 +90,7 @@ Expression IfThenElseEliminator::VisitAddition(const Expression& e,
   Expression ret{get_constant_in_addition(e)};
   for (const auto& p : get_expr_to_coeff_map_in_addition(e)) {
     const Expression& e_i{p.first};
-    const double c_i{p.second};
+    const mpq_class& c_i{p.second};
     ret += c_i * Visit(e_i, guard);
   }
   return ret;

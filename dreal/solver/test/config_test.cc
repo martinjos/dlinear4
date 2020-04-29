@@ -12,6 +12,7 @@ namespace {
 
 using std::pair;
 
+#if 0
 // To save the branch variables in MyBrancher function.
 std::vector<Variable> g_branch_variables;
 
@@ -58,6 +59,7 @@ GTEST_TEST(Config, CustomBrancher) {
   EXPECT_EQ(g_branch_variables[3], y);
   EXPECT_EQ(g_branch_variables[4], z);
 }
+#endif
 
 }  // namespace
 }  // namespace dreal

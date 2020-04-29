@@ -23,3 +23,12 @@ public:
 };
 
 }  // namespace std
+
+namespace dreal {
+namespace gmp {
+
+mpz_class floor(const mpq_class& val);
+mpz_class ceil(const mpq_class& val);
+
+}  // namespace gmp
+}  // namespace dreal

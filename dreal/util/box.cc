@@ -11,10 +11,8 @@
 #include "dreal/util/logging.h"
 #include "dreal/util/math.h"
 
-using std::ceil;
 using std::equal;
 using std::find_if;
-using std::floor;
 using std::make_pair;
 using std::make_shared;
 using std::numeric_limits;
@@ -22,8 +20,33 @@ using std::ostream;
 using std::pair;
 using std::unordered_map;
 using std::vector;
+using dreal::gmp::ceil;
+using dreal::gmp::floor;
 
 namespace dreal {
+
+Box::Interval::Interval(Interval&& other) noexcept try : lb_(1), ub_(0) {
+  try {
+    lb_.swap(other.lb_);
+    ub_.swap(other.ub_);
+  } catch (...) {
+    DREAL_ASSERT("Should never happen");
+  }
+} catch (...) {
+  DREAL_ASSERT("Should never happen");
+}
+
+std::pair<Box::Interval, Box::Interval> Box::Interval::bisect(const mpq_class& p) const {
+  return std::make_pair(Interval(lb_, p), Interval(p, ub_));
+}
+
+std::ostream& operator<<(std::ostream& os, const Box::Interval& iv) {
+  if (iv.is_empty()) {
+    return os << "[ empty ]";
+  } else {
+    return os << "[" << iv.lb() << ", " << iv.ub() << "]";
+  }
+}
 
 Box::Box()
     : variables_{make_shared<vector<Variable>>()},
@@ -31,14 +54,14 @@ Box::Box()
       // zero interval vector. Note that because of this special case,
       // `variables_->size() == values_.size()` do not hold. We should
       // rely on `values_.size()`.
-      values_{1},
+      values_(1),
       var_to_idx_{
           make_shared<unordered_map<Variable, int, hash_value<Variable>>>()},
       idx_to_var_{make_shared<unordered_map<int, Variable>>()} {}
 
 Box::Box(const vector<Variable>& variables)
     : variables_{make_shared<vector<Variable>>()},
-      values_{static_cast<int>(variables.size())},
+      values_(static_cast<int>(variables.size())),
       var_to_idx_{
           make_shared<unordered_map<Variable, int, hash_value<Variable>>>()},
       idx_to_var_{make_shared<unordered_map<int, Variable>>()} {
@@ -73,14 +96,14 @@ void Box::Add(const Variable& v) {
   // TODO(soonho): For now, we allow Boolean variables in a box. Change this.
   if (v.get_type() == Variable::Type::BOOLEAN ||
       v.get_type() == Variable::Type::BINARY) {
-    values_[n] = Interval(0.0, 1.0);
+    values_[n] = Interval(0, 1);
   } else if (v.get_type() == Variable::Type::INTEGER) {
     values_[n] =
         Interval(-numeric_limits<int>::max(), numeric_limits<int>::max());
   }
 }
 
-void Box::Add(const Variable& v, const double lb, const double ub) {
+void Box::Add(const Variable& v, const mpq_class& lb, const mpq_class& ub) {
   Add(v);
 
   DREAL_ASSERT(lb <= ub);
@@ -96,9 +119,9 @@ void Box::Add(const Variable& v, const double lb, const double ub) {
   values_[(*var_to_idx_)[v]] = Interval{lb, ub};
 }
 
-bool Box::empty() const { return values_.is_empty(); }
+bool Box::empty() const { return values_.empty(); }
 
-void Box::set_empty() { values_.set_empty(); }
+void Box::set_empty() { values_.clear(); }
 
 int Box::size() const { return variables_->size(); }
 
@@ -130,11 +153,11 @@ int Box::index(const Variable& var) const { return (*var_to_idx_)[var]; }
 const Box::IntervalVector& Box::interval_vector() const { return values_; }
 Box::IntervalVector& Box::mutable_interval_vector() { return values_; }
 
-pair<double, int> Box::MaxDiam() const {
-  double max_diam{0.0};
+pair<mpq_class, int> Box::MaxDiam() const {
+  mpq_class max_diam{0.0};
   int idx{-1};
   for (size_t i{0}; i < variables_->size(); ++i) {
-    const double diam_i{values_[i].diam()};
+    const mpq_class& diam_i{values_[i].diam()};
     if (diam_i > max_diam && values_[i].is_bisectable()) {
       max_diam = diam_i;
       idx = i;
@@ -176,10 +199,10 @@ pair<Box, Box> Box::bisect_int(const int i) const {
   DREAL_ASSERT(idx_to_var_->at(i).get_type() == Variable::Type::INTEGER ||
                idx_to_var_->at(i).get_type() == Variable::Type::BINARY);
   const Interval& intv_i{values_[i]};
-  const double lb{ceil(intv_i.lb())};
-  const double ub{floor(intv_i.ub())};
-  const double mid{intv_i.mid()};
-  const double mid_floor{floor(mid)};
+  const mpz_class& lb{ceil(intv_i.lb())};
+  const mpz_class& ub{floor(intv_i.ub())};
+  const mpq_class& mid{intv_i.mid()};
+  const mpz_class& mid_floor{floor(mid)};
   DREAL_ASSERT(intv_i.lb() <= lb);
   DREAL_ASSERT(lb <= mid_floor);
   DREAL_ASSERT(mid_floor + 1 <= ub);
@@ -204,6 +227,7 @@ pair<Box, Box> Box::bisect_continuous(const int i) const {
   return make_pair(b1, b2);
 }
 
+#if 0
 Box& Box::InplaceUnion(const Box& b) {
   // Checks variables() == b.variables().
   DREAL_ASSERT(equal(variables().begin(), variables().end(),
@@ -212,6 +236,7 @@ Box& Box::InplaceUnion(const Box& b) {
   values_ |= b.values_;
   return *this;
 }
+#endif
 
 namespace {
 // RAII which preserves the FmtFlags of an ostream.
@@ -233,9 +258,6 @@ class IosFmtFlagSaver {
 
 ostream& operator<<(ostream& os, const Box& box) {
   IosFmtFlagSaver saver{os};
-  // See
-  // https://stackoverflow.com/questions/554063/how-do-i-print-a-double-value-with-full-precision-using-cout#comment40126260_554134.
-  os.precision(numeric_limits<double>::max_digits10 + 2);
   int i{0};
   for (const Variable& var : *(box.variables_)) {
     const Box::Interval interval{box.values_[i++]};
@@ -243,13 +265,6 @@ ostream& operator<<(ostream& os, const Box& box) {
     switch (var.get_type()) {
       case Variable::Type::INTEGER:
       case Variable::Type::BINARY:
-        if (interval.is_empty()) {
-          os << "[ empty ]";
-        } else {
-          os << "[" << static_cast<int>(interval.lb()) << ", "
-             << static_cast<int>(interval.ub()) << "]";
-        }
-        break;
       case Variable::Type::CONTINUOUS:
         os << interval;
         break;
@@ -283,9 +298,6 @@ ostream& DisplayDiff(ostream& os, const vector<Variable>& variables,
                      const Box::IntervalVector& old_iv,
                      const Box::IntervalVector& new_iv) {
   IosFmtFlagSaver saver{os};
-  // See
-  // https://stackoverflow.com/questions/554063/how-do-i-print-a-double-value-with-full-precision-using-cout#comment40126260_554134.
-  os.precision(numeric_limits<double>::max_digits10 + 2);
   for (size_t i = 0; i < variables.size(); ++i) {
     const Box::Interval& old_i{old_iv[i]};
     const Box::Interval& new_i{new_iv[i]};

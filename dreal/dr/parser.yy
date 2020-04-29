@@ -5,6 +5,8 @@
 
 #include "dreal/symbolic/symbolic.h"
 
+#include <gmpxx.h>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wdeprecated"
@@ -56,7 +58,7 @@
 
 %union
 {
-    double                    doubleVal;
+    mpq_class*                rationalVal;
     std::string*              stringVal;
     Expression*               exprVal;
     Formula*                  formulaVal;
@@ -73,7 +75,7 @@
 %token TK_LB TK_RB TK_COLON TK_COMMA TK_SEMICOLON
 
 %token                 END          0        "end of file"
-%token <doubleVal>     DOUBLE                "double"
+%token <rationalVal>   RATIONAL              "rational"
 %token <stringVal>     ID                    "identifier"
 
 %type <exprVal>        expr
@@ -212,7 +214,10 @@ formula:
 // ==========
 // Expression
 // ==========
-expr:           DOUBLE { $$ = new Expression{$1}; }
+expr:           RATIONAL {
+            $$ = new Expression{*$1};
+            delete $1;
+        }
         |       ID {
 	    try {
 		const Variable& var = driver.lookup_variable(*$1);

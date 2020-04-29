@@ -11,7 +11,7 @@ extern "C" {
 #include <qsopt_ex/QSopt_ex.h>
 }
 
-#include "dreal/dr/run.h"
+//#include "dreal/dr/run.h"
 #include "dreal/smt2/run.h"
 #include "dreal/solver/config.h"
 #include "dreal/solver/context.h"
@@ -59,7 +59,7 @@ void MainProgram::PrintUsage() {
 void MainProgram::AddOptions() {
   opt_.overview =
       fmt::format("dReal {} : delta-complete SMT solver", get_version_string());
-  opt_.syntax = "dreal [OPTIONS] <input file> (.smt2 or .dr)";
+  opt_.syntax = "dreal [OPTIONS] <input file> (.smt2)";
 
   opt_.add("" /* Default */, false /* Required? */,
            0 /* Number of args expected. */,
@@ -105,12 +105,12 @@ void MainProgram::AddOptions() {
            "Read from standard input. Uses smt2 by default.\n", "--in");
 
   auto* const format_option_validator =
-      new ez::ezOptionValidator("t", "in", "auto,dr,smt2", false);
+      new ez::ezOptionValidator("t", "in", "auto,smt2", false);
   opt_.add("auto" /* Default */, false /* Required? */,
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */,
            "File format. Any one of these (default = auto):\n"
-           "smt2, dr, auto (use file extension)\n",
+           "smt2, auto (use file extension)\n",
            "--format", format_option_validator);
 
   opt_.add("false" /* Default */, false /* Required? */,
@@ -433,10 +433,13 @@ int MainProgram::Run() {
     DeInit();
   } else if (format_opt == "dr" ||
              (format_opt == "auto" && extension == "dr")) {
+    throw DREAL_RUNTIME_ERROR("Format 'dr' not supported");
+#if 0
     Init();
     RunDr(filename, config_, opt_.isSet("--debug-scanning"),
           opt_.isSet("--debug-parsing"));
     DeInit();
+#endif
   } else {
     cerr << "Unknown extension: " << filename << "\n" << endl;
     PrintUsage();

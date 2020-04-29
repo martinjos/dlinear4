@@ -16,6 +16,10 @@
 
 #include "dreal/dr/scanner.h"
 
+#include "dreal/qsopt_ex.h"
+
+using dreal::qsopt_ex::StringToMpqPtr;
+
 /* import the parser's token type into a local typedef */
 typedef dreal::DrParser::token token;
 typedef dreal::DrParser::token_type token_type;
@@ -133,18 +137,18 @@ dr_yycolumn += yyleng;
 }
 
 (0|[1-9][0-9]*) {
-    yylval->doubleVal = std::stod(yytext);
-    return token::DOUBLE;
+    yylval->rationalVal = StringToMpqPtr(yytext);
+    return token::RATIONAL;
 }
 
 ((([0-9]+)|([0-9]*\.?[0-9]+))([eE][-+]?[0-9]+)?)   {
-    yylval->doubleVal = std::stod(yytext);
-    return token::DOUBLE;
+    yylval->rationalVal = StringToMpqPtr(yytext);
+    return token::RATIONAL;
 }
 
 ((([0-9]+)|([0-9]+\.)))                            {
-    yylval->doubleVal = std::stod(yytext);
-    return token::DOUBLE;
+    yylval->rationalVal = StringToMpqPtr(yytext);
+    return token::RATIONAL;
 }
 
 [a-zA-Z]([a-zA-Z0-9_\.])* {

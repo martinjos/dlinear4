@@ -32,6 +32,7 @@ bool CheckSatisfiability(const Formula& f, double delta, Box* box);
 /// @p config.
 bool CheckSatisfiability(const Formula& f, Config config, Box* box);
 
+#if 0
 /// Finds a solution to minimize @p objective function while satisfying a
 /// given @p constraint using @p delta.
 ///
@@ -60,5 +61,6 @@ bool Minimize(const Expression& objective, const Formula& constraint,
 /// given @p constraint using @p delta.
 bool Minimize(const Expression& objective, const Formula& constraint,
               Config config, Box* box);
+#endif
 
 }  // namespace dreal

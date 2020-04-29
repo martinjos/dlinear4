@@ -11,7 +11,7 @@
 
 #include <fmt/format.h>
 
-#include "dreal/solver/filter_assertion.h"
+//#include "dreal/solver/filter_assertion.h"
 #include "dreal/util/assert.h"
 #include "dreal/util/exception.h"
 #include "dreal/util/if_then_else_eliminator.h"
@@ -21,7 +21,6 @@
 namespace dreal {
 
 using std::find_if;
-using std::isfinite;
 using std::ostringstream;
 using std::pair;
 using std::set;
@@ -34,6 +33,7 @@ namespace {
 // is larger than delta when the given constraints are not tight.
 // This function tighten the box @p box so that every dimension has a
 // width smaller than delta.
+#if 0
 void Tighten(Box* box, const double delta) {
   for (int i = 0; i < box->size(); ++i) {
     auto& interval = (*box)[i];
@@ -58,6 +58,7 @@ void Tighten(Box* box, const double delta) {
     }
   }
 }
+#endif
 
 bool ParseBooleanOption(const string& key, const string& val) {
   if (val == "true") {
@@ -89,22 +90,24 @@ void Context::Impl::Assert(const Formula& f) {
     box().set_empty();
     return;
   }
-  if (FilterAssertion(f, &box()) == FilterAssertionResult::NotFiltered) {
-    DREAL_LOG_DEBUG("ContextImpl::Assert: {} is added.", f);
-    IfThenElseEliminator ite_eliminator;
-    const Formula no_ite{ite_eliminator.Process(f)};
-    for (const Variable& ite_var : ite_eliminator.variables()) {
-      // Note that the following does not mark `ite_var` as a model variable.
-      AddToBox(ite_var);
-    }
-    stack_.push_back(no_ite);
-    sat_solver_.AddFormula(no_ite);
-    return;
+  //if (FilterAssertion(f, &box()) == FilterAssertionResult::NotFiltered) {
+  DREAL_LOG_DEBUG("ContextImpl::Assert: {} is added.", f);
+  IfThenElseEliminator ite_eliminator;
+  const Formula no_ite{ite_eliminator.Process(f)};
+  for (const Variable& ite_var : ite_eliminator.variables()) {
+    // Note that the following does not mark `ite_var` as a model variable.
+    AddToBox(ite_var);
+  }
+  stack_.push_back(no_ite);
+  sat_solver_.AddFormula(no_ite);
+  return;
+#if 0
   } else {
     DREAL_LOG_DEBUG("ContextImpl::Assert: {} is not added.", f);
     DREAL_LOG_DEBUG("Box=\n{}", box());
     return;
   }
+#endif
 }
 
 optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
@@ -140,7 +143,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
     if (optional_model) {
       const vector<pair<Variable, bool>>& boolean_model{optional_model->first};
       for (const pair<Variable, bool>& p : boolean_model) {
-        box[p.first] = p.second ? 1.0 : 0.0;  // true -> 1.0 and false -> 0.0
+        box[p.first] = p.second ? 1 : 0;  // true -> 1 and false -> 0
       }
       const vector<pair<Variable, bool>>& theory_model{optional_model->second};
       if (!theory_model.empty()) {
@@ -184,7 +187,7 @@ optional<Box> Context::Impl::CheckSat() {
   auto result = CheckSatCore(stack_, box(), &sat_solver_);
   if (result) {
     // In case of delta-sat, do post-processing.
-    Tighten(&(*result), config_.precision());
+    //Tighten(&(*result), config_.precision());
     DREAL_LOG_DEBUG("ContextImpl::CheckSat() - Found Model\n{}", *result);
     model_ = ExtractModel(*result);
     return model_;
@@ -216,11 +219,12 @@ void Context::Impl::DeclareVariable(const Variable& v,
 
 void Context::Impl::SetDomain(const Variable& v, const Expression& lb,
                               const Expression& ub) {
-  const double lb_fp = lb.Evaluate();
-  const double ub_fp = ub.Evaluate();
+  const mpq_class& lb_fp = lb.Evaluate();
+  const mpq_class& ub_fp = ub.Evaluate();
   SetInterval(v, lb_fp, ub_fp);
 }
 
+#if 0
 void Context::Impl::Minimize(const vector<Expression>& functions) {
   // Given objective functions f₁(x), ... fₙ(x) and the current
   // constraints ϕᵢ which involves x. this method encodes them into a
@@ -272,8 +276,8 @@ void Context::Impl::Minimize(const vector<Expression>& functions) {
     // If `box()[x_i]` has a finite bound, let's add that information in
     // set_of_negated_phi as a constraint on y_i.
     const Box::Interval& bound_on_x_i{box()[x_i]};
-    const double lb_x_i{bound_on_x_i.lb()};
-    const double ub_x_i{bound_on_x_i.ub()};
+    const mpq_class& lb_x_i{bound_on_x_i.lb()};
+    const mpq_class& ub_x_i{bound_on_x_i.ub()};
     if (isfinite(lb_x_i)) {
       set_of_negated_phi.insert(!(lb_x_i <= y_i));
     }
@@ -299,6 +303,7 @@ void Context::Impl::Minimize(const vector<Expression>& functions) {
   const Formula psi{new_z_block && forall(quantified_variables, quantified)};
   return Assert(psi);
 }
+#endif
 
 void Context::Impl::Pop() {
   DREAL_LOG_DEBUG("ContextImpl::Pop()");
@@ -325,8 +330,8 @@ void Context::Impl::SetInfo(const string& key, const string& val) {
   info_[key] = val;
 }
 
-void Context::Impl::SetInterval(const Variable& v, const double lb,
-                                const double ub) {
+void Context::Impl::SetInterval(const Variable& v, const mpq_class& lb,
+                                const mpq_class& ub) {
   DREAL_LOG_DEBUG("ContextImpl::SetInterval({} = [{}, {}])", v, lb, ub);
   box()[v] = Box::Interval{lb, ub};
 }

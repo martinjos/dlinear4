@@ -6,18 +6,46 @@
 #include <utility>
 #include <vector>
 
-#include "./ibex.h"
-
+#include "dreal/util/assert.h"
 #include "dreal/symbolic/symbolic.h"
+#include "dreal/gmp.h"
 
 namespace dreal {
 
-/// Represents a n-dimensional interval vector. This is a wrapper of
-/// ibex::IntervalVector.
+/// Represents a n-dimensional interval vector.
 class Box {
  public:
-  using Interval = ibex::Interval;
-  using IntervalVector = ibex::IntervalVector;
+  class Interval {
+   public:
+    Interval() : lb_(1), ub_(0) {}
+    Interval(Interval&& other) noexcept;
+    Interval(const Interval& other) : lb_(other.lb_), ub_(other.ub_) {}
+    Interval(const mpq_class& val) : lb_(val), ub_(val) {}
+    Interval(const mpq_class& lb, const mpq_class& ub) : lb_(lb), ub_(ub) {
+      DREAL_ASSERT(lb <= ub);
+    }
+    bool is_empty() const { return lb_ == 1 && ub_ == 0; }
+    bool is_degenerated() const { return lb_ == ub_; }
+    bool is_bisectable() const { return lb_ < ub_; }
+    mpq_class lb() const { return lb_; }
+    mpq_class ub() const { return ub_; }
+    mpq_class mid() const { return (lb_ + ub_) / 2; }
+    mpq_class diam() const { return ub_ - lb_; }
+    std::pair<Interval, Interval> bisect(const mpq_class& p) const;
+    bool operator==(const Interval& other) const { return lb_ == other.lb_ && ub_ == other.ub_; }
+    bool operator!=(const Interval& other) const { return lb_ != other.lb_ || ub_ != other.ub_; }
+    Interval& operator=(const mpq_class& val) { lb_ = ub_ = val; return *this; }
+    Interval& operator=(const Interval& other) { lb_ = other.lb_; ub_ = other.ub_; return *this; }
+    // Mutators
+    void set_empty() { lb_ = 1; ub_ = 0; }
+    friend std::ostream& operator<<(std::ostream& os, const Interval& iv);
+   private:
+    mpq_class lb_, ub_;
+  };
+
+  class IntervalVector : public std::vector<Interval> {
+    using vector::vector;
+  };
 
   /// Constructs a zero-dimensional box.
   Box();
@@ -44,7 +72,7 @@ class Box {
   void Add(const Variable& v);
 
   /// Adds @p v to the box and sets its domain using @p lb and @p ub.
-  void Add(const Variable& v, double lb, double ub);
+  void Add(const Variable& v, const mpq_class& lb, const mpq_class& ub);
 
   /// Checks if this box is empty.
   bool empty() const;
@@ -86,7 +114,7 @@ class Box {
   int index(const Variable& var) const;
 
   /// Returns the max diameter of the box and the associated index .
-  std::pair<double, int> MaxDiam() const;
+  std::pair<mpq_class, int> MaxDiam() const;
 
   /// Bisects the box at @p i -th dimension.
   /// @throws std::runtime if @p i -th dimension is not bisectable.
@@ -99,7 +127,7 @@ class Box {
   /// Updates the current box by taking union with @p b.
   ///
   /// @pre variables() == b.variables().
-  Box& InplaceUnion(const Box& b);
+  //Box& InplaceUnion(const Box& b);
 
  private:
   /// Bisects the box at @p i -th dimension.
@@ -114,7 +142,7 @@ class Box {
 
   std::shared_ptr<std::vector<Variable>> variables_;
 
-  ibex::IntervalVector values_;
+  IntervalVector values_;
 
   std::shared_ptr<std::unordered_map<Variable, int, hash_value<Variable>>>
       var_to_idx_;
@@ -123,6 +151,8 @@ class Box {
 
   friend std::ostream& operator<<(std::ostream& os, const Box& box);
 };
+
+std::ostream& operator<<(std::ostream& os, const Box::Interval& iv);
 
 std::ostream& operator<<(std::ostream& os, const Box& box);
 

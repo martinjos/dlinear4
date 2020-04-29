@@ -38,6 +38,7 @@ bool CheckSatisfiability(const Formula& f, Config config, Box* const box) {
   }
 }
 
+#if 0
 optional<Box> Minimize(const Expression& objective, const Formula& constraint,
                        double delta) {
   Config config;
@@ -77,5 +78,6 @@ bool Minimize(const Expression& objective, const Formula& constraint,
     return false;
   }
 }
+#endif
 
 }  // namespace dreal

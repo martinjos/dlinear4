@@ -13,9 +13,6 @@ namespace dreal {
 
 PrefixPrinter::PrefixPrinter(ostream& os)
     : os_{os}, old_precision_{os.precision()} {
-  // See
-  // https://stackoverflow.com/questions/554063/how-do-i-print-a-double-value-with-full-precision-using-cout#comment40126260_554134.
-  os_.precision(std::numeric_limits<double>::max_digits10 + 2);
 }
 
 PrefixPrinter::~PrefixPrinter() { os_.precision(old_precision_); }
@@ -33,7 +30,18 @@ ostream& PrefixPrinter::VisitVariable(const Expression& e) {
 }
 
 ostream& PrefixPrinter::VisitConstant(const Expression& e) {
-  return os_ << get_constant_value(e);
+  const mpq_class& constant{get_constant_value(e)};
+  bool print_den = constant.get_den() != 1;
+  if (print_den) {
+    os_ << "(/ ";
+  }
+  os_ << constant.get_num();
+  if (print_den) {
+    os_ << " ";
+    os_ << constant.get_den();
+    os_ << ")";
+  }
+  return os_;
 }
 
 ostream& PrefixPrinter::VisitUnaryFunction(const std::string& name,
@@ -53,19 +61,22 @@ ostream& PrefixPrinter::VisitBinaryFunction(const std::string& name,
 }
 
 ostream& PrefixPrinter::VisitAddition(const Expression& e) {
-  const double constant{get_constant_in_addition(e)};
+  const mpq_class& constant{get_constant_in_addition(e)};
   os_ << "(+";
   if (constant != 0.0) {
-    os_ << " " << constant;
+    os_ << " ";
+    VisitConstant(constant);
   }
   for (const auto& p : get_expr_to_coeff_map_in_addition(e)) {
     const Expression& e_i{p.first};
-    const double c_i{p.second};
+    const mpq_class& c_i{p.second};
     os_ << " ";
     if (c_i == 1.0) {
       Print(e_i);
     } else {
-      os_ << "(* " << c_i << " ";
+      os_ << "(* ";
+      VisitConstant(c_i);
+      os_ << " ";
       Print(e_i);
       os_ << ")";
     }
@@ -74,10 +85,11 @@ ostream& PrefixPrinter::VisitAddition(const Expression& e) {
 }
 
 ostream& PrefixPrinter::VisitMultiplication(const Expression& e) {
-  const double constant{get_constant_in_multiplication(e)};
+  const mpq_class& constant{get_constant_in_multiplication(e)};
   os_ << "(*";
   if (constant != 1.0) {
-    os_ << " " << constant;
+    os_ << " ";
+    VisitConstant(constant);
   }
   for (const auto& p : get_base_to_exponent_map_in_multiplication(e)) {
     const Expression& b_i{p.first};

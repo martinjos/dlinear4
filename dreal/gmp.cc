@@ -22,3 +22,31 @@ size_t hash<mpq_class>::operator()(const mpq_class& val) const {
 }
 
 }  // namespace std
+
+namespace dreal {
+namespace gmp {
+
+mpz_class floor(const mpq_class& val) {
+    // This rounds towards zero
+    mpz_class t{val};
+    if (t == val || val > 0) {
+        return t;
+    } else {
+        // val is negative and non-integer, so it was rounded upwards
+        return t - 1;
+    }
+}
+
+mpz_class ceil(const mpq_class& val) {
+    // This rounds towards zero
+    mpz_class t{val};
+    if (t == val || val < 0) {
+        return t;
+    } else {
+        // val is positive and non-integer, so it was rounded downwards
+        return t + 1;
+    }
+}
+
+}  // namespace gmp
+}  // namespace dreal

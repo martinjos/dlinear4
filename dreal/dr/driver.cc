@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "dreal/dr/scanner.h"
-#include "dreal/solver/expression_evaluator.h"
+//#include "dreal/solver/expression_evaluator.h"
 #include "dreal/util/optional.h"
 
 namespace dreal {
@@ -95,10 +95,12 @@ void DrDriver::Solve() {
     cout << "delta-sat with delta = " << context_.config().precision() << endl;
     if (context_.config().produce_models()) {
       cout << *model << endl;
+#if 0
       for (const Expression& f : objectives_) {
         cout << "Found minimum for " << f << " is "
              << ExpressionEvaluator(f)(*model).mid() << endl;
       }
+#endif
     }
   } else {
     cout << "unsat" << endl;

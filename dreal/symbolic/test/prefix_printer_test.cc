@@ -28,12 +28,12 @@ TEST_F(PrefixPrinterTest, Variable) {
 }
 
 TEST_F(PrefixPrinterTest, Constant1) {
-  const Expression e{3.0};
+  const Expression e{3};
   EXPECT_EQ(ToPrefix(e), "3");
 }
 
 TEST_F(PrefixPrinterTest, Constant2) {
-  const Expression e{M_PI};
+  const Expression e{mpq_class(M_PI)};
   EXPECT_EQ(ToPrefix(e), "3.141592653589793116");
 }
 
