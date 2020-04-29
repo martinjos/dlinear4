@@ -25,43 +25,43 @@ dreal_cc_library(
         "//dreal/optimization:__pkg__",
     ],
     deps = [
-        ":brancher",
+        #":brancher",
         "//dreal/util:box",
         "//dreal/util:dynamic_bitset",
         "//dreal/util:option_value",
     ],
 )
 
-dreal_cc_library(
-    name = "brancher",
-    srcs = [
-        "brancher.cc",
-    ],
-    hdrs = [
-        "brancher.h",
-    ],
-    deps = [
-        "//dreal/util:assert",
-        "//dreal/util:box",
-        "//dreal/util:dynamic_bitset",
-        "//dreal/util:logging",
-    ],
-)
+#dreal_cc_library(
+#    name = "brancher",
+#    srcs = [
+#        "brancher.cc",
+#    ],
+#    hdrs = [
+#        "brancher.h",
+#    ],
+#    deps = [
+#        "//dreal/util:assert",
+#        "//dreal/util:box",
+#        "//dreal/util:dynamic_bitset",
+#        "//dreal/util:logging",
+#    ],
+#)
 
-dreal_cc_library(
-    name = "icp_stat",
-    srcs = [
-        "icp_stat.cc",
-    ],
-    hdrs = [
-        "icp_stat.h",
-    ],
-    deps = [
-        "//dreal/util:stat",
-        "//dreal/util:timer",
-        "@fmt",
-    ],
-)
+#dreal_cc_library(
+#    name = "icp_stat",
+#    srcs = [
+#        "icp_stat.cc",
+#    ],
+#    hdrs = [
+#        "icp_stat.h",
+#    ],
+#    deps = [
+#        "//dreal/util:stat",
+#        "//dreal/util:timer",
+#        "@fmt",
+#    ],
+#)
 
 # We combine context and theory_solver in a single target because they
 # have mutual dependencies.
@@ -71,27 +71,27 @@ dreal_cc_library(
         "context.cc",
         "context_impl.cc",
         "context_impl.h",
-        "expression_evaluator.cc",
-        "forall_formula_evaluator.cc",
-        "forall_formula_evaluator.h",
-        "formula_evaluator.cc",
-        "formula_evaluator_cell.cc",
-        "formula_evaluator_cell.h",
-        "icp.cc",
-        "icp_parallel.cc",
-        "icp_seq.cc",
-        "relational_formula_evaluator.cc",
-        "relational_formula_evaluator.h",
+        #"expression_evaluator.cc",
+        #"forall_formula_evaluator.cc",
+        #"forall_formula_evaluator.h",
+        #"formula_evaluator.cc",
+        #"formula_evaluator_cell.cc",
+        #"formula_evaluator_cell.h",
+        #"icp.cc",
+        #"icp_parallel.cc",
+        #"icp_seq.cc",
+        #"relational_formula_evaluator.cc",
+        #"relational_formula_evaluator.h",
         "theory_solver.cc",
         "linear_theory_solver.cc",
     ],
     hdrs = [
         "context.h",
-        "expression_evaluator.h",
-        "formula_evaluator.h",
-        "icp.h",
-        "icp_parallel.h",
-        "icp_seq.h",
+        #"expression_evaluator.h",
+        #"formula_evaluator.h",
+        #"icp.h",
+        #"icp_parallel.h",
+        #"icp_seq.h",
         "theory_solver.h",
         "linear_theory_solver.h",
     ],
@@ -103,13 +103,13 @@ dreal_cc_library(
         "//dreal/smt2:__pkg__",
     ],
     deps = [
-        ":brancher",
+        #":brancher",
         ":config",
-        ":filter_assertion",
-        ":icp_stat",
+        #":filter_assertion",
+        #":icp_stat",
         ":sat_solver",
         "//dreal:version_header",
-        "//dreal/contractor",
+        #"//dreal:contractor",
         "//dreal/smt2:logic",
         "//dreal/smt2:sort",
         "//dreal/symbolic",
@@ -118,7 +118,7 @@ dreal_cc_library(
         "//dreal/util:cds",
         "//dreal/util:dynamic_bitset",
         "//dreal/util:exception",
-        "//dreal/util:ibex_converter",
+        #"//dreal/util:ibex_converter",
         "//dreal/util:if_then_else_eliminator",
         "//dreal/util:interrupt",
         "//dreal/util:logging",
@@ -159,21 +159,21 @@ dreal_cc_library(
     ],
 )
 
-dreal_cc_library(
-    name = "filter_assertion",
-    srcs = [
-        "filter_assertion.cc",
-    ],
-    hdrs = [
-        "filter_assertion.h",
-    ],
-    visibility = ["//dreal/contractor:__pkg__"],
-    deps = [
-        "//dreal/symbolic",
-        "//dreal/util:box",
-        "//dreal/util:logging",
-    ],
-)
+#dreal_cc_library(
+#    name = "filter_assertion",
+#    srcs = [
+#        "filter_assertion.cc",
+#    ],
+#    hdrs = [
+#        "filter_assertion.h",
+#    ],
+#    visibility = [],
+#    deps = [
+#        "//dreal/symbolic",
+#        "//dreal/util:box",
+#        "//dreal/util:logging",
+#    ],
+#)
 
 # -----
 # Tests
@@ -198,37 +198,37 @@ dreal_cc_googletest(
     ],
 )
 
-dreal_cc_googletest(
-    name = "expression_evaluator_test",
-    tags = ["unit"],
-    deps = [
-        ":solver",
-    ],
-)
+#dreal_cc_googletest(
+#    name = "expression_evaluator_test",
+#    tags = ["unit"],
+#    deps = [
+#        ":solver",
+#    ],
+#)
 
-dreal_cc_googletest(
-    name = "filter_assertion_test",
-    tags = ["unit"],
-    deps = [
-        ":filter_assertion",
-    ],
-)
+#dreal_cc_googletest(
+#    name = "filter_assertion_test",
+#    tags = ["unit"],
+#    deps = [
+#        ":filter_assertion",
+#    ],
+#)
 
-dreal_cc_googletest(
-    name = "formula_evaluator_test",
-    tags = ["unit"],
-    deps = [
-        ":solver",
-    ],
-)
+#dreal_cc_googletest(
+#    name = "formula_evaluator_test",
+#    tags = ["unit"],
+#    deps = [
+#        ":solver",
+#    ],
+#)
 
-dreal_cc_googletest(
-    name = "icp_test",
-    tags = ["unit"],
-    deps = [
-        ":solver",
-    ],
-)
+#dreal_cc_googletest(
+#    name = "icp_test",
+#    tags = ["unit"],
+#    deps = [
+#        ":solver",
+#    ],
+#)
 
 dreal_cc_googletest(
     name = "jorge_test",
@@ -262,7 +262,7 @@ dreal_cc_googletest(
 filegroup(
     name = "headers",
     srcs = [
-        "brancher.h",
+        #"brancher.h",
         "config.h",
         "context.h",
     ],

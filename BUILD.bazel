@@ -139,7 +139,7 @@ pkg_deb(
         "coinor-libclp-dev",
         "libbz2-dev",
         "libibex-dev",
-        "libnlopt-dev",
+        #"libnlopt-dev",
         # The followings are Build-Depends:
         # "bison",
         # "flex",

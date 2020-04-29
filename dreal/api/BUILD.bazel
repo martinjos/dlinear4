@@ -5,7 +5,7 @@ load(
     "dreal_cc_binary",
     "dreal_cc_googletest",
     "dreal_cc_library",
-    "dreal_py_test",
+    #"dreal_py_test",
 )
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
@@ -45,26 +45,26 @@ dreal_cc_googletest(
     ],
 )
 
-dreal_py_test(
-    name = "cav18_benchmark",
-    srcs = [
-        "test/cav18_benchmark.py",
-    ],
-    args = [
-        "--precision 0.001",
-        "--local-optimization",
-    ],
-    main = "test/cav18_benchmark.py",
-    tags = [
-        "no_asan",
-        "no_lsan",
-        "no_tsan",
-        "no_ubsan",
-    ],
-    deps = [
-        "//dreal:dreal_py",
-    ],
-)
+#dreal_py_test(
+#    name = "cav18_benchmark",
+#    srcs = [
+#        "test/cav18_benchmark.py",
+#    ],
+#    args = [
+#        "--precision 0.001",
+#        "--local-optimization",
+#    ],
+#    main = "test/cav18_benchmark.py",
+#    tags = [
+#        "no_asan",
+#        "no_lsan",
+#        "no_tsan",
+#        "no_ubsan",
+#    ],
+#    deps = [
+#        "//dreal:dreal_py",
+#    ],
+#)
 
 dreal_cc_binary(
     name = "cav19_benchmark",

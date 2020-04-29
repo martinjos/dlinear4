@@ -38,7 +38,8 @@ dreal_cc_library(
         ":logging",
         ":math",
         "//dreal/symbolic",
-        "@ibex",
+        #"@ibex",
+        "//dreal:gmp",
     ],
 )
 
@@ -53,19 +54,19 @@ dreal_cc_library(
     ],
 )
 
-dreal_cc_library(
-    name = "interval",
-    srcs = [
-        "interval.cc",
-    ],
-    hdrs = [
-        "interval.h",
-    ],
-    visibility = ["//dreal:__subpackages__"],
-    deps = [
-        ":box",
-    ],
-)
+#dreal_cc_library(
+#    name = "interval",
+#    srcs = [
+#        "interval.cc",
+#    ],
+#    hdrs = [
+#        "interval.h",
+#    ],
+#    visibility = ["//dreal:__subpackages__"],
+#    deps = [
+#        ":box",
+#    ],
+#)
 
 dreal_cc_library(
     name = "if_then_else_eliminator",
@@ -207,30 +208,29 @@ dreal_cc_library(
     visibility = ["//dreal:__subpackages__"],
 )
 
-dreal_cc_library(
-    name = "ibex_converter",
-    srcs = [
-        "ibex_converter.cc",
-    ],
-    hdrs = [
-        "ibex_converter.h",
-    ],
-    visibility = [
-        "//dreal/contractor:__pkg__",
-        "//dreal/solver:__pkg__",
-    ],
-    deps = [
-        ":box",
-        ":exception",
-        ":interval",
-        ":logging",
-        ":math",
-        ":stat",
-        ":timer",
-        "//dreal/symbolic",
-        "@ibex",
-    ],
-)
+#dreal_cc_library(
+#    name = "ibex_converter",
+#    srcs = [
+#        "ibex_converter.cc",
+#    ],
+#    hdrs = [
+#        "ibex_converter.h",
+#    ],
+#    visibility = [
+#        "//dreal/solver:__pkg__",
+#    ],
+#    deps = [
+#        ":box",
+#        ":exception",
+#        #":interval",
+#        ":logging",
+#        ":math",
+#        ":stat",
+#        ":timer",
+#        "//dreal/symbolic",
+#        "@ibex",
+#    ],
+#)
 
 dreal_cc_library(
     name = "logging",
@@ -260,6 +260,7 @@ dreal_cc_library(
     visibility = ["//dreal:__subpackages__"],
     deps = [
         ":exception",
+        "//dreal:gmp",
     ],
 )
 
@@ -406,13 +407,13 @@ dreal_cc_googletest(
     ],
 )
 
-dreal_cc_googletest(
-    name = "interval_test",
-    tags = ["unit"],
-    deps = [
-        ":interval",
-    ],
-)
+#dreal_cc_googletest(
+#    name = "interval_test",
+#    tags = ["unit"],
+#    deps = [
+#        ":interval",
+#    ],
+#)
 
 dreal_cc_googletest(
     name = "if_then_else_eliminator_test",

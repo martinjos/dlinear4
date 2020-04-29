@@ -5,6 +5,11 @@ try-import %workspace%/user.bazelrc
 build --cxxopt=-std=c++14
 build --host_cxxopt=-std=c++14
 
+# Color diagnostics. Always.
+common --color=yes
+build --cxxopt=-fdiagnostics-color=always
+build --host_cxxopt=-fdiagnostics-color=always
+
 # Default to an optimized build.
 build -c opt
 
