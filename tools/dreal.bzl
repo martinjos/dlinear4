@@ -293,11 +293,13 @@ def smt2_test(
             "$(location //dreal:dreal)",
             "$(location %s)" % smt2,
             "$(location %s)" % expected,
+            "$(locations //:qsopt-ex-lib)",
         ] + options,
         tags = tags + ["smt2"],
         srcs = ["test.py"],
         data = [
             "//dreal:dreal",
+            "//:qsopt-ex-lib",
         ] + data_files,
         main = "test.py",
         srcs_version = "PY2AND3",

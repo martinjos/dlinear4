@@ -34,6 +34,12 @@ cc_library(
     ],
 )
 
+filegroup(
+    name = "qsopt-ex-lib",
+    srcs = ["qsopt-ex/lib"],
+    visibility = ["//visibility:public"],
+)
+
 cc_binary(
     name = "libdreal.so",
     linkshared = 1,

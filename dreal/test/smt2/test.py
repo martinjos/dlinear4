@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
+import os
 import subprocess
 import difflib
 
@@ -18,14 +19,20 @@ smt2 = sys.argv[2]
 # 3rd Argument: smt2 expected output
 expected_output_filename = sys.argv[3]
 
-options = sys.argv[4:]
+# 4rd Argument: qsopt_ex lib directory
+qsoptex_lib_dir = sys.argv[4]
+
+options = sys.argv[5:]
 
 with open(expected_output_filename, "r") as myfile:
     expected_output = myfile.read().strip().splitlines()
 
 try:
     # 1. Run dReal with smt2 file
-    output = subprocess.check_output([dreal, smt2] + options).decode('UTF-8')
+    env = dict(os.environ)
+    env["LD_LIBRARY_PATH"] = qsoptex_lib_dir
+    output = subprocess.check_output([dreal, smt2] + options,
+                                     env=env).decode('UTF-8')
     output = output.splitlines()
     print(output)
     # 2. Compare the output with expected output
