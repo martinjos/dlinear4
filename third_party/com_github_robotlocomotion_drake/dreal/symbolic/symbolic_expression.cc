@@ -161,23 +161,40 @@ size_t Expression::get_hash() const {
   return ptr_->get_hash();
 }
 
+// These must be initialized separately to prevent problems with QSopt_ex's
+// heap allocation of mpq_t.
+static Expression zero{Expression::NaN()};
+static Expression one{Expression::NaN()};
+static Expression pi{Expression::NaN()};
+static Expression e{Expression::NaN()};
+
+void Expression::InitConstants() {
+  zero = Expression(new ExpressionConstant(0.0));
+  one = Expression(new ExpressionConstant(1.0));
+  pi = Expression(new ExpressionConstant(M_PI));
+  e = Expression(new ExpressionConstant(M_E));
+}
+
+void Expression::DeInitConstants() {
+  zero = Expression::NaN();
+  one = Expression::NaN();
+  pi = Expression::NaN();
+  e = Expression::NaN();
+}
+
 Expression Expression::Zero() {
-  static const Expression zero{new ExpressionConstant{0.0}};
   return zero;
 }
 
 Expression Expression::One() {
-  static const Expression one{new ExpressionConstant{1.0}};
   return one;
 }
 
 Expression Expression::Pi() {
-  static const Expression pi{new ExpressionConstant{M_PI}};
   return pi;
 }
 
 Expression Expression::E() {
-  static const Expression e{new ExpressionConstant{M_E}};
   return e;
 }
 

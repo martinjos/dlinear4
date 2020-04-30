@@ -190,6 +190,12 @@ class Expression {
   /** Collects variables in expression. */
   const Variables& GetVariables() const;
 
+  /** Must be called after QSexactStart(), and before Zero(), One(), Pi(), or E() */
+  static void InitConstants();
+
+  /** Must be called before QSexactClear() */
+  static void DeInitConstants();
+
   /** Checks structural equality.
    *
    * Two expressions e1 and e2 are structurally equal when they have the same

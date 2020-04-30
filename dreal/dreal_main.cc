@@ -398,9 +398,11 @@ void MainProgram::ExtractOptions() {
 
 void MainProgram::Init() {
   QSexactStart();
+  Expression::InitConstants();
 }
 
 void MainProgram::DeInit() {
+  Expression::DeInitConstants();
   QSexactClear();
 }
 
