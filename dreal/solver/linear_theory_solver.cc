@@ -3,15 +3,11 @@
 #include <atomic>
 #include <iostream>
 
-#include <gmpxx.h>
-extern "C" {
-#include <qsopt_ex/QSopt_ex.h>
-}
-
 #include "dreal/util/assert.h"
 #include "dreal/util/logging.h"
 #include "dreal/util/stat.h"
 #include "dreal/util/timer.h"
+#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 
@@ -63,7 +59,7 @@ bool LinearTheorySolver::CheckSat(const Box& box, const vector<Formula>& asserti
   (void) box;  // TODO: remove these lines
   (void) assertions;
 
-  QSopt_ex_version();
+  qsopt_ex::QSopt_ex_version();
   return true;  // FIXME: implement
 }
 

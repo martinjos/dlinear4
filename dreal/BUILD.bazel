@@ -46,6 +46,7 @@ dreal_cc_library(
     ],
     deps = [
         "//:qsopt-ex",
+        "@linux_libs//:gmpxx",
     ],
 )
 
@@ -83,9 +84,9 @@ dreal_cc_binary(
         "//dreal/util:filesystem",
         "//dreal/util:logging",
         "//dreal/util:rounding_mode_guard",
+        "//dreal:qsopt-ex",
         "@ezoptionparser",
         "@fmt",
-        "//:qsopt-ex",
     ],
 )
 

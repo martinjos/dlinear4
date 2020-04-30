@@ -4,8 +4,7 @@
 #include <string>
 
 #include "dreal/symbolic/symbolic.h"
-
-#include <gmpxx.h>
+#include "dreal/gmp.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"

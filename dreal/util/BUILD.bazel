@@ -40,6 +40,7 @@ dreal_cc_library(
         "//dreal/symbolic",
         #"@ibex",
         "//dreal:gmp",
+        "//dreal:qsopt-ex",
     ],
 )
 

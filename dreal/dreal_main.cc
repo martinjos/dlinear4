@@ -6,11 +6,6 @@
 
 #include <fmt/format.h>
 
-#include <gmpxx.h>
-extern "C" {
-#include <qsopt_ex/QSopt_ex.h>
-}
-
 //#include "dreal/dr/run.h"
 #include "dreal/smt2/run.h"
 #include "dreal/solver/config.h"
@@ -19,6 +14,7 @@ extern "C" {
 #include "dreal/util/filesystem.h"
 #include "dreal/util/logging.h"
 #include "dreal/util/rounding_mode_guard.h"
+#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 
@@ -41,7 +37,7 @@ string get_version_string() {
   }
   return fmt::format("v{} ({} Build){} (qsopt-ex: {})",
                      Context::version(), build_type, repo_stat,
-                     QSopt_ex_repository_status());
+                     qsopt_ex::QSopt_ex_repository_status());
 }
 }  // namespace
 
@@ -397,13 +393,13 @@ void MainProgram::ExtractOptions() {
 }
 
 void MainProgram::Init() {
-  QSexactStart();
+  qsopt_ex::QSexactStart();
   Expression::InitConstants();
 }
 
 void MainProgram::DeInit() {
   Expression::DeInitConstants();
-  QSexactClear();
+  qsopt_ex::QSexactClear();
 }
 
 int MainProgram::Run() {

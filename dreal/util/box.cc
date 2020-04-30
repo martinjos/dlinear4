@@ -25,7 +25,7 @@ using dreal::gmp::floor;
 
 namespace dreal {
 
-Box::Interval::Interval(Interval&& other) noexcept try : lb_(1), ub_(0) {
+Box::Interval::Interval(Interval&& other) noexcept try {
   try {
     lb_.swap(other.lb_);
     ub_.swap(other.ub_);
@@ -119,9 +119,16 @@ void Box::Add(const Variable& v, const mpq_class& lb, const mpq_class& ub) {
   values_[(*var_to_idx_)[v]] = Interval{lb, ub};
 }
 
-bool Box::empty() const { return values_.empty(); }
+bool Box::empty() const {
+  return std::any_of(values_.begin(), values_.end(),
+                     [](const Interval& iv){ return iv.is_empty(); });
+}
 
-void Box::set_empty() { values_.clear(); }
+void Box::set_empty() {
+  for (Interval& iv : values_) {
+    iv.set_empty();
+  }
+}
 
 int Box::size() const { return variables_->size(); }
 
