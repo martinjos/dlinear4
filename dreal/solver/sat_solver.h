@@ -97,6 +97,9 @@ class SatSolver {
   // relationship between Variable ⇔ Literal (in SAT).
   void MakeSatVar(const Variable& var);
 
+  // Disable all literals in the linear solver
+  void ResetLinearProblem();
+
   // Add a symbolic formula @p f to @p clause.
   //
   // @pre @p f is either a Boolean variable or a negation of Boolean
@@ -105,6 +108,9 @@ class SatSolver {
 
   // Add a linear literal to the linear solver
   void AddLinearLiteral(const Variable& var, bool truth);
+
+  // Enable a linear literal in the linear solver
+  void EnableLinearLiteral(const Variable& var, bool truth);
 
   // Add a variable to the linear solver
   void AddLinearVariable(const Variable& var);
@@ -145,7 +151,7 @@ class SatSolver {
 
   // Map (symbolic::Variable, bool) <-> int (row in QSopt_ex problem).
   std::map<std::pair<Variable::Id, bool>, int> to_qsx_row_;
-  std::map<int, Literal> from_qsx_row_;
+  std::vector<Literal> from_qsx_row_;
 
   std::vector<mpq_class> qsx_rhs_;
   std::vector<char> qsx_sense_;

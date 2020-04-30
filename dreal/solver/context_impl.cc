@@ -150,6 +150,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         // SAT from SATSolver.
         DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Sat Check = SAT");
 
+        // The selected assertions have already been enabled in the LP solver
         if (theory_solver_.CheckSat(box, sat_solver->GetLinearSolver())) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(

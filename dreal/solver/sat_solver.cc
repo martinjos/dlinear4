@@ -138,6 +138,7 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
   Model model;
   if (ret == PICOSAT_SATISFIABLE) {
     // SAT Case.
+    ResetLinearProblem();
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
     for (int i = 1; i <= picosat_variables(sat_); ++i) {
       const int model_i{has_picosat_pop_used_ ? picosat_deref(sat_, i)
@@ -159,6 +160,7 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
                         model_i == 1 ? "" : "¬", var);
         auto& theory_model = model.second;
         theory_model.emplace_back(var, model_i == 1);
+        EnableLinearLiteral(var, model_i == 1);
       } else if (tseitin_variables_.count(var.get_id()) == 0) {
         DREAL_LOG_TRACE(
             "SatSolver::CheckSat: Add Boolean literal {}{} to Model ",
@@ -218,6 +220,25 @@ void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
   mpq_clear(c_value);
 }
 
+void SatSolver::ResetLinearProblem() {
+  DREAL_LOG_TRACE("SatSolver::ResetLinearProblem()");
+  const int qsx_rows{mpq_QSget_rowcount(qsx_prob_)};
+  DREAL_ASSERT(static_cast<size_t>(qsx_rows) == from_qsx_row_.size());
+  for (int i = 0; i < qsx_rows; i++) {
+    mpq_QSchange_sense(qsx_prob_, i, 'G');
+    mpq_QSchange_rhscoef(qsx_prob_, i, mpq_NINFTY);
+  }
+}
+
+void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
+    const auto it = to_qsx_row_.find(make_pair(var.get_id(), truth));
+    DREAL_ASSERT(it != to_qsx_row_.end());
+    const int qsx_row = it->second;
+    mpq_QSchange_sense(qsx_prob_, qsx_row, qsx_sense_[qsx_row]);
+    mpq_QSchange_rhscoef(qsx_prob_, qsx_row, qsx_rhs_[qsx_row].get_mpq_t());
+    DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral({})", qsx_row);
+}
+
 void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
     const auto it = var_to_formula_map.find(formulaVar);
@@ -261,6 +282,8 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     }
     const int qsx_row{mpq_QSget_rowcount(qsx_prob_)};
     mpq_QSnew_row(qsx_prob_, mpq_NINFTY, 'G', NULL);  // Inactive
+    DREAL_ASSERT(static_cast<size_t>(qsx_row) == qsx_sense_.size() - 1);
+    DREAL_ASSERT(static_cast<size_t>(qsx_row) == qsx_rhs_.size());
     qsx_rhs_.push_back(0);
     if (is_constant(expr)) {
       qsx_rhs_.back() = -get_constant_value(expr);
@@ -290,7 +313,8 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
     }
     to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
-    from_qsx_row_.emplace(make_pair(qsx_row, make_pair(formulaVar, truth)));
+    DREAL_ASSERT(static_cast<size_t>(qsx_row) == from_qsx_row_.size());
+    from_qsx_row_.push_back(make_pair(formulaVar, truth));
     DREAL_LOG_DEBUG("SatSolver::AddLinearLiteral({}{} ↦ {})",
                     truth ? "" : "¬", it->second, qsx_row);
 }
