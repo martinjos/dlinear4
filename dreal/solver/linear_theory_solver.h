@@ -6,6 +6,8 @@
 #include "dreal/solver/config.h"
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/box.h"
+#include "dreal/qsopt_ex.h"
+#include "dreal/gmp.h"
 
 namespace dreal {
 
@@ -17,7 +19,7 @@ class LinearTheorySolver {
 
   /// Checks consistency. Returns true if there is a satisfying
   /// assignment. Otherwise, return false.
-  bool CheckSat(const Box& box, const std::vector<Formula>& assertions);
+  bool CheckSat(const Box& box, const qsopt_ex::mpq_QSprob prob);
 
   /// Gets a satisfying Model.
   const Box& GetModel() const;
@@ -29,6 +31,7 @@ class LinearTheorySolver {
   const Config& config_;
   Box model_;
   std::set<Formula> explanation_;
+  mpq_class precision_;
 };
 
 }  // namespace dreal

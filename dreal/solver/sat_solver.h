@@ -76,6 +76,10 @@ class SatSolver {
     return predicate_abstractor_[var];
   }
 
+  qsopt_ex::mpq_QSprob GetLinearSolver() const {
+    return qsx_prob_;
+  }
+
  private:
   // Adds a formula @p f to the solver.
   //

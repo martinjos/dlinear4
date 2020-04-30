@@ -4,16 +4,18 @@
 #include <iostream>
 
 #include "dreal/util/assert.h"
+#include "dreal/util/exception.h"
 #include "dreal/util/logging.h"
 #include "dreal/util/stat.h"
 #include "dreal/util/timer.h"
-#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 
 using std::cout;
 using std::set;
 using std::vector;
+
+using qsopt_ex::mpq_QSprob;
 
 LinearTheorySolver::LinearTheorySolver(const Config& config)
     : config_{config} {
@@ -48,19 +50,37 @@ class TheorySolverStat : public Stat {
 
 }  // namespace
 
-bool LinearTheorySolver::CheckSat(const Box& box, const vector<Formula>& assertions) {
+bool LinearTheorySolver::CheckSat(const Box& box, const mpq_QSprob prob) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
                                    true /* start_timer */);
 
-  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat()");
+  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: Box = \n{}", box);
 
-  (void) box;  // TODO: remove these lines
-  (void) assertions;
+  int status = -1;
+  int lp_status = -1;
 
-  qsopt_ex::QSopt_ex_version();
-  return true;  // FIXME: implement
+  precision_ = config_.precision();
+
+  status = qsopt_ex::QSdelta_solver(prob, precision_.get_mpq_t(), NULL, NULL, NULL,
+                                    DUAL_SIMPLEX, &lp_status);
+
+  if (status) {
+    throw DREAL_RUNTIME_ERROR("QSdelta_solver() returned {}", status);
+  }
+
+  switch (lp_status) {
+   case QS_LP_FEASIBLE:
+   case QS_LP_DELTA_FEASIBLE:
+    return true;
+   case QS_LP_INFEASIBLE:
+    return false;
+   case QS_LP_UNSOLVED:
+    throw DREAL_RUNTIME_ERROR("QSdelta_solver() failed to solve LP");
+  }
+
+  DREAL_UNREACHABLE();
 }
 
 const Box& LinearTheorySolver::GetModel() const {

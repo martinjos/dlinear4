@@ -150,13 +150,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         // SAT from SATSolver.
         DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Sat Check = SAT");
 
-        vector<Formula> assertions;
-        assertions.reserve(theory_model.size());
-        for (const pair<Variable, bool>& p : theory_model) {
-          assertions.push_back(p.second ? sat_solver->theory_literal(p.first)
-                                        : !sat_solver->theory_literal(p.first));
-        }
-        if (theory_solver_.CheckSat(box, assertions)) {
+        if (theory_solver_.CheckSat(box, sat_solver->GetLinearSolver())) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(
               "ContextImpl::CheckSatCore() - Theroy Check = delta-SAT");
