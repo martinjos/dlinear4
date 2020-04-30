@@ -2,6 +2,8 @@
 
 #include "dreal/util/rounding_mode_guard.h"
 
+#pragma STDC FENV_ACCESS ON
+
 namespace dreal {
 
 using std::stod;

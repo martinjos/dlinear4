@@ -325,6 +325,7 @@ dreal_cc_library(
     hdrs = [
         "rounding_mode_guard.h",
     ],
+    copts = ["-frounding-math", "-Wno-unknown-pragmas"],
     visibility = ["//dreal:__subpackages__"],
 )
 
@@ -372,6 +373,7 @@ dreal_cc_library(
     hdrs = [
         "string_to_interval.h",
     ],
+    copts = ["-frounding-math", "-Wno-unknown-pragmas"],
     visibility = ["//dreal:__subpackages__"],
     deps = [
         ":rounding_mode_guard",

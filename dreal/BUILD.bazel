@@ -71,6 +71,7 @@ dreal_cc_binary(
         "dreal_main.cc",
         "dreal_main.h",
     ],
+    copts = ["-frounding-math", "-Wno-unknown-pragmas"],
     visibility = [
         #"//dreal/test/dr:__subpackages__",
         "//dreal/test/smt2:__subpackages__",
@@ -81,6 +82,7 @@ dreal_cc_binary(
         "//dreal/solver:config",
         "//dreal/util:filesystem",
         "//dreal/util:logging",
+        "//dreal/util:rounding_mode_guard",
         "@ezoptionparser",
         "@fmt",
         "//:qsopt-ex",

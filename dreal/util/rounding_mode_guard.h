@@ -2,6 +2,8 @@
 
 #include <cfenv>
 
+#pragma STDC FENV_ACCESS ON
+
 namespace dreal {
 
 class RoundingModeGuard {
@@ -31,3 +33,5 @@ class RoundingModeGuard {
   const int round_mode_{};
 };
 }  // namespace dreal
+
+#pragma STDC FENV_ACCESS DEFAULT

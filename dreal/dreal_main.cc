@@ -18,6 +18,7 @@ extern "C" {
 #include "dreal/util/exception.h"
 #include "dreal/util/filesystem.h"
 #include "dreal/util/logging.h"
+#include "dreal/util/rounding_mode_guard.h"
 
 namespace dreal {
 
@@ -276,14 +277,20 @@ void MainProgram::ExtractOptions() {
     log()->set_level(spdlog::level::off);
   }
 
+#pragma STDC FENV_ACCESS ON
+
   // --precision
   if (opt_.isSet("--precision")) {
-    double precision{0.0};
-    opt_.get("--precision")->getDouble(precision);
+    string precision_str;
+    opt_.get("--precision")->getString(precision_str);
+    RoundingModeGuard guard(FE_DOWNWARD);
+    double precision = stod(precision_str);
     config_.mutable_precision().set_from_command_line(precision);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --precision = {}",
                     config_.precision());
   }
+
+#pragma STDC FENV_ACCESS DEFAULT
 
   // --produce-model
   if (opt_.isSet("--produce-models")) {
