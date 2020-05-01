@@ -35,6 +35,11 @@ class Box {
     std::pair<Interval, Interval> bisect(const mpq_class& p) const;
     bool operator==(const Interval& other) const { return lb_ == other.lb_ && ub_ == other.ub_; }
     bool operator!=(const Interval& other) const { return lb_ != other.lb_ || ub_ != other.ub_; }
+    Interval& operator=(const mpq_t& val) {
+      mpq_set(lb_.get_mpq_t(), val);
+      mpq_set(ub_.get_mpq_t(), val);
+      return *this;
+    }
     Interval& operator=(const mpq_class& val) { lb_ = ub_ = val; return *this; }
     Interval& operator=(const Interval& other) { lb_ = other.lb_; ub_ = other.ub_; return *this; }
     // Mutators

@@ -377,7 +377,8 @@ void SatSolver::AddLinearVariable(const Variable& var) {
                              var.get_name().c_str());
   DREAL_ASSERT(!status);
   to_qsx_col_.emplace(make_pair(var.get_id(), qsx_col));
-  from_qsx_col_.emplace(make_pair(qsx_col, var));
+  DREAL_ASSERT(static_cast<size_t>(qsx_col) == from_qsx_col_.size());
+  from_qsx_col_.push_back(var);
   DREAL_LOG_DEBUG("SatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
 }
 }  // namespace dreal

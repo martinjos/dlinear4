@@ -4,6 +4,17 @@
 #include "dreal/qsopt_ex.h"
 
 using std::string;
+using std::fprintf;
+using std::exit;
+
+// Needed for mpq_EGlpNumAllocArray(), etc.
+#define EXIT(__A, ...)                             \
+    do {                                           \
+        if(__A) {                                  \
+            fprintf(stderr, "EXIT: " __VA_ARGS__); \
+            exit(EXIT_FAILURE);                    \
+        }                                          \
+    } while (0)
 
 namespace dreal {
 namespace qsopt_ex {
@@ -24,6 +35,14 @@ mpq_class StringToMpq(const string& str) {
     mpq_class result(val);
     mpq_clear(val);
     return result;
+}
+
+MpqArray::MpqArray(int size) {
+    array = mpq_EGlpNumAllocArray(size);
+}
+
+MpqArray::~MpqArray() {
+    mpq_EGlpNumFreeArray(array);
 }
 
 }  // namespace qsopt_ex

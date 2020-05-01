@@ -36,5 +36,19 @@ extern "C" {
 mpq_class* StringToMpqPtr(const std::string& str);
 mpq_class StringToMpq(const std::string& str);
 
+class MpqArray {
+ public:
+  MpqArray(int size);
+  ~MpqArray();
+  operator const mpq_t*() const {
+    return array;
+  }
+  operator mpq_t*() {
+    return array;
+  }
+ private:
+  mpq_t* array;
+};
+
 }  // namespace qsopt_ex
 }  // namespace dreal

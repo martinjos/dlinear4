@@ -80,6 +80,10 @@ class SatSolver {
     return qsx_prob_;
   }
 
+  const std::vector<Variable>& GetLinearVarMap() const {
+    return from_qsx_col_;
+  }
+
  private:
   // Adds a formula @p f to the solver.
   //
@@ -147,7 +151,7 @@ class SatSolver {
   // won't create duplicate columns.  No two Variable objects ever have the
   // same Id.
   std::map<Variable::Id, int> to_qsx_col_;
-  std::map<int, Variable> from_qsx_col_;
+  std::vector<Variable> from_qsx_col_;
 
   // Map (symbolic::Variable, bool) <-> int (row in QSopt_ex problem).
   std::map<std::pair<Variable::Id, bool>, int> to_qsx_row_;
