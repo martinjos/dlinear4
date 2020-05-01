@@ -26,6 +26,8 @@ using qsopt_ex::mpq_QSget_colcount;
 using qsopt_ex::mpq_QSnew_col;
 using qsopt_ex::mpq_ILL_MINDOUBLE;  // mpq_NINFTY
 using qsopt_ex::mpq_ILL_MAXDOUBLE;  // mpq_INFTY
+using qsopt_ex::mpq_ninfty;  // mpq_class versions
+using qsopt_ex::mpq_infty;
 using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
 
 SatSolver::SatSolver(const Config& config) : sat_{picosat_init()} {
@@ -213,6 +215,9 @@ void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
   if (it == to_qsx_col_.end()) {
     throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
   }
+  if (value <= mpq_ninfty() || value >= mpq_infty()) {
+    throw DREAL_RUNTIME_ERROR("LP coefficient too large: {}", value);
+  }
   mpq_t c_value;
   mpq_init(c_value);
   mpq_set(c_value, value.get_mpq_t());
@@ -248,6 +253,7 @@ void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
 // Because the input precision > 0, and we have reduced this by a small amount,
 // we can replace any strict inequalities with the equivalent non-strict
 // inequalities, and ignore not-equal constraints altogether.
+
 static bool is_equal_or_whatever(const Formula& formula, bool truth) {
   if (truth) {
     return is_equal_to(formula);
@@ -337,6 +343,9 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
       qsx_rhs_.back() = -get_constant_in_addition(expr);
     } else {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
+    }
+    if (qsx_rhs_.back() <= mpq_ninfty() || qsx_rhs_.back() >= mpq_infty()) {
+      throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", qsx_rhs_.back());
     }
     to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
     DREAL_ASSERT(static_cast<size_t>(qsx_row) == from_qsx_row_.size());

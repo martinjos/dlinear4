@@ -50,5 +50,15 @@ class MpqArray {
   mpq_t* array;
 };
 
+extern mpq_class* mpq_class_infinity;
+extern mpq_class* mpq_class_ninfinity;
+
+void QSXStart();
+void QSXFinish();
+
+// Important: must call QSXStart() first!
+const mpq_class& mpq_infty();
+const mpq_class& mpq_ninfty();
+
 }  // namespace qsopt_ex
 }  // namespace dreal

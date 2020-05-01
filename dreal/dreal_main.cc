@@ -400,13 +400,13 @@ void MainProgram::ExtractOptions() {
 }
 
 void MainProgram::Init() {
-  qsopt_ex::QSexactStart();
+  qsopt_ex::QSXStart();
   Expression::InitConstants();
 }
 
 void MainProgram::DeInit() {
   Expression::DeInitConstants();
-  qsopt_ex::QSexactClear();
+  qsopt_ex::QSXFinish();
 }
 
 int MainProgram::Run() {
