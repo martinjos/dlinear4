@@ -150,15 +150,8 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         // SAT from SATSolver.
         DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Sat Check = SAT");
 
-        vector<Formula> assertions;
-        assertions.reserve(theory_model.size());
-        for (const pair<Variable, bool>& p : theory_model) {
-          assertions.push_back(p.second ? sat_solver->theory_literal(p.first)
-                                        : !sat_solver->theory_literal(p.first));
-        }
-
         // The selected assertions have already been enabled in the LP solver
-        if (theory_solver_.CheckSat(box, assertions, sat_solver->GetLinearSolver(),
+        if (theory_solver_.CheckSat(box, theory_model, sat_solver->GetLinearSolver(),
                                     sat_solver->GetLinearVarMap())) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(
@@ -168,7 +161,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         } else {
           // UNSAT from TheorySolver.
           DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theroy Check = UNSAT");
-          const set<Formula>& explanation{theory_solver_.GetExplanation()};
+          const set<pair<Variable, bool>>& explanation{theory_solver_.GetExplanation()};
           DREAL_LOG_DEBUG(
               "ContextImpl::CheckSatCore() - size of explanation = {} - stack "
               "size = {}",

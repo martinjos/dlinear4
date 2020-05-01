@@ -52,7 +52,7 @@ class TheorySolverStat : public Stat {
 }  // namespace
 
 bool LinearTheorySolver::CheckSat(const Box& box,
-                                  const std::vector<Formula>& assertions,
+                                  const std::vector<Literal>& assertions,
                                   const mpq_QSprob prob,
                                   const std::vector<Variable>& var_map) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
@@ -107,7 +107,7 @@ const Box& LinearTheorySolver::GetModel() const {
   return model_;
 }
 
-const set<Formula>& LinearTheorySolver::GetExplanation() const {
+const set<LinearTheorySolver::Literal>& LinearTheorySolver::GetExplanation() const {
   return explanation_;
 }
 

@@ -59,7 +59,7 @@ class SatSolver {
 
   /// Given a @p formulas = {f₁, ..., fₙ}, adds a clause (¬f₁ ∨ ... ∨ ¬ fₙ) to
   /// the solver.
-  void AddLearnedClause(const std::set<Formula>& formulas);
+  void AddLearnedClause(const std::set<Literal>& literals);
 
   /// Checks the satisfiability of the current configuration.
   ///
@@ -109,6 +109,7 @@ class SatSolver {
   // @pre @p f is either a Boolean variable or a negation of Boolean
   // variable.
   void AddLiteral(const Formula& f);
+  void AddLiteral(const Literal& l, bool learned);
 
   // Add a linear literal to the linear solver
   void AddLinearLiteral(const Variable& var, bool truth);

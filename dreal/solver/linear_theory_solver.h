@@ -14,12 +14,14 @@ namespace dreal {
 /// Theory solver for linear theory over the Reals.
 class LinearTheorySolver {
  public:
+  using Literal = std::pair<Variable, bool>;
+
   LinearTheorySolver() = delete;
   explicit LinearTheorySolver(const Config& config);
 
   /// Checks consistency. Returns true if there is a satisfying
   /// assignment. Otherwise, return false.
-  bool CheckSat(const Box& box, const std::vector<Formula>& assertions,
+  bool CheckSat(const Box& box, const std::vector<Literal>& assertions,
                 const qsopt_ex::mpq_QSprob prob,
                 const std::vector<Variable>& var_map);
 
@@ -27,12 +29,12 @@ class LinearTheorySolver {
   const Box& GetModel() const;
 
   /// Gets a list of used constraints.
-  const std::set<Formula>& GetExplanation() const;
+  const std::set<Literal>& GetExplanation() const;
 
  private:
   const Config& config_;
   Box model_;
-  std::set<Formula> explanation_;
+  std::set<Literal> explanation_;
   mpq_class precision_;
 };
 

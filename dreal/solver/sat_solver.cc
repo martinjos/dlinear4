@@ -76,9 +76,9 @@ void SatSolver::AddFormulas(const vector<Formula>& formulas) {
   }
 }
 
-void SatSolver::AddLearnedClause(const set<Formula>& formulas) {
-  for (const Formula& f : formulas) {
-    AddLiteral(!predicate_abstractor_.Convert(f));
+void SatSolver::AddLearnedClause(const set<Literal>& literals) {
+  for (const Literal& l : literals) {
+      AddLiteral(make_pair(l.first, !(l.second)), true);
   }
   picosat_add(sat_, 0);
 }
@@ -232,7 +232,13 @@ void SatSolver::ResetLinearProblem() {
 
 void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
     const auto it = to_qsx_row_.find(make_pair(var.get_id(), truth));
-    DREAL_ASSERT(it != to_qsx_row_.end());
+    if (it == to_qsx_row_.end()) {
+      // Must be part of a learned clause - can safely ignore, but the opposite
+      // literal should be present in the LP solver.
+      DREAL_ASSERT(to_qsx_row_.end() !=
+                   to_qsx_row_.find(make_pair(var.get_id(), !truth)));
+      return;
+    }
     const int qsx_row = it->second;
     mpq_QSchange_sense(qsx_prob_, qsx_row, qsx_sense_[qsx_row]);
     mpq_QSchange_rhscoef(qsx_prob_, qsx_row, qsx_rhs_[qsx_row].get_mpq_t());
@@ -319,24 +325,35 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
                     truth ? "" : "¬", it->second, qsx_row);
 }
 
+void SatSolver::AddLiteral(const Literal& l, bool learned) {
+  if (l.second) {
+    // f = b
+    const Variable& var{l.first};
+    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
+    // Add l = b
+    picosat_add(sat_, to_sat_var_[var.get_id()]);
+    if (!learned) {
+      AddLinearLiteral(var, true);
+    }
+  } else {
+    // f = ¬b
+    const Variable& var{l.first};
+    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
+    // Add l = ¬b
+    picosat_add(sat_, -to_sat_var_[var.get_id()]);
+    if (!learned) {
+      AddLinearLiteral(var, false);
+    }
+  }
+}
+
 void SatSolver::AddLiteral(const Formula& f) {
   DREAL_ASSERT(is_variable(f) ||
                (is_negation(f) && is_variable(get_operand(f))));
   if (is_variable(f)) {
-    // f = b
-    const Variable& var{get_variable(f)};
-    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
-    // Add l = b
-    picosat_add(sat_, to_sat_var_[var.get_id()]);
-    AddLinearLiteral(var, true);
+    AddLiteral(make_pair(get_variable(f), true), false);
   } else {
-    // f = ¬b
-    DREAL_ASSERT(is_negation(f) && is_variable(get_operand(f)));
-    const Variable& var{get_variable(get_operand(f))};
-    DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
-    // Add l = ¬b
-    picosat_add(sat_, -to_sat_var_[var.get_id()]);
-    AddLinearLiteral(var, false);
+    AddLiteral(make_pair(get_variable(get_operand(f)), false), false);
   }
 }
 
