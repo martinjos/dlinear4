@@ -86,8 +86,13 @@ bool LinearTheorySolver::CheckSat(const Box& box,
     // Copy delta-feasible point from x into model_
     DREAL_ASSERT(var_map.size() == static_cast<size_t>(colcount));
     for (int i = 0; i < colcount; i++) {
-      model_[var_map[i]] = x[i];
+      const Variable& var = var_map[i];
+      if (!model_.has_variable(var)) {
+        model_.Add(var);
+      }
+      model_[var] = x[i];
     }
+    // TODO: make sure that this is okay
     DREAL_ASSERT(model_.size() == colcount);
     return true;
    case QS_LP_INFEASIBLE:

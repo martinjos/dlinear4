@@ -233,16 +233,43 @@ void SatSolver::ResetLinearProblem() {
 void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
     const auto it = to_qsx_row_.find(make_pair(var.get_id(), truth));
     if (it == to_qsx_row_.end()) {
-      // Must be part of a learned clause - can safely ignore, but the opposite
-      // literal should be present in the LP solver.
-      DREAL_ASSERT(to_qsx_row_.end() !=
-                   to_qsx_row_.find(make_pair(var.get_id(), !truth)));
+      // Either a learned literal, or a not-equal literal from the input
+      // problem.
+      DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral: ignoring ({}, {})",
+                      var, truth);
       return;
     }
     const int qsx_row = it->second;
     mpq_QSchange_sense(qsx_prob_, qsx_row, qsx_sense_[qsx_row]);
     mpq_QSchange_rhscoef(qsx_prob_, qsx_row, qsx_rhs_[qsx_row].get_mpq_t());
     DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral({})", qsx_row);
+}
+
+// Because the input precision > 0, and we have reduced this by a small amount,
+// we can replace any strict inequalities with the equivalent non-strict
+// inequalities, and ignore not-equal constraints altogether.
+static bool is_equal_or_whatever(const Formula& formula, bool truth) {
+  if (truth) {
+    return is_equal_to(formula);
+  } else {
+    return is_not_equal_to(formula);
+  }
+}
+
+static bool is_not_equal_or_whatever(const Formula& formula, bool truth) {
+  return is_equal_or_whatever(formula, !truth);
+}
+
+static bool is_greater_or_whatever(const Formula& formula, bool truth) {
+  if (truth) {
+    return is_greater_than(formula) || is_greater_than_or_equal_to(formula);
+  } else {
+    return is_less_than(formula) || is_less_than_or_equal_to(formula);
+  }
+}
+
+static bool is_less_or_whatever(const Formula& formula, bool truth) {
+  return is_greater_or_whatever(formula, !truth);
 }
 
 void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
@@ -259,32 +286,25 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     }
     // Theory formula
     Formula formula = it->second;
-    for (const Variable& var : formula.GetFreeVariables()) {
-      AddLinearVariable(var);
-    }
-    if (!truth) {
-      if (is_not_equal_to(formula)) {
-        formula = get_lhs_expression(formula) == get_rhs_expression(formula);
-      } else if (is_greater_than(formula)) {
-        formula = get_lhs_expression(formula) <= get_rhs_expression(formula);
-      } else if (is_less_than(formula)) {
-        formula = get_lhs_expression(formula) >= get_rhs_expression(formula);
-      } else {
-        throw DREAL_RUNTIME_ERROR("Negation of formula {} not supported", formula);
-      }
+    if (is_equal_or_whatever(formula, truth)) {
+      qsx_sense_.push_back('E');
+    } else if (is_greater_or_whatever(formula, truth)) {
+      qsx_sense_.push_back('G');
+    } else if (is_less_or_whatever(formula, truth)) {
+      qsx_sense_.push_back('L');
+    } else if (is_not_equal_or_whatever(formula, truth)) {
+      // Nothing to do, because this constraint is always delta-sat for
+      // delta > 0.
+      return;
+    } else {
+      throw DREAL_RUNTIME_ERROR("Formula {} not supported", formula);
     }
     Expression expr;
-    if (is_equal_to(formula)) {
-      expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
-      qsx_sense_.push_back('E');
-    } else if (is_greater_than_or_equal_to(formula)) {
-      expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
-      qsx_sense_.push_back('G');
-    } else if (is_less_than_or_equal_to(formula)) {
-      expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
-      qsx_sense_.push_back('L');
-    } else {
-        throw DREAL_RUNTIME_ERROR("Formula {} not supported", formula);
+    expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
+    // Before calling SetQSXVarCoef(), we must create the LP solver variables
+    // using AddLinearVariable().
+    for (const Variable& var : formula.GetFreeVariables()) {
+      AddLinearVariable(var);
     }
     const int qsx_row{mpq_QSget_rowcount(qsx_prob_)};
     mpq_QSnew_row(qsx_prob_, mpq_NINFTY, 'G', NULL);  // Inactive
@@ -397,5 +417,16 @@ void SatSolver::AddLinearVariable(const Variable& var) {
   DREAL_ASSERT(static_cast<size_t>(qsx_col) == from_qsx_col_.size());
   from_qsx_col_.push_back(var);
   DREAL_LOG_DEBUG("SatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
+}
+
+const vector<Variable>& SatSolver::GetLinearVarMap() const {
+  DREAL_LOG_TRACE("SatSolver::GetLinearVarMap(): from_qsx_col_ =");
+  if (log()->should_log(spdlog::level::trace)) {
+    for (size_t i = 0; i < from_qsx_col_.size(); i++) {
+      const Variable& var = from_qsx_col_[i];
+      std::cerr << i << ": " << var << "\n";
+    }
+  }
+  return from_qsx_col_;
 }
 }  // namespace dreal

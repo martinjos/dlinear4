@@ -80,9 +80,7 @@ class SatSolver {
     return qsx_prob_;
   }
 
-  const std::vector<Variable>& GetLinearVarMap() const {
-    return from_qsx_col_;
-  }
+  const std::vector<Variable>& GetLinearVarMap() const;
 
  private:
   // Adds a formula @p f to the solver.

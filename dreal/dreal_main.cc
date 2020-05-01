@@ -3,6 +3,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 
 #include <fmt/format.h>
 
@@ -23,6 +24,7 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using std::numeric_limits;
 
 namespace {
 string get_version_string() {
@@ -281,6 +283,11 @@ void MainProgram::ExtractOptions() {
     opt_.get("--precision")->getString(precision_str);
     RoundingModeGuard guard(FE_DOWNWARD);
     double precision = stod(precision_str);
+    // This allows us to replace strict inequalities with non-strict ones
+    precision = nextafter(precision, -numeric_limits<double>::infinity());
+    if (precision < 0) {
+      throw DREAL_RUNTIME_ERROR("Can't set --precision 0");
+    }
     config_.mutable_precision().set_from_command_line(precision);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --precision = {}",
                     config_.precision());
