@@ -15,7 +15,7 @@
 #include "dreal/util/predicate_abstractor.h"
 #include "dreal/util/scoped_unordered_map.h"
 #include "dreal/util/scoped_unordered_set.h"
-#include "dreal/util/tseitin_cnfizer.h"
+#include "dreal/util/martin_cnfizer.h"
 #include "dreal/qsopt_ex.h"
 
 namespace dreal {
@@ -129,7 +129,7 @@ class SatSolver {
   // ----------------
   // Pointer to the PicoSat solver.
   PicoSAT* const sat_{};
-  TseitinCnfizer cnfizer_;
+  MartinCnfizer cnfizer_;
   PredicateAbstractor predicate_abstractor_;
 
   // Map symbolic::Variable → int (Variable type in PicoSat).
@@ -138,9 +138,9 @@ class SatSolver {
   // Map int (Variable type in PicoSat) → symbolic::Variable.
   ScopedUnorderedMap<int, Variable> to_sym_var_;
 
-  /// Set of temporary Boolean variables introduced by Tseitin
+  /// Set of temporary Boolean variables introduced by CNF
   /// transformations.
-  ScopedUnorderedSet<Variable::Id> tseitin_variables_;
+  ScopedUnorderedSet<Variable::Id> cnf_variables_;
 
   // Exact LP solver (QSopt_ex)
   qsopt_ex::mpq_QSprob qsx_prob_;

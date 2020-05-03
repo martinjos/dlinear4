@@ -62,9 +62,9 @@ SatSolver::~SatSolver() {
 void SatSolver::AddFormula(const Formula& f) {
   DREAL_LOG_DEBUG("SatSolver::AddFormula({})", f);
   vector<Formula> clauses{cnfizer_.Convert(f)};
-  // Collect Tseitin variables.
-  for (const auto& p : cnfizer_.map()) {
-    tseitin_variables_.insert(p.first.get_id());
+  // Collect CNF variables.
+  for (const auto& p : cnfizer_.vars()) {
+    cnf_variables_.insert(p.get_id());
   }
   for (Formula& clause : clauses) {
     clause = predicate_abstractor_.Convert(clause);
@@ -163,7 +163,7 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
         auto& theory_model = model.second;
         theory_model.emplace_back(var, model_i == 1);
         EnableLinearLiteral(var, model_i == 1);
-      } else if (tseitin_variables_.count(var.get_id()) == 0) {
+      } else if (cnf_variables_.count(var.get_id()) == 0) {
         DREAL_LOG_TRACE(
             "SatSolver::CheckSat: Add Boolean literal {}{} to Model ",
             model_i == 1 ? "" : "¬", var);
@@ -192,7 +192,7 @@ void SatSolver::Pop() {
   // FIXME: disabled for QSopt_ex changes
   throw DREAL_RUNTIME_ERROR("SatSolver::Pop() currently unsupported");
   DREAL_LOG_DEBUG("SatSolver::Pop()");
-  tseitin_variables_.pop();
+  cnf_variables_.pop();
   to_sym_var_.pop();
   to_sat_var_.pop();
   picosat_pop(sat_);
@@ -206,7 +206,7 @@ void SatSolver::Push() {
   picosat_push(sat_);
   to_sat_var_.push();
   to_sym_var_.push();
-  tseitin_variables_.push();
+  cnf_variables_.push();
 }
 
 void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,

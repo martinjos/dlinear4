@@ -86,6 +86,7 @@ bool is_clause(const Formula& f) {
   }
   if (is_disjunction(f)) {
     const auto& operands = get_operands(f);
+    // FIXME: should this also be checking for negated atomic formulas?
     const bool result{
         all_of(operands.cbegin(), operands.cend(),
                [](const Formula& formula) { return is_atomic(formula); })};

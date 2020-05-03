@@ -153,7 +153,7 @@ dreal_cc_library(
         "//dreal/util:scoped_unordered_set",
         "//dreal/util:stat",
         "//dreal/util:timer",
-        "//dreal/util:tseitin_cnfizer",
+        "//dreal/util:martin_cnfizer",
         "@picosat",
         "//dreal:qsopt-ex",
     ],

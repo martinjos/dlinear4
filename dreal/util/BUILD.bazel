@@ -171,6 +171,26 @@ dreal_cc_library(
 )
 
 dreal_cc_library(
+    name = "martin_cnfizer",
+    srcs = [
+        "martin_cnfizer.cc",
+    ],
+    hdrs = [
+        "martin_cnfizer.h",
+    ],
+    visibility = ["//dreal/solver:__pkg__"],
+    deps = [
+        ":assert",
+        ":exception",
+        ":logging",
+        ":naive_cnfizer",
+        ":stat",
+        ":timer",
+        "//dreal/symbolic",
+    ],
+)
+
+dreal_cc_library(
     name = "naive_cnfizer",
     srcs = [
         "naive_cnfizer.cc",
