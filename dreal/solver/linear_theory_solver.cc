@@ -17,6 +17,8 @@ using std::vector;
 
 using qsopt_ex::mpq_QSprob;
 using qsopt_ex::MpqArray;
+using qsopt_ex::mpq_infty;
+using qsopt_ex::mpq_ninfty;
 
 LinearTheorySolver::LinearTheorySolver(const Config& config)
     : config_{config} {
@@ -60,7 +62,7 @@ bool LinearTheorySolver::CheckSat(const Box& box,
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
                                    true /* start_timer */);
 
-  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: Box = \n{}", box);
+  DREAL_LOG_TRACE("LinearTheorySolver::CheckSat: Box = \n{}", box);
 
   int status = -1;
   int lp_status = -1;
@@ -73,38 +75,74 @@ bool LinearTheorySolver::CheckSat(const Box& box,
   //    * should have room for the (rowcount) "logical" variables, which come
   //    after the (colcount) "structural" variables.
   MpqArray x{colcount + rowcount};
-  status = qsopt_ex::QSdelta_solver(prob, precision_.get_mpq_t(), x, NULL, NULL,
-                                    DUAL_SIMPLEX, &lp_status);
 
-  if (status) {
-    throw DREAL_RUNTIME_ERROR("QSdelta_solver() returned {}", status);
-  }
+  model_ = Box(var_map);
+  DREAL_ASSERT(model_.size() == colcount);
 
-  switch (lp_status) {
-   case QS_LP_FEASIBLE:
-   case QS_LP_DELTA_FEASIBLE:
-    // Copy delta-feasible point from x into model_
-    DREAL_ASSERT(var_map.size() == static_cast<size_t>(colcount));
+  if (rowcount == 0) {
+    // The solver can't handle problems with no constraint rows, so we need to
+    // do that here.
+    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: no constraint rows - not calling LP solver");
+    lp_status = QS_LP_FEASIBLE;
+    mpq_t temp;
+    mpq_init(temp);
     for (int i = 0; i < colcount; i++) {
-      const Variable& var = var_map[i];
-      if (!model_.has_variable(var)) {
-        model_.Add(var);
+      int res;
+      res = mpq_QSget_bound(prob, i, 'L', &temp);
+      DREAL_ASSERT(!res);
+      mpq_class lb{temp};
+      res = mpq_QSget_bound(prob, i, 'U', &temp);
+      DREAL_ASSERT(!res);
+      mpq_class ub{temp};
+      if (lb > ub) {
+        lp_status = QS_LP_INFEASIBLE;
+        // Prevent the exact same LP from coming up again
+        explanation_.clear();
+        explanation_.insert(assertions.begin(), assertions.end());
+        break;
       }
-      model_[var] = x[i];
+      mpq_class val;
+      if (mpq_ninfty() < lb) {
+        val = lb;
+      } else if (ub < mpq_infty()) {
+        val = ub;
+      } else {
+        val = 0;
+      }
+      model_[var_map[i]] = val;
     }
-    // TODO: make sure that this is okay
-    DREAL_ASSERT(model_.size() == colcount);
-    return true;
-   case QS_LP_INFEASIBLE:
-    // Prevent the exact same LP from coming up again
-    explanation_.clear();
-    explanation_.insert(assertions.begin(), assertions.end());
-    return false;
-   case QS_LP_UNSOLVED:
-    throw DREAL_RUNTIME_ERROR("QSdelta_solver() failed to solve LP");
-  }
+    mpq_clear(temp);
+    return (lp_status == QS_LP_FEASIBLE);
+  } else {
+    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: calling QSdelta_solver()");
+    status = qsopt_ex::QSdelta_solver(prob, precision_.get_mpq_t(), x, NULL, NULL,
+                                      DUAL_SIMPLEX, &lp_status);
 
-  DREAL_UNREACHABLE();
+    if (status) {
+      throw DREAL_RUNTIME_ERROR("QSdelta_solver() returned {}", status);
+    } else {
+      DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSdelta_solver() returned");
+    }
+
+    switch (lp_status) {
+     case QS_LP_FEASIBLE:
+     case QS_LP_DELTA_FEASIBLE:
+      // Copy delta-feasible point from x into model_
+      for (int i = 0; i < colcount; i++) {
+        model_[var_map[i]] = x[i];
+      }
+      return true;
+     case QS_LP_INFEASIBLE:
+      // Prevent the exact same LP from coming up again
+      explanation_.clear();
+      explanation_.insert(assertions.begin(), assertions.end());
+      return false;
+     case QS_LP_UNSOLVED:
+      throw DREAL_RUNTIME_ERROR("QSdelta_solver() failed to solve LP");
+    }
+
+    DREAL_UNREACHABLE();
+  }
 }
 
 const Box& LinearTheorySolver::GetModel() const {

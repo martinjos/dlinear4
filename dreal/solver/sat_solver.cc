@@ -314,7 +314,9 @@ void SatSolver::ResetLinearProblem() {
 }
 
 static bool is_simple_bound(const Formula& formula) {
-  DREAL_ASSERT(is_relational(formula));
+  if (!is_relational(formula)) {
+    return false;
+  }
   const Expression& lhs{get_lhs_expression(formula)};
   const Expression& rhs{get_rhs_expression(formula)};
   return ((is_constant(lhs) && is_variable(rhs)) ||
