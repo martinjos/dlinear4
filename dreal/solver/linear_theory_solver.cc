@@ -79,28 +79,28 @@ bool LinearTheorySolver::CheckSat(const Box& box,
   model_ = Box(var_map);
   DREAL_ASSERT(model_.size() == colcount);
 
-  if (rowcount == 0) {
-    // The solver can't handle problems with no constraint rows, so we need to
-    // do that here.
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: no constraint rows - not calling LP solver");
-    lp_status = QS_LP_FEASIBLE;
-    mpq_t temp;
-    mpq_init(temp);
-    for (int i = 0; i < colcount; i++) {
-      int res;
-      res = mpq_QSget_bound(prob, i, 'L', &temp);
-      DREAL_ASSERT(!res);
-      mpq_class lb{temp};
-      res = mpq_QSget_bound(prob, i, 'U', &temp);
-      DREAL_ASSERT(!res);
-      mpq_class ub{temp};
-      if (lb > ub) {
-        lp_status = QS_LP_INFEASIBLE;
-        // Prevent the exact same LP from coming up again
-        explanation_.clear();
-        explanation_.insert(assertions.begin(), assertions.end());
-        break;
-      }
+  // The solver can't handle problems with inverted bounds, so we need to
+  // handle that here.  Also, if there are no constraints, we can immediately
+  // return SAT afterwards if the bounds are OK.
+  lp_status = QS_LP_FEASIBLE;
+  mpq_t temp;
+  mpq_init(temp);
+  for (int i = 0; i < colcount; i++) {
+    int res;
+    res = mpq_QSget_bound(prob, i, 'L', &temp);
+    DREAL_ASSERT(!res);
+    mpq_class lb{temp};
+    res = mpq_QSget_bound(prob, i, 'U', &temp);
+    DREAL_ASSERT(!res);
+    mpq_class ub{temp};
+    if (lb > ub) {
+      lp_status = QS_LP_INFEASIBLE;
+      // Prevent the exact same LP from coming up again
+      explanation_.clear();
+      explanation_.insert(assertions.begin(), assertions.end());
+      break;
+    }
+    if (rowcount == 0) {
       mpq_class val;
       if (mpq_ninfty() < lb) {
         val = lb;
@@ -111,38 +111,43 @@ bool LinearTheorySolver::CheckSat(const Box& box,
       }
       model_[var_map[i]] = val;
     }
-    mpq_clear(temp);
-    return (lp_status == QS_LP_FEASIBLE);
-  } else {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: calling QSdelta_solver()");
-    status = qsopt_ex::QSdelta_solver(prob, precision_.get_mpq_t(), x, NULL, NULL,
-                                      DUAL_SIMPLEX, &lp_status);
-
-    if (status) {
-      throw DREAL_RUNTIME_ERROR("QSdelta_solver() returned {}", status);
-    } else {
-      DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSdelta_solver() returned");
-    }
-
-    switch (lp_status) {
-     case QS_LP_FEASIBLE:
-     case QS_LP_DELTA_FEASIBLE:
-      // Copy delta-feasible point from x into model_
-      for (int i = 0; i < colcount; i++) {
-        model_[var_map[i]] = x[i];
-      }
-      return true;
-     case QS_LP_INFEASIBLE:
-      // Prevent the exact same LP from coming up again
-      explanation_.clear();
-      explanation_.insert(assertions.begin(), assertions.end());
-      return false;
-     case QS_LP_UNSOLVED:
-      throw DREAL_RUNTIME_ERROR("QSdelta_solver() failed to solve LP");
-    }
-
-    DREAL_UNREACHABLE();
   }
+  mpq_clear(temp);
+  if (lp_status == QS_LP_INFEASIBLE || rowcount == 0) {
+    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: no need to call LP solver");
+    return (lp_status == QS_LP_FEASIBLE);
+  }
+
+  // Now we call the solver
+  lp_status = -1;
+  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: calling QSdelta_solver()");
+  status = qsopt_ex::QSdelta_solver(prob, precision_.get_mpq_t(), x, NULL, NULL,
+                                    DUAL_SIMPLEX, &lp_status);
+
+  if (status) {
+    throw DREAL_RUNTIME_ERROR("QSdelta_solver() returned {}", status);
+  } else {
+    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSdelta_solver() returned");
+  }
+
+  switch (lp_status) {
+   case QS_LP_FEASIBLE:
+   case QS_LP_DELTA_FEASIBLE:
+    // Copy delta-feasible point from x into model_
+    for (int i = 0; i < colcount; i++) {
+      model_[var_map[i]] = x[i];
+    }
+    return true;
+   case QS_LP_INFEASIBLE:
+    // Prevent the exact same LP from coming up again
+    explanation_.clear();
+    explanation_.insert(assertions.begin(), assertions.end());
+    return false;
+   case QS_LP_UNSOLVED:
+    throw DREAL_RUNTIME_ERROR("QSdelta_solver() failed to solve LP");
+  }
+
+  DREAL_UNREACHABLE();
 }
 
 const Box& LinearTheorySolver::GetModel() const {
