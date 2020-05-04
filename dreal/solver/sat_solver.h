@@ -123,7 +123,7 @@ class SatSolver {
   void SetQSXVarCoef(int qsx_row, const Variable& var, const mpq_class& value);
 
   // Set one of the variable's bounds ('L' - lower or 'U' - upper) in the
-  // linear solver
+  // linear solver, in addition to bounds already asserted.
   void SetQSXVarBound(const Variable& var, const char type,
                       const mpq_class& value);
 

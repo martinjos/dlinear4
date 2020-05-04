@@ -290,8 +290,12 @@ void SatSolver::SetQSXVarBound(const Variable& var, const char type,
   }
   mpq_t c_value;
   mpq_init(c_value);
-  mpq_set(c_value, value.get_mpq_t());
-  mpq_QSchange_bound(qsx_prob_, it->second, type, c_value);
+  mpq_QSget_bound(qsx_prob_, it->second, type, &c_value);
+  mpq_class existing{c_value};
+  if ((type == 'L' && existing < value) || (type == 'U' && value < existing)) {
+    mpq_set(c_value, value.get_mpq_t());
+    mpq_QSchange_bound(qsx_prob_, it->second, type, c_value);
+  }
   mpq_clear(c_value);
 }
 
