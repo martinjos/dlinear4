@@ -532,6 +532,15 @@ dreal_cc_googletest(
 )
 
 dreal_cc_googletest(
+    name = "martin_cnfizer_test",
+    tags = ["unit"],
+    deps = [
+        ":martin_cnfizer",
+        "//dreal/symbolic:symbolic_test_util",
+    ],
+)
+
+dreal_cc_googletest(
     name = "timer_test",
     tags = ["unit"],
     deps = [
