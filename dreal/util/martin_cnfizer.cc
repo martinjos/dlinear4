@@ -83,46 +83,37 @@ Formula MartinCnfizer::VisitGreaterThanOrEqualTo(const Formula& f) {
 Formula MartinCnfizer::VisitLessThan(const Formula& f) { return f; }
 Formula MartinCnfizer::VisitLessThanOrEqualTo(const Formula& f) { return f; }
 
-// FIXME: implement.
 Formula MartinCnfizer::VisitForall(const Formula& f) {
-  throw DREAL_RUNTIME_ERROR("Forall not supported");
-  // Given: f := ∀y. φ(x, y), this process CNFizes φ(x, y) and push the
-  // universal quantifier over conjunctions:
+  // We always need a variable
+  static size_t id{0};
+  const Variable bvar{string("forall") + to_string(id++),
+                      Variable::Type::BOOLEAN};
+  vars_.push_back(bvar);
+
+  // Given: f := ∀y. φ(x, y), this process CNFizes φ(x, y), pushes the
+  // universal quantifier over conjunctions, and inserts ¬b:
   //
   //     = ∀y. (clause₁(x, y) ∧ ... ∧ clauseₙ(x, y))
-  //     = (∀y. clause₁(x, y)) ∧ ... ∧ (∀y. clauseₙ(x, y))
+  //     = (∀y. ¬b v clause₁(x, y)) ∧ ... ∧ (∀y. ¬b v clauseₙ(x, y))
   const Variables& quantified_variables{get_quantified_variables(f)};  // y
   const Formula& quantified_formula{get_quantified_formula(f)};  // φ(x, y)
   // clause₁(x, y) ∧ ... ∧ clauseₙ(x, y)
-  // TODO: Don't use naive cnfizer!
   const set<Formula> clauses{
       get_clauses(naive_cnfizer_.Convert(quantified_formula))};
-  const set<Formula> new_clauses{
-      ::dreal::map(clauses, [&quantified_variables](const Formula& clause) {
-        DREAL_ASSERT(is_clause(clause));
-        if (HaveIntersection(clause.GetFreeVariables(), quantified_variables)) {
-          return forall(quantified_variables, clause);
-        } else {
-          return clause;
-        }
-      })};
-
-  DREAL_ASSERT(!new_clauses.empty());
-
-#if 0
-  if (new_clauses.size() == 1) {
-    const Variable bvar{string("forall") + to_string(id++),
-                        Variable::Type::BOOLEAN};
-    vars_.push_back(bvar);
-    return Formula{bvar};
-  } else {
-    static size_t id{0};
-    const Variable bvar{string("forall") + to_string(id++),
-                        Variable::Type::BOOLEAN};
-    vars_.push_back(bvar);
-    return Formula{bvar};
+  for (const Formula& clause : clauses) {
+    DREAL_ASSERT(is_clause(clause));
+    set<Formula> new_clause_set{get_operands(clause)};
+    new_clause_set.insert(!bvar);
+    Formula new_clause{make_disjunction(new_clause_set)};
+    // Only the old clause's variables can intersect
+    if (HaveIntersection(clause.GetFreeVariables(), quantified_variables)) {
+      aux_.emplace_back(forall(quantified_variables, new_clause));
+    } else {
+      aux_.emplace_back(new_clause);
+    }
   }
-#endif
+
+  return Formula{bvar};
 }
 
 // TODO: flatten nested conjunctions and disjunctions?

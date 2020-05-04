@@ -946,9 +946,9 @@ bool is_two(const Expression& e) { return is_constant(e, 2.0); }
 bool is_nan(const Expression& e) { return e.get_kind() == ExpressionKind::NaN; }
 bool is_infinite(const Expression& e) { return e.get_kind() == ExpressionKind::Infty; }
 bool is_infinity(const Expression& e) { return e.get_kind() == ExpressionKind::Infty
-                                           && ((ExpressionInfty&)e).GetSign() == 1; }
+                                           && to_infty(e)->GetSign() == 1; }
 bool is_negative_infinity(const Expression& e) { return e.get_kind() == ExpressionKind::Infty
-                                                     && ((ExpressionInfty&)e).GetSign() == -1; }
+                                                     && to_infty(e)->GetSign() == -1; }
 bool is_variable(const Expression& e) { return is_variable(*e.ptr_); }
 bool is_addition(const Expression& e) { return is_addition(*e.ptr_); }
 bool is_multiplication(const Expression& e) {

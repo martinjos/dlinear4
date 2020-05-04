@@ -2162,6 +2162,9 @@ ostream& ExpressionUninterpretedFunction::Display(ostream& os) const {
 bool is_constant(const ExpressionCell& c) {
   return c.get_kind() == ExpressionKind::Constant;
 }
+bool is_infinite(const ExpressionCell& c) {
+  return c.get_kind() == ExpressionKind::Infty;
+}
 bool is_variable(const ExpressionCell& c) {
   return c.get_kind() == ExpressionKind::Var;
 }
@@ -2238,6 +2241,14 @@ const ExpressionConstant* to_constant(const ExpressionCell* const expr_ptr) {
 }
 const ExpressionConstant* to_constant(const Expression& e) {
   return to_constant(e.ptr_);
+}
+
+const ExpressionInfty* to_infty(const ExpressionCell* const expr_ptr) {
+  assert(is_infinite(*expr_ptr));
+  return static_cast<const ExpressionInfty*>(expr_ptr);
+}
+const ExpressionInfty* to_infty(const Expression& e) {
+  return to_infty(e.ptr_);
 }
 
 const ExpressionVar* to_variable(const ExpressionCell* const expr_ptr) {

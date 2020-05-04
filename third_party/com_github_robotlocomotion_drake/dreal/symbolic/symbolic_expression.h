@@ -59,6 +59,7 @@ bool operator<(ExpressionKind k1, ExpressionKind k2);
 
 class ExpressionCell;                   // In symbolic_expression_cell.h
 class ExpressionConstant;               // In symbolic_expression_cell.h
+class ExpressionInfty;                  // In symbolic_expression_cell.h
 class ExpressionVar;                    // In symbolic_expression_cell.h
 class UnaryExpressionCell;              // In symbolic_expression_cell.h
 class BinaryExpressionCell;             // In symbolic_expression_cell.h
@@ -461,6 +462,7 @@ class Expression {
   // header. These functions are declared in
   // symbolic/symbolic_expression_cell.h header.
   friend const ExpressionConstant* to_constant(const Expression& e);
+  friend const ExpressionInfty* to_infty(const Expression& e);
   friend const ExpressionVar* to_variable(const Expression& e);
   friend const UnaryExpressionCell* to_unary(const Expression& e);
   friend const BinaryExpressionCell* to_binary(const Expression& e);

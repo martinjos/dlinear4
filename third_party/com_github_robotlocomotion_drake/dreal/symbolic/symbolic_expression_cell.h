@@ -858,6 +858,8 @@ class ExpressionUninterpretedFunction : public ExpressionCell {
 
 /** Checks if @p c is a rational constant expression. */
 bool is_constant(const ExpressionCell& c);
+/** Checks if @p c is a symbolic infinity expression. */
+bool is_infinite(const ExpressionCell& c);
 /** Checks if @p c is a variable expression. */
 bool is_variable(const ExpressionCell& c);
 /** Checks if @p c is an addition expression. */
@@ -914,6 +916,16 @@ const ExpressionConstant* to_constant(const ExpressionCell* expr_ptr);
  *  @pre @p *(e.ptr_) is of @c ExpressionConstant.
  */
 const ExpressionConstant* to_constant(const Expression& e);
+
+/** Casts @p expr_ptr of const ExpressionCell* to
+ *  @c const ExpressionInfty*.
+ *  @pre @p *expr_ptr is of @c ExpressionInfty.
+ */
+const ExpressionInfty* to_infty(const ExpressionCell* expr_ptr);
+/** Casts @p e of Expression to @c const ExpressionInfty*.
+ *  @pre @p *(e.ptr_) is of @c ExpressionInfty.
+ */
+const ExpressionInfty* to_infty(const Expression& e);
 
 /** Casts @p expr_ptr of const ExpressionCell* to
  *  @c const ExpressionVar*.
