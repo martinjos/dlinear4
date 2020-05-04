@@ -122,6 +122,11 @@ class SatSolver {
   // solver
   void SetQSXVarCoef(int qsx_row, const Variable& var, const mpq_class& value);
 
+  // Set one of the variable's bounds ('L' - lower or 'U' - upper) in the
+  // linear solver
+  void SetQSXVarBound(const Variable& var, const char type,
+                      const mpq_class& value);
+
   // Add a clause @p f to sat solver.
   void DoAddClause(const Formula& f);
 

@@ -272,29 +272,53 @@ void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
   mpq_clear(c_value);
 }
 
+void SatSolver::SetQSXVarBound(const Variable& var, const char type,
+                               const mpq_class& value) {
+  if (type == 'B') {
+    // Both
+    SetQSXVarBound(var, 'L', value);
+    SetQSXVarBound(var, 'U', value);
+    return;
+  }
+  DREAL_ASSERT(type == 'L' || type == 'U');
+  const auto it = to_qsx_col_.find(var.get_id());
+  if (it == to_qsx_col_.end()) {
+    throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
+  }
+  if (value <= mpq_ninfty() || value >= mpq_infty()) {
+    throw DREAL_RUNTIME_ERROR("Simple bound too large: {}", value);
+  }
+  mpq_t c_value;
+  mpq_init(c_value);
+  mpq_set(c_value, value.get_mpq_t());
+  mpq_QSchange_bound(qsx_prob_, it->second, type, c_value);
+  mpq_clear(c_value);
+}
+
 void SatSolver::ResetLinearProblem() {
   DREAL_LOG_TRACE("SatSolver::ResetLinearProblem()");
+  // Clear constraint bounds
   const int qsx_rows{mpq_QSget_rowcount(qsx_prob_)};
   DREAL_ASSERT(static_cast<size_t>(qsx_rows) == from_qsx_row_.size());
   for (int i = 0; i < qsx_rows; i++) {
     mpq_QSchange_sense(qsx_prob_, i, 'G');
     mpq_QSchange_rhscoef(qsx_prob_, i, mpq_NINFTY);
   }
+  // Clear variable bounds
+  const int qsx_cols{mpq_QSget_colcount(qsx_prob_)};
+  DREAL_ASSERT(static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
+  for (int i = 0; i < qsx_cols; i++) {
+    mpq_QSchange_bound(qsx_prob_, i, 'L', mpq_NINFTY);
+    mpq_QSchange_bound(qsx_prob_, i, 'U', mpq_INFTY);
+  }
 }
 
-void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
-    const auto it = to_qsx_row_.find(make_pair(var.get_id(), truth));
-    if (it == to_qsx_row_.end()) {
-      // Either a learned literal, or a not-equal literal from the input
-      // problem.
-      DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral: ignoring ({}, {})",
-                      var, truth);
-      return;
-    }
-    const int qsx_row = it->second;
-    mpq_QSchange_sense(qsx_prob_, qsx_row, qsx_sense_[qsx_row]);
-    mpq_QSchange_rhscoef(qsx_prob_, qsx_row, qsx_rhs_[qsx_row].get_mpq_t());
-    DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral({})", qsx_row);
+static bool is_simple_bound(const Formula& formula) {
+  DREAL_ASSERT(is_relational(formula));
+  const Expression& lhs{get_lhs_expression(formula)};
+  const Expression& rhs{get_rhs_expression(formula)};
+  return ((is_constant(lhs) && is_variable(rhs)) ||
+          (is_variable(lhs) && is_constant(rhs)));
 }
 
 // Because the input precision > 0, and we have reduced this by a small amount,
@@ -325,6 +349,63 @@ static bool is_less_or_whatever(const Formula& formula, bool truth) {
   return is_greater_or_whatever(formula, !truth);
 }
 
+void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
+    const auto it_row = to_qsx_row_.find(make_pair(var.get_id(), truth));
+    if (it_row != to_qsx_row_.end()) {
+      // A non-trivial linear literal from the input problem
+      const int qsx_row = it_row->second;
+      mpq_QSchange_sense(qsx_prob_, qsx_row, qsx_sense_[qsx_row]);
+      mpq_QSchange_rhscoef(qsx_prob_, qsx_row, qsx_rhs_[qsx_row].get_mpq_t());
+      DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral({})", qsx_row);
+      return;
+    }
+    const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
+    const auto it = var_to_formula_map.find(var);
+    if (it != var_to_formula_map.end() && is_simple_bound(it->second)) {
+      // A simple bound - set it directly
+      const Formula& formula{it->second};
+      const Expression& lhs{get_lhs_expression(formula)};
+      const Expression& rhs{get_rhs_expression(formula)};
+      DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral({}{})",
+                      truth ? "" : "¬", formula);
+      if (is_equal_or_whatever(formula, truth)) {
+        if (is_variable(lhs) && is_constant(rhs)) {
+          SetQSXVarBound(get_variable(lhs), 'B', get_constant_value(rhs));
+        } else if (is_constant(lhs) && is_variable(rhs)) {
+          SetQSXVarBound(get_variable(rhs), 'B', get_constant_value(lhs));
+        } else {
+          DREAL_UNREACHABLE();
+        }
+      } else if (is_greater_or_whatever(formula, truth)) {
+        if (is_variable(lhs) && is_constant(rhs)) {
+          SetQSXVarBound(get_variable(lhs), 'L', get_constant_value(rhs));
+        } else if (is_constant(lhs) && is_variable(rhs)) {
+          SetQSXVarBound(get_variable(rhs), 'U', get_constant_value(lhs));
+        } else {
+          DREAL_UNREACHABLE();
+        }
+      } else if (is_less_or_whatever(formula, truth)) {
+        if (is_variable(lhs) && is_constant(rhs)) {
+          SetQSXVarBound(get_variable(lhs), 'U', get_constant_value(rhs));
+        } else if (is_constant(lhs) && is_variable(rhs)) {
+          SetQSXVarBound(get_variable(rhs), 'L', get_constant_value(lhs));
+        } else {
+          DREAL_UNREACHABLE();
+        }
+      } else if (is_not_equal_or_whatever(formula, truth)) {
+        // Nothing to do, because this constraint is always delta-sat for
+        // delta > 0.
+      } else {
+        throw DREAL_RUNTIME_ERROR("Formula {} not supported", formula);
+      }
+      return;
+    }
+    // Either a learned literal, or a not-equal literal from the input
+    // problem.
+    DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral: ignoring ({}, {})",
+                    var, truth);
+}
+
 void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
     const auto it = var_to_formula_map.find(formulaVar);
@@ -338,12 +419,25 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
       return;
     }
     // Theory formula
-    Formula formula = it->second;
+    const Formula& formula = it->second;
+    // Create the LP solver variables
+    for (const Variable& var : formula.GetFreeVariables()) {
+      AddLinearVariable(var);
+    }
     if (is_equal_or_whatever(formula, truth)) {
+      if (is_simple_bound(formula)) {
+        return;  // Just create simple bound in LP
+      }
       qsx_sense_.push_back('E');
     } else if (is_greater_or_whatever(formula, truth)) {
+      if (is_simple_bound(formula)) {
+        return;
+      }
       qsx_sense_.push_back('G');
     } else if (is_less_or_whatever(formula, truth)) {
+      if (is_simple_bound(formula)) {
+        return;
+      }
       qsx_sense_.push_back('L');
     } else if (is_not_equal_or_whatever(formula, truth)) {
       // Nothing to do, because this constraint is always delta-sat for
@@ -354,11 +448,6 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     }
     Expression expr;
     expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
-    // Before calling SetQSXVarCoef(), we must create the LP solver variables
-    // using AddLinearVariable().
-    for (const Variable& var : formula.GetFreeVariables()) {
-      AddLinearVariable(var);
-    }
     const int qsx_row{mpq_QSget_rowcount(qsx_prob_)};
     mpq_QSnew_row(qsx_prob_, mpq_NINFTY, 'G', NULL);  // Inactive
     DREAL_ASSERT(static_cast<size_t>(qsx_row) == qsx_sense_.size() - 1);
