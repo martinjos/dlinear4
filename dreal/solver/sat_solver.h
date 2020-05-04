@@ -125,6 +125,14 @@ class SatSolver {
   // Add a clause @p f to sat solver.
   void DoAddClause(const Formula& f);
 
+  // Update data structures used to remove literals that are only required by
+  // learned clauses.
+  void UpdateLookup(int lit, int learned);
+
+  // Collect active literals, removing those that are only required by learned
+  // clauses.
+  std::set<int> GetMainActiveLiterals() const;
+
   // Member variables
   // ----------------
   // Pointer to the PicoSat solver.
@@ -137,6 +145,13 @@ class SatSolver {
 
   // Map int (Variable type in PicoSat) → symbolic::Variable.
   ScopedUnorderedMap<int, Variable> to_sym_var_;
+
+  // Data to help with removing literals that are only required by learned
+  // clauses.
+  std::vector<int> main_clauses_copy_;
+  std::set<int> learned_clause_lits_;
+  std::map<int, std::set<int>> main_clause_lookup_;
+  int cur_clause_start_;
 
   /// Set of temporary Boolean variables introduced by CNF
   /// transformations.

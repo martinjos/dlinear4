@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <utility>
+#include <cmath>
 
 #include "dreal/util/assert.h"
 #include "dreal/util/exception.h"
@@ -16,6 +17,7 @@ using std::set;
 using std::vector;
 using std::pair;
 using std::make_pair;
+using std::abs;
 using qsopt_ex::mpq_QScreate_prob;
 using qsopt_ex::mpq_QSset_param;
 using qsopt_ex::mpq_QSfree_prob;
@@ -30,7 +32,8 @@ using qsopt_ex::mpq_ninfty;  // mpq_class versions
 using qsopt_ex::mpq_infty;
 using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
 
-SatSolver::SatSolver(const Config& config) : sat_{picosat_init()} {
+SatSolver::SatSolver(const Config& config) : sat_{picosat_init()},
+    cur_clause_start_{0} {
   // Enable partial checks via picosat_deref_partial. See the call-site in
   // SatSolver::CheckSat().
   picosat_save_original_clauses(sat_);
@@ -125,6 +128,54 @@ class SatSolverStat : public Stat {
 };
 }  // namespace
 
+// Collect active literals, removing those that are only required by learned
+// clauses.
+set<int> SatSolver::GetMainActiveLiterals() const {
+    set<int> lits;
+    for (int i = 1; i <= picosat_variables(sat_); ++i) {
+      const int model_i{has_picosat_pop_used_ ? picosat_deref(sat_, i)
+                                              : picosat_deref_partial(sat_, i)};
+      if (model_i == 0) {
+        continue;
+      }
+      lits.insert(model_i * i);
+    }
+    for (auto it = lits.begin(); it != lits.end(); ) {
+      int i = *it;
+      int required = false;
+      // Determine whether literal `i' is required
+      auto c_it = main_clause_lookup_.find(i);
+      if (c_it != main_clause_lookup_.end()) {
+        for (int c : c_it->second) {
+          int count = 0;
+          size_t j;
+          for (j = c; j < main_clauses_copy_.size() &&
+                          main_clauses_copy_[j]; ++j) {
+            int k{main_clauses_copy_[j]};
+            if (lits.find(k) != lits.end()) {
+              ++count;
+            }
+          }
+          DREAL_ASSERT(j < main_clauses_copy_.size());  // Detect buffer overrun
+          DREAL_ASSERT(count > 0);  // Should contain at least `i'
+          if (count == 1) {
+            // `i' is the only active literal in clause `c'; hence, required.
+            required = true;
+            break;
+          }
+        }
+      }
+      if (!required) {
+        // There is more than one literal in every main (non-learned) clause
+        // containing literal `i'.  Hence, it is not required.
+        it = lits.erase(it);
+      } else {
+        ++it;
+      }
+    }
+    return lits;
+}
+
 optional<SatSolver::Model> SatSolver::CheckSat() {
   static SatSolverStat stat{DREAL_LOG_INFO_ENABLED};
   DREAL_LOG_DEBUG("SatSolver::CheckSat(#vars = {}, #clauses = {})",
@@ -140,15 +191,11 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
   Model model;
   if (ret == PICOSAT_SATISFIABLE) {
     // SAT Case.
+    set<int> lits{GetMainActiveLiterals()};
     ResetLinearProblem();
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
-    for (int i = 1; i <= picosat_variables(sat_); ++i) {
-      const int model_i{has_picosat_pop_used_ ? picosat_deref(sat_, i)
-                                              : picosat_deref_partial(sat_, i)};
-      if (model_i == 0) {
-        continue;
-      }
-      const auto it_var = to_sym_var_.find(i);
+    for (int i : lits) {
+      const auto it_var = to_sym_var_.find(abs(i));
       if (it_var == to_sym_var_.end()) {
         // There is no symbolic::Variable corresponding to this
         // picosat variable (int). This could be because of
@@ -159,20 +206,20 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
       const auto it = var_to_formula_map.find(var);
       if (it != var_to_formula_map.end()) {
         DREAL_LOG_TRACE("SatSolver::CheckSat: Add theory literal {}{} to Model",
-                        model_i == 1 ? "" : "¬", var);
+                        i > 0 ? "" : "¬", var);
         auto& theory_model = model.second;
-        theory_model.emplace_back(var, model_i == 1);
-        EnableLinearLiteral(var, model_i == 1);
+        theory_model.emplace_back(var, i > 0);
+        EnableLinearLiteral(var, i > 0);
       } else if (cnf_variables_.count(var.get_id()) == 0) {
         DREAL_LOG_TRACE(
             "SatSolver::CheckSat: Add Boolean literal {}{} to Model ",
-            model_i == 1 ? "" : "¬", var);
+            i > 0 ? "" : "¬", var);
         auto& boolean_model = model.first;
-        boolean_model.emplace_back(var, model_i == 1);
+        boolean_model.emplace_back(var, i > 0);
       } else {
         DREAL_LOG_TRACE(
             "SatSolver::CheckSat: Skip {}{} which is a temporary variable.",
-            model_i == 1 ? "" : "¬", var);
+            i > 0 ? "" : "¬", var);
       }
     }
     DREAL_LOG_DEBUG("SatSolver::CheckSat() Found a model.");
@@ -354,13 +401,24 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
                     truth ? "" : "¬", it->second, qsx_row);
 }
 
+void SatSolver::UpdateLookup(int lit, int learned) {
+  if (learned) {
+    learned_clause_lits_.insert(lit);
+  } else {
+    main_clauses_copy_.push_back(lit);
+    main_clause_lookup_[lit].insert(cur_clause_start_);
+  }
+}
+
 void SatSolver::AddLiteral(const Literal& l, bool learned) {
   if (l.second) {
     // f = b
     const Variable& var{l.first};
     DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
     // Add l = b
-    picosat_add(sat_, to_sat_var_[var.get_id()]);
+    int lit{to_sat_var_[var.get_id()]};
+    picosat_add(sat_, lit);
+    UpdateLookup(lit, learned);
     if (!learned) {
       AddLinearLiteral(var, true);
     }
@@ -369,7 +427,9 @@ void SatSolver::AddLiteral(const Literal& l, bool learned) {
     const Variable& var{l.first};
     DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
     // Add l = ¬b
-    picosat_add(sat_, -to_sat_var_[var.get_id()]);
+    int lit{-to_sat_var_[var.get_id()]};
+    picosat_add(sat_, lit);
+    UpdateLookup(lit, learned);
     if (!learned) {
       AddLinearLiteral(var, false);
     }
@@ -387,6 +447,7 @@ void SatSolver::AddLiteral(const Formula& f) {
 }
 
 void SatSolver::DoAddClause(const Formula& f) {
+  cur_clause_start_ = main_clauses_copy_.size();
   if (is_disjunction(f)) {
     // f = l₁ ∨ ... ∨ lₙ
     for (const Formula& l : get_operands(f)) {
@@ -397,6 +458,7 @@ void SatSolver::DoAddClause(const Formula& f) {
     AddLiteral(f);
   }
   picosat_add(sat_, 0);
+  main_clauses_copy_.push_back(0);
 }
 
 void SatSolver::MakeSatVar(const Variable& var) {
