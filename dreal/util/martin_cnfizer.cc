@@ -61,7 +61,7 @@ vector<Formula> MartinCnfizer::Convert(const Formula& f) {
   aux_.clear();
   vars_.clear();
   vector<Formula> ret;
-  const Formula head{Visit(f)};
+  const Formula head{Visit(g)};
   aux_.push_back(head);
   return aux_;
 }
