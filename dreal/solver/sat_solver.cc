@@ -81,7 +81,7 @@ void SatSolver::AddFormulas(const vector<Formula>& formulas) {
   }
 }
 
-void SatSolver::AddLearnedClause(const set<Literal>& literals) {
+void SatSolver::AddLearnedClause(const LinearTheorySolver::LiteralSet& literals) {
   for (const Literal& l : literals) {
       AddLiteral(make_pair(l.first, !(l.second)), true);
   }

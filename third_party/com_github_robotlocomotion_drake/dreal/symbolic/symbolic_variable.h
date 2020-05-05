@@ -70,7 +70,6 @@ class Variable {
 
   /// Compares two variables based on their ID values.
   bool less(const Variable& v) const { return get_id() < v.get_id(); }
-  bool operator<(const Variable& v) const { return get_id() < v.get_id(); }
 
   friend std::ostream& operator<<(std::ostream& os, const Variable& var);
 

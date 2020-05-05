@@ -2,6 +2,7 @@
 
 #include <set>
 #include <vector>
+#include <functional>
 
 #include "dreal/solver/config.h"
 #include "dreal/symbolic/symbolic.h"
@@ -15,6 +16,10 @@ namespace dreal {
 class LinearTheorySolver {
  public:
   using Literal = std::pair<Variable, bool>;
+  struct LiteralComparator {
+    bool operator()(const Literal& a, const Literal& b) const;
+  };
+  using LiteralSet = std::set<Literal, LiteralComparator>;
 
   LinearTheorySolver() = delete;
   explicit LinearTheorySolver(const Config& config);
@@ -29,12 +34,12 @@ class LinearTheorySolver {
   const Box& GetModel() const;
 
   /// Gets a list of used constraints.
-  const std::set<Literal>& GetExplanation() const;
+  const LiteralSet& GetExplanation() const;
 
  private:
   const Config& config_;
   Box model_;
-  std::set<Literal> explanation_;
+  LiteralSet explanation_;
   mpq_class precision_;
 };
 

@@ -10,6 +10,7 @@
 #include "./picosat.h"
 
 #include "dreal/solver/config.h"
+#include "dreal/solver/linear_theory_solver.h"  // For LiteralSet
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/optional.h"
 #include "dreal/util/predicate_abstractor.h"
@@ -59,7 +60,7 @@ class SatSolver {
 
   /// Given a @p formulas = {f₁, ..., fₙ}, adds a clause (¬f₁ ∨ ... ∨ ¬ fₙ) to
   /// the solver.
-  void AddLearnedClause(const std::set<Literal>& literals);
+  void AddLearnedClause(const LinearTheorySolver::LiteralSet& literals);
 
   /// Checks the satisfiability of the current configuration.
   ///

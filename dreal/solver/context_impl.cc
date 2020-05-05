@@ -161,7 +161,8 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         } else {
           // UNSAT from TheorySolver.
           DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theroy Check = UNSAT");
-          const set<pair<Variable, bool>>& explanation{theory_solver_.GetExplanation()};
+          const LinearTheorySolver::LiteralSet& explanation{
+                  theory_solver_.GetExplanation()};
           DREAL_LOG_DEBUG(
               "ContextImpl::CheckSatCore() - size of explanation = {} - stack "
               "size = {}",

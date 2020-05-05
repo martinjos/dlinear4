@@ -84,6 +84,7 @@ dreal_cc_library(
         #"relational_formula_evaluator.h",
         #"theory_solver.cc",
         "linear_theory_solver.cc",
+        "sat_solver.cc",
     ],
     hdrs = [
         "context.h",
@@ -94,6 +95,7 @@ dreal_cc_library(
         #"icp_seq.h",
         #"theory_solver.h",
         "linear_theory_solver.h",
+        "sat_solver.h",
     ],
     visibility = [
         "//:__pkg__",
@@ -107,7 +109,6 @@ dreal_cc_library(
         ":config",
         #":filter_assertion",
         #":icp_stat",
-        ":sat_solver",
         "//dreal:version_header",
         #"//dreal:contractor",
         "//dreal/smt2:logic",
@@ -130,32 +131,12 @@ dreal_cc_library(
         "//third_party/com_github_progschj_threadpool:thread_pool",
         "@fmt",
         "//dreal:qsopt-ex",
-    ],
-)
-
-dreal_cc_library(
-    name = "sat_solver",
-    srcs = [
-        "sat_solver.cc",
-    ],
-    hdrs = [
-        "sat_solver.h",
-    ],
-    deps = [
-        ":config",
-        "//dreal/symbolic",
-        "//dreal/util:assert",
-        "//dreal/util:exception",
-        "//dreal/util:logging",
         "//dreal/util:optional",
         "//dreal/util:predicate_abstractor",
         "//dreal/util:scoped_unordered_map",
         "//dreal/util:scoped_unordered_set",
-        "//dreal/util:stat",
-        "//dreal/util:timer",
         "//dreal/util:martin_cnfizer",
         "@picosat",
-        "//dreal:qsopt-ex",
     ],
 )
 
@@ -242,7 +223,7 @@ dreal_cc_googletest(
     name = "sat_solver_test",
     tags = ["unit"],
     deps = [
-        ":sat_solver",
+        ":solver",
         "//dreal/util:logging",
     ],
 )
