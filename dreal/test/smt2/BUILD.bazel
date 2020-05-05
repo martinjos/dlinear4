@@ -7,85 +7,85 @@ load(
     "smt2_test",
 )
 
-smt2_test(
-    name = "01",
-    size = "small",
-)
-
-smt2_test(
-    name = "02",
-    size = "small",
-)
-
-smt2_test(
-    name = "03",
-    size = "small",
-)
-
-smt2_test(
-    name = "04",
-    size = "small",
-)
-
-smt2_test(
-    name = "05",
-    size = "small",
-)
-
-smt2_test(
-    name = "06",
-    size = "small",
-)
-
-smt2_test(
-    name = "07",
-    size = "small",
-)
-
-smt2_test(
-    name = "08",
-    size = "small",
-)
-
-smt2_test(
-    name = "09",
-    size = "small",
-)
-
-smt2_test(
-    name = "10",
-    size = "small",
-)
-
-smt2_test(
-    name = "11",
-    size = "small",
-)
-
-smt2_test(
-    name = "12",
-    size = "small",
-)
-
-smt2_test(
-    name = "13",
-    size = "small",
-)
-
-smt2_test(
-    name = "14",
-    size = "small",
-)
-
-smt2_test(
-    name = "15",
-    size = "small",
-)
-
-smt2_test(
-    name = "16",
-    size = "small",
-)
+#smt2_test(
+#    name = "01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "05",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "06",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "07",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "08",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "09",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "11",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "12",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "13",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "14",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "15",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "16",
+#    size = "small",
+#)
 
 smt2_test(
     name = "17",
@@ -97,10 +97,10 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "19",
-    size = "small",
-)
+#smt2_test(
+#    name = "19",
+#    size = "small",
+#)
 
 smt2_test(
     name = "20",
@@ -112,240 +112,240 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "abs_1",
-    size = "small",
-)
-
-smt2_test(
-    name = "abs_2",
-    size = "small",
-)
-
-smt2_test(
-    name = "aircraft",
-    size = "small",
-)
+#smt2_test(
+#    name = "abs_1",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "abs_2",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "aircraft",
+#    size = "small",
+#)
 
 smt2_test(
     name = "andrea_callia_01",
     size = "small",
 )
 
-smt2_test(
-    name = "atan2_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "atan2_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "atan2_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "atan2_04",
-    size = "small",
-)
-
-smt2_test(
-    name = "atan2_05",
-    size = "small",
-)
-
-smt2_test(
-    name = "berstein",
-    size = "small",
-)
+#smt2_test(
+#    name = "atan2_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "atan2_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "atan2_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "atan2_04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "atan2_05",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "berstein",
+#    size = "small",
+#)
 
 smt2_test(
     name = "bool_01",
     size = "small",
 )
 
-smt2_test(
-    name = "cgd8d_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "cgd8d_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "constant_region_loss_5_212",
-    size = "small",
-)
-
-smt2_test(
-    name = "constrained_betts",
-    size = "small",
-)
-
-smt2_test(
-    name = "disjunct",
-    size = "small",
-)
-
-smt2_test(
-    name = "dzufferey_01",
-    size = "small",
-)
+#smt2_test(
+#    name = "cgd8d_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "cgd8d_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "constant_region_loss_5_212",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "constrained_betts",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "disjunct",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "dzufferey_01",
+#    size = "small",
+#)
 
 smt2_test(
     name = "dzufferey_02",
     size = "small",
 )
 
-smt2_test(
-    name = "dzufferey_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "ea_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "ea_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "ea_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "ea_abs",
-    size = "small",
-)
-
-smt2_test(
-    name = "ea_abs_simplified",
-    size = "small",
-)
-
-smt2_test(
-    name = "ea_beale",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_04",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_05",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_06",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_07",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_08",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_09",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_10",
-    size = "small",
-)
-
-smt2_test(
-    name = "exist_forall_zenna_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_04",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_05",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_06",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_07",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_08",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_09",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_10",
-    size = "small",
-)
-
-smt2_test(
-    name = "fedor_11",
-    size = "small",
-)
+#smt2_test(
+#    name = "dzufferey_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "ea_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "ea_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "ea_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "ea_abs",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "ea_abs_simplified",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "ea_beale",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_05",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_06",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_07",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_08",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_09",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "exist_forall_zenna_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_05",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_06",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_07",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_08",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_09",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "fedor_11",
+#    size = "small",
+#)
 
 smt2_test(
     name = "fedor_12",
@@ -382,15 +382,15 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "hansen_simple",
-    size = "small",
-)
-
-smt2_test(
-    name = "hansen_hockey",
-    size = "small",
-)
+#smt2_test(
+#    name = "hansen_simple",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hansen_hockey",
+#    size = "small",
+#)
 
 smt2_test(
     name = "hex_01",
@@ -402,57 +402,57 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "int_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "int_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "int_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "int_03_parallel",
-    size = "small",
-    options = ["-j 4"],
-    smt2 = "int_03.smt2",
-)
+#smt2_test(
+#    name = "int_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "int_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "int_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "int_03_parallel",
+#    size = "small",
+#    options = ["-j 4"],
+#    smt2 = "int_03.smt2",
+#)
 
 smt2_test(
     name = "ite_01",
     size = "small",
 )
 
-smt2_test(
-    name = "lei_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "lei_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "lei_03",
-    size = "small",
-)
+#smt2_test(
+#    name = "lei_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "lei_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "lei_03",
+#    size = "small",
+#)
 
 smt2_test(
     name = "lei_04",
     size = "small",
 )
 
-smt2_test(
-    name = "lei_05",
-    size = "small",
-)
+#smt2_test(
+#    name = "lei_05",
+#    size = "small",
+#)
 
 smt2_test(
     name = "let_01",
@@ -474,10 +474,10 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "let_05",
-    size = "small",
-)
+#smt2_test(
+#    name = "let_05",
+#    size = "small",
+#)
 
 smt2_test(
     name = "let_06",
@@ -489,232 +489,232 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "mass_spring",
-    size = "small",
-)
-
-smt2_test(
-    name = "max_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "min_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "minimize_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "minimize_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "minimize_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "minimize_04",
-    size = "small",
-)
-
-smt2_test(
-    name = "ml",
-    size = "small",
-)
-
-smt2_test(
-    name = "nikos_01",
-    size = "medium",
-)
-
-smt2_test(
-    name = "nikos_02",
-    size = "medium",
-)
-
-smt2_test(
-    name = "nikos_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "nikos_03_parallel",
-    size = "small",
-    options = ["-j 4"],
-    smt2 = "nikos_03.smt2",
-)
-
-smt2_test(
-    name = "nikos_04",
-    size = "small",
-)
-
-smt2_test(
-    name = "nt-cond",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-backoff",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-bounce-ML5",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-bounce-ML6",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-bounce-ML7",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-bounce-ML8",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML2-d10",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML2",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML3-d10",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML3",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML4-d10",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML4",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML5",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML5-d10",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-hockey-ML5-d10-A",
-    size = "small",
-)
-
-smt2_test(
-    name = "osmosis-simple",
-    size = "small",
-)
-
-smt2_test(
-    name = "push_pop_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "push_pop_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "push_pop_03",
-    size = "small",
-)
-
-smt2_test(
-    name = "push_pop_04",
-    size = "small",
-)
-
-smt2_test(
-    name = "push_pop_05",
-    size = "small",
-)
-
-smt2_test(
-    name = "realpaver-bug",
-    size = "small",
-)
-
-smt2_test(
-    name = "rp_bug_cos",
-    size = "small",
-)
-
-smt2_test(
-    name = "scungao_01",
-    size = "small",
-)
+#smt2_test(
+#    name = "mass_spring",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "max_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "min_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "minimize_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "minimize_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "minimize_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "minimize_04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "ml",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "nikos_01",
+#    size = "medium",
+#)
+#
+#smt2_test(
+#    name = "nikos_02",
+#    size = "medium",
+#)
+#
+#smt2_test(
+#    name = "nikos_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "nikos_03_parallel",
+#    size = "small",
+#    options = ["-j 4"],
+#    smt2 = "nikos_03.smt2",
+#)
+#
+#smt2_test(
+#    name = "nikos_04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "nt-cond",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-backoff",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-bounce-ML5",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-bounce-ML6",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-bounce-ML7",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-bounce-ML8",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML2-d10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML2",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML3-d10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML3",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML4-d10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML4",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML5",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML5-d10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-hockey-ML5-d10-A",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "osmosis-simple",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "push_pop_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "push_pop_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "push_pop_03",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "push_pop_04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "push_pop_05",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "realpaver-bug",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "rp_bug_cos",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "scungao_01",
+#    size = "small",
+#)
 
 smt2_test(
     name = "scungao_03",
     size = "small",
 )
 
-smt2_test(
-    name = "scungao_04",
-    size = "small",
-)
-
-smt2_test(
-    name = "sk",
-    size = "small",
-)
-
-smt2_test(
-    name = "sqrt1",
-    size = "small",
-)
-
-smt2_test(
-    name = "stephen_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "stephen_02",
-    size = "small",
-)
-
-smt2_test(
-    name = "tai_sin_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "tai_sin_03",
-    size = "small",
-)
+#smt2_test(
+#    name = "scungao_04",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "sk",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "sqrt1",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "stephen_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "stephen_02",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "tai_sin_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "tai_sin_03",
+#    size = "small",
+#)
 
 smt2_test(
     name = "trivial_01",
@@ -741,41 +741,41 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "uav",
-    size = "small",
-)
-
-smt2_test(
-    name = "uav_hard",
-    size = "large",
-    tags = ["manual"],
-)
-
-smt2_test(
-    name = "uav_poly",
-    size = "small",
-)
-
-smt2_test(
-    name = "uav_simple",
-    size = "small",
-)
-
-smt2_test(
-    name = "uav_transcend",
-    size = "small",
-)
-
-smt2_test(
-    name = "uav_x1000",
-    size = "small",
-)
-
-smt2_test(
-    name = "yichao_01",
-    size = "small",
-)
+#smt2_test(
+#    name = "uav",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "uav_hard",
+#    size = "large",
+#    tags = ["manual"],
+#)
+#
+#smt2_test(
+#    name = "uav_poly",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "uav_simple",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "uav_transcend",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "uav_x1000",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "yichao_01",
+#    size = "small",
+#)
 
 smt2_test(
     name = "zenna_01",
@@ -797,241 +797,241 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "zenna_07",
-    size = "small",
-)
-
-smt2_test(
-    name = "zenna_08",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_1",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_2",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_3",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_4",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_5",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_6",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_7",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_8",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_9",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_10",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_11",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_12",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_13",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_14",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_15",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_16",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_17",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_18",
-    size = "small",
-)
-
-smt2_test(
-    name = "hong/hong_18_parallel",
-    size = "small",
-    options = ["-j 4"],
-    smt2 = "hong/hong_18.smt2",
-)
-
-smt2_test(
-    name = "hong/hong_19",
-    size = "small",
-    tags = ["manual"],
-)
-
-smt2_test(
-    name = "hong/hong_20",
-    size = "small",
-    tags = ["manual"],
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_1_20",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_1_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_2_15",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_2_20",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_2_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_2_50",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_3_10",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_3_20",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_3_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_3_30",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_3_30_parallel",
-    size = "small",
-    options = ["-j 4"],
-    smt2 = "powersystem/dreal_file_3_30.smt2",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_3_40",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_4_5",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_5_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_6_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_7_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_8_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "powersystem/dreal_file_9_25",
-    size = "small",
-)
-
-smt2_test(
-    name = "github_issue_184",
-    size = "small",
-)
-
-smt2_test(
-    name = "github_issue_185",
-    size = "small",
-)
-
-smt2_test(
-    name = "github_issue_188",
-    size = "small",
-)
-
-smt2_test(
-    name = "github_issue_189",
-    size = "small",
-)
-
-smt2_test(
-    name = "github_issue_190",
-    size = "small",
-)
+#smt2_test(
+#    name = "zenna_07",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "zenna_08",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_1",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_2",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_3",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_4",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_5",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_6",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_7",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_8",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_9",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_11",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_12",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_13",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_14",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_15",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_16",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_17",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_18",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_18_parallel",
+#    size = "small",
+#    options = ["-j 4"],
+#    smt2 = "hong/hong_18.smt2",
+#)
+#
+#smt2_test(
+#    name = "hong/hong_19",
+#    size = "small",
+#    tags = ["manual"],
+#)
+#
+#smt2_test(
+#    name = "hong/hong_20",
+#    size = "small",
+#    tags = ["manual"],
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_1_20",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_1_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_2_15",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_2_20",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_2_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_2_50",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_3_10",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_3_20",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_3_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_3_30",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_3_30_parallel",
+#    size = "small",
+#    options = ["-j 4"],
+#    smt2 = "powersystem/dreal_file_3_30.smt2",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_3_40",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_4_5",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_5_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_6_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_7_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_8_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "powersystem/dreal_file_9_25",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "github_issue_184",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "github_issue_185",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "github_issue_188",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "github_issue_189",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "github_issue_190",
+#    size = "small",
+#)
 
 smt2_test(
     name = "github_issue_192",
@@ -1043,11 +1043,11 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "github_issue_197",
-    size = "small",
-    options = ["-j 2"],
-)
+#smt2_test(
+#    name = "github_issue_197",
+#    size = "small",
+#    options = ["-j 2"],
+#)
 
 smt2_test(
     name = "github_issue_198",
@@ -1064,10 +1064,10 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "github_issue_200_3",
-    size = "small",
-)
+#smt2_test(
+#    name = "github_issue_200_3",
+#    size = "small",
+#)
 
 licenses(["notice"])  # Apache 2.0
 

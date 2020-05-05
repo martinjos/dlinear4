@@ -413,9 +413,11 @@ int MainProgram::Run() {
   if (opt_.isSet("--help")) {
     return 0;
   }
-  cout << "dReal " << get_version_string() << endl;
   if (opt_.isSet("--version")) {
+    cout << "dReal " << get_version_string() << endl;
     return 0;
+  } else {
+    cerr << "dReal " << get_version_string() << endl;
   }
   if (!is_options_all_valid_) {
     return 1;
