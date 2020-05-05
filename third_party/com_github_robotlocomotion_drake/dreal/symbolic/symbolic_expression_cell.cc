@@ -545,7 +545,8 @@ mpq_class ExpressionAdd::Evaluate(const Environment& env) const {
   return accumulate(
       expr_to_coeff_map_.begin(), expr_to_coeff_map_.end(), constant_,
       [&env](const mpq_class& init, const pair<const Expression, mpq_class>& p) {
-        return init + p.first.Evaluate(env) * p.second;
+        // Without the cast, it would return an expression template
+        return static_cast<mpq_class>(init + p.first.Evaluate(env) * p.second);
       });
 }
 
