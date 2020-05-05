@@ -16,8 +16,10 @@
 #include "dreal/symbolic/symbolic_environment.h"
 #include "dreal/symbolic/symbolic_variable.h"
 #include "dreal/symbolic/symbolic_variables.h"
+#include "dreal/symbolic/symbolic_variables.h"
 
 #include "dreal/gmp.h"
+#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 namespace drake {
@@ -755,6 +757,9 @@ struct hash<dreal::drake::symbolic::Expression> {
 /* Provides std::numeric_limits<dreal::drake::symbolic::Expression>. */
 template <>
 struct numeric_limits<dreal::drake::symbolic::Expression>
-    : public numeric_limits<mpq_class> {};
+    : public numeric_limits<mpq_class> {
+  static const bool has_infinity = true;
+  static mpq_class infinity() { return dreal::qsopt_ex::mpq_infty(); }
+};
 
 }  // namespace std

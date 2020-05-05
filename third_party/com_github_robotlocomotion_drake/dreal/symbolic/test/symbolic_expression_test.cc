@@ -803,6 +803,8 @@ TEST_F(SymbolicExpressionTest, NumericLimits) {
   using std::numeric_limits;
   using Limits = numeric_limits<Expression>;
 
+  // These are meaningless for mpq_class
+#if 0
   const Expression num_eps = Limits::epsilon();
   ASSERT_TRUE(is_constant(num_eps));
   EXPECT_EQ(get_constant_value(num_eps), numeric_limits<double>::epsilon());
@@ -810,9 +812,12 @@ TEST_F(SymbolicExpressionTest, NumericLimits) {
   const Expression num_min = Limits::min();
   ASSERT_TRUE(is_constant(num_min));
   EXPECT_EQ(get_constant_value(num_min), numeric_limits<double>::min());
+#endif
 
-  const Expression num_infinity = Limits::infinity();
-  EXPECT_EQ(num_infinity.to_string(), "inf");
+  Expression num_infinity;
+  EXPECT_THROW(num_infinity = Limits::infinity(), runtime_error);
+  num_infinity = Expression::Infty();
+  EXPECT_EQ(num_infinity.to_string(), "infinity");
 }
 
 TEST_F(SymbolicExpressionTest, UnaryPlus) {

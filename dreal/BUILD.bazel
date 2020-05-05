@@ -41,8 +41,7 @@ dreal_cc_library(
         "qsopt_ex.h",
     ],
     visibility = [
-        "//:__pkg__",
-        "//dreal:__subpackages__",
+        "//visibility:public",
     ],
     deps = [
         "//:qsopt-ex",

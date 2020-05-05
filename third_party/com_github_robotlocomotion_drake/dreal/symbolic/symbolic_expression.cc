@@ -30,6 +30,8 @@ using std::string;
 using std::vector;
 using std::isinf;
 using std::isnan;
+using dreal::qsopt_ex::mpq_infty;
+using dreal::qsopt_ex::mpq_ninfty;
 
 bool operator<(ExpressionKind k1, ExpressionKind k2) {
   return static_cast<int>(k1) < static_cast<int>(k2);
@@ -124,6 +126,8 @@ ExpressionCell* Expression::make_cell(const mpq_class& d) {
     return Expression::Pi().ptr_;
   } else if (d == M_E) {
     return Expression::E().ptr_;
+  } else if (d <= mpq_ninfty() || d >= mpq_infty()) {
+    throw runtime_error("Number too large for QSopt_ex");
   } else {
     return new ExpressionConstant(d);
   }
