@@ -38,7 +38,7 @@ mpq_class StringToMpq(const std::string& str);
 
 class MpqArray {
  public:
-  MpqArray(int size);
+  explicit MpqArray(int size);
   ~MpqArray();
   operator const mpq_t*() const {
     return array;

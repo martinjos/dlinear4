@@ -10,7 +10,7 @@ using std::exit;
 // Needed for mpq_EGlpNumAllocArray(), etc.
 #define EXIT(__A, ...)                             \
     do {                                           \
-        if(__A) {                                  \
+        if (__A) {                                 \
             fprintf(stderr, "EXIT: " __VA_ARGS__); \
             exit(EXIT_FAILURE);                    \
         }                                          \

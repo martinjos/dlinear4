@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 #include <functional>
+#include <utility>
 
 #include "dreal/solver/config.h"
 #include "dreal/symbolic/symbolic.h"

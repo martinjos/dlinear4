@@ -141,19 +141,19 @@ bool LinearTheorySolver::CheckSat(const Box& box,
   }
 
   switch (lp_status) {
-   case QS_LP_FEASIBLE:
-   case QS_LP_DELTA_FEASIBLE:
+  case QS_LP_FEASIBLE:
+  case QS_LP_DELTA_FEASIBLE:
     // Copy delta-feasible point from x into model_
     for (int i = 0; i < colcount; i++) {
       model_[var_map[i]] = x[i];
     }
     return true;
-   case QS_LP_INFEASIBLE:
+  case QS_LP_INFEASIBLE:
     // Prevent the exact same LP from coming up again
     explanation_.clear();
     explanation_.insert(assertions.begin(), assertions.end());
     return false;
-   case QS_LP_UNSOLVED:
+  case QS_LP_UNSOLVED:
     throw DREAL_RUNTIME_ERROR("QSdelta_solver() failed to solve LP");
   }
 
