@@ -383,7 +383,7 @@ term:           TK_TRUE { $$ = new Term(Formula::True()); }
             delete $1;
             $$ = new Term{rational};
         }
-/*      |       HEXFLOAT { $$ = new Term{$1}; }  */
+        |       HEXFLOAT { $$ = new Term{$1}; }
         |       INT { $$ = new Term{convert_int64_to_rational($1)}; }
         |       SYMBOL {
             try {
