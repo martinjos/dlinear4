@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "dreal/symbolic/symbolic.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 #include "dreal/util/assert.h"
 
 using std::set;
@@ -31,6 +32,7 @@ bool IsSatisfiable(const Formula& f) {
 }
 
 class TseitinCnfizerTest : public ::testing::Test {
+  DrakeSymbolicGuard guard_;
  protected:
   ::testing::AssertionResult CnfChecker(const Formula& f) {
     const vector<Formula> clauses{cnfizer_.Convert(f)};

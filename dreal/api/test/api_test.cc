@@ -4,11 +4,13 @@
 #include <gtest/gtest.h>
 
 //#include "dreal/solver/formula_evaluator.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 
 namespace dreal {
 namespace {
 
 class ApiTest : public ::testing::Test {
+  DrakeSymbolicGuard guard_;
  protected:
   const Variable x_{"x", Variable::Type::CONTINUOUS};
   const Variable y_{"y", Variable::Type::CONTINUOUS};

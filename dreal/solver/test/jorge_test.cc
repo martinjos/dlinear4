@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include "dreal/symbolic/symbolic.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 
 namespace dreal {
 namespace {
@@ -15,6 +16,8 @@ using std::endl;
 using std::vector;
 
 GTEST_TEST(Test, Example) {
+  DrakeSymbolicGuard guard_;
+
   // -----------------
   // Declare variables
   // -----------------

@@ -176,6 +176,7 @@ dreal_cc_googletest(
     tags = ["unit"],
     deps = [
         ":solver",
+        "//dreal/symbolic:symbolic_test_util",
     ],
 )
 
@@ -216,6 +217,7 @@ dreal_cc_googletest(
     tags = ["unit"],
     deps = [
         ":solver",
+        "//dreal/symbolic:symbolic_test_util",
     ],
 )
 
@@ -225,6 +227,7 @@ dreal_cc_googletest(
     deps = [
         ":solver",
         "//dreal/util:logging",
+        "//dreal/symbolic:symbolic_test_util",
     ],
 )
 

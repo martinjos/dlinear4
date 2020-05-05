@@ -6,6 +6,7 @@
 
 #include "dreal/symbolic/symbolic_environment.h"
 #include "dreal/symbolic/symbolic_expression.h"
+#include "dreal/symbolic/test/symbolic_test_util.h"
 
 namespace dreal {
 namespace drake {
@@ -17,6 +18,7 @@ using std::string;
 
 // Provides common variables that are used by the following tests.
 class EnvironmentTest : public ::testing::Test {
+  ::dreal::drake::symbolic::test::DrakeSymbolicGuard guard_;
  protected:
   const Variable var_dummy_{};
   const Variable var_x_{"x"};

@@ -86,6 +86,7 @@ void CheckOrdering(const vector<Expression>& expressions) {
 
 // Provides common variables that are used by the following tests.
 class SymbolicExpressionTest : public ::testing::Test {
+  ::dreal::drake::symbolic::test::DrakeSymbolicGuard guard_;
  protected:
   const Variable var_a_{"a"};
   const Variable var_x_{"x"};

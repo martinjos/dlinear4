@@ -4,11 +4,13 @@
 
 #include "dreal/solver/config.h"
 #include "dreal/symbolic/symbolic.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 
 namespace dreal {
 namespace {
 
 class SatSolverTest : public ::testing::Test {
+  DrakeSymbolicGuard guard_;
  protected:
   const Variable b1_{"b1", Variable::Type::BOOLEAN};
   const Variable b2_{"b2", Variable::Type::BOOLEAN};

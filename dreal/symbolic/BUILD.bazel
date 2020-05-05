@@ -53,7 +53,7 @@ dreal_cc_library(
         "symbolic_test_util.h",
     ],
     visibility = [
-        "//dreal/util:__pkg__",
+        "//dreal:__subpackages__",
     ],
     deps = [
         ":symbolic",
@@ -65,6 +65,7 @@ dreal_cc_googletest(
     tags = ["unit"],
     deps = [
         ":prefix_printer",
+        ":symbolic_test_util",
     ],
 )
 

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "dreal/symbolic/symbolic_variables.h"
+#include "dreal/symbolic/test/symbolic_test_util.h"
 
 namespace dreal {
 namespace drake {
@@ -9,6 +10,7 @@ namespace {
 
 // Provides common variables that are used by the following tests.
 class VariablesTest : public ::testing::Test {
+  ::dreal::drake::symbolic::test::DrakeSymbolicGuard guard_;
  protected:
   const Variable x_{"x"};
   const Variable y_{"y"};

@@ -1,4 +1,5 @@
 #include "dreal/symbolic/prefix_printer.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 
 #include <cmath>
 
@@ -8,6 +9,7 @@ namespace dreal {
 namespace {
 
 class PrefixPrinterTest : public ::testing::Test {
+  DrakeSymbolicGuard guard_;
  protected:
   const Variable x_{"x", Variable::Type::CONTINUOUS};
   const Variable y_{"y", Variable::Type::CONTINUOUS};

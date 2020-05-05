@@ -410,6 +410,7 @@ dreal_cc_googletest(
     tags = ["unit"],
     deps = [
         ":box",
+        "//dreal/symbolic:symbolic_test_util",
     ],
 )
 

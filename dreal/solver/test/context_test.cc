@@ -3,14 +3,19 @@
 #include <gtest/gtest.h>
 
 #include "dreal/symbolic/symbolic.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 #include "dreal/util/logging.h"
 
 namespace dreal {
 namespace {
 
 class ContextTest : public ::testing::Test {
+  DrakeSymbolicGuard guard_;
  protected:
-  void SetUp() override { context_.DeclareVariable(x_); }
+  void SetUp() override {
+    ::testing::Test::SetUp();
+    context_.DeclareVariable(x_);
+  }
 
   const Variable x_{"x"};
   Context context_;

@@ -77,6 +77,7 @@ void CheckOrdering(const vector<Formula>& formulas) {
 
 // Provides common variables that are used by the following tests.
 class SymbolicFormulaTest : public ::testing::Test {
+  ::dreal::drake::symbolic::test::DrakeSymbolicGuard guard_;
  protected:
   const Variable var_x_{"x", Variable::Type::CONTINUOUS};
   const Variable var_y_{"y", Variable::Type::CONTINUOUS};

@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include "dreal/symbolic/symbolic.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 
 using std::is_nothrow_move_constructible;
 using std::numeric_limits;
@@ -20,6 +21,7 @@ namespace dreal {
 namespace {
 
 class BoxTest : public ::testing::Test {
+  DrakeSymbolicGuard guard_;
  protected:
   // Real Variables.
   const Variable x_{"x"};

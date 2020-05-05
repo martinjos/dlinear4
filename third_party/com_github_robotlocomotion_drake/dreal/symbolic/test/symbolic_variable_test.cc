@@ -28,6 +28,7 @@ using test::VarNotLess;
 
 // Provides common variables that are used by the following tests.
 class VariableTest : public ::testing::Test {
+  ::dreal::drake::symbolic::test::DrakeSymbolicGuard guard_;
  protected:
   const Variable x_{"x"};
   const Variable y_{"y"};

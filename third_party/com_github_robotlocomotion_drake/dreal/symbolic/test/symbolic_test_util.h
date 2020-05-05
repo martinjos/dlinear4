@@ -15,6 +15,15 @@ namespace drake {
 namespace symbolic {
 namespace test {
 
+struct DrakeSymbolicGuard {
+  DrakeSymbolicGuard() {
+    Expression::InitConstants();
+  }
+  ~DrakeSymbolicGuard() {
+    Expression::DeInitConstants();
+  }
+};
+
 inline bool VarEqual(const Variable& v1, const Variable& v2) {
   return v1.equal_to(v2);
 }

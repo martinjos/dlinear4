@@ -500,8 +500,13 @@ void DoMain() {
 }  // namespace dreal
 
 int main(int argc, const char* argv[]) {
+  // Best to have this here in case of scope issues
+  dreal::Expression::InitConstants();
+
   if (argc == 2) {
     dreal::g_number_of_jobs = std::max(atoi(argv[1]), 1);
   }
   dreal::DoMain();
+
+  dreal::Expression::DeInitConstants();
 }
