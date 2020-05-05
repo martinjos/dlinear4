@@ -806,14 +806,19 @@ bool ExpressionMul::Less(const ExpressionCell& e) const {
 }
 
 mpq_class ExpressionMul::Evaluate(const Environment& env) const {
-  throw runtime_error("Not implemented");  // Because of mpq_class
-#if 0
   return accumulate(
       base_to_exponent_map_.begin(), base_to_exponent_map_.end(), constant_,
       [&env](const mpq_class& init, const pair<const Expression, Expression>& p) {
-        return init * std::pow(p.first.Evaluate(env), p.second.Evaluate(env));
+        mpq_class exponent{p.second.Evaluate(env)};
+        if (exponent == 1) {
+          // Without the cast, it would return an expression template
+          return static_cast<mpq_class>(init * p.first.Evaluate(env));
+        } else if (exponent == 0) {
+          return init;
+        } else {
+          throw runtime_error("Not implemented");  // Because of mpq_class
+        }
       });
-#endif
 }
 
 Expression ExpressionMul::Expand() {
