@@ -22,6 +22,8 @@ using std::unordered_map;
 using std::vector;
 using dreal::gmp::ceil;
 using dreal::gmp::floor;
+using dreal::qsopt_ex::mpq_ninfty;
+using dreal::qsopt_ex::mpq_infty;
 
 namespace dreal {
 
@@ -43,8 +45,22 @@ std::pair<Box::Interval, Box::Interval> Box::Interval::bisect(const mpq_class& p
 std::ostream& operator<<(std::ostream& os, const Box::Interval& iv) {
   if (iv.is_empty()) {
     return os << "[ empty ]";
+  } else if (iv.lb() <= mpq_ninfty() && iv.ub() >= mpq_infty()) {
+    return os << "[ ENTIRE ]";
   } else {
-    return os << "[" << iv.lb() << ", " << iv.ub() << "]";
+    os << "[";
+    if (iv.lb() <= mpq_ninfty()) {
+      os << "-inf";
+    } else {
+      os << iv.lb();
+    }
+    os << ", ";
+    if (iv.ub() >= mpq_infty()) {
+      os << "inf";
+    } else {
+      os << iv.ub();
+    }
+    return os << "]";
   }
 }
 
