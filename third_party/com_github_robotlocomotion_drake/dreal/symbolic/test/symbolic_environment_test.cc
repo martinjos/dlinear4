@@ -38,9 +38,12 @@ TEST_F(EnvironmentTest, EmptySize) {
   EXPECT_EQ(env2.size(), 3u);
 }
 
+// Can't be made to work with mpq_class
+#if 0
 TEST_F(EnvironmentTest, InitWithNan) {
   EXPECT_THROW((Environment{{var_x_, 10}, {var_y_, NAN}}), runtime_error);
 }
+#endif
 
 TEST_F(EnvironmentTest, InitializerListWithoutValues) {
   const Environment env{var_x_, var_y_, var_z_};
@@ -64,11 +67,14 @@ TEST_F(EnvironmentTest, InitWithMapExceptionDummyVariable) {
   EXPECT_THROW(Environment{m}, runtime_error);
 }
 
+// Can't be made to work with mpq_class
+#if 0
 TEST_F(EnvironmentTest, InitWithMapExceptionNan) {
   Environment::map m;
   m.emplace(var_x_, NAN);
   EXPECT_THROW(Environment{m}, runtime_error);
 }
+#endif
 
 TEST_F(EnvironmentTest, insert_find) {
   Environment env1{{var_x_, 2}, {var_y_, 3}, {var_z_, 4}};
