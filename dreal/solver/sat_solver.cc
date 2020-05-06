@@ -31,6 +31,7 @@ using qsopt_ex::mpq_ILL_MAXDOUBLE;  // mpq_INFTY
 using qsopt_ex::mpq_ninfty;  // mpq_class versions
 using qsopt_ex::mpq_infty;
 using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
+using qsopt_ex::__oneLpNum_mpq__;  // mpq_oneLpNum
 
 SatSolver::SatSolver(const Config& config) : sat_{picosat_init()},
     cur_clause_start_{0}, config_(config) {
@@ -310,7 +311,8 @@ void SatSolver::ResetLinearProblem() {
   }
   // Clear variable bounds
   const int qsx_cols{mpq_QSget_colcount(qsx_prob_)};
-  DREAL_ASSERT(static_cast<size_t>(qsx_cols) == from_qsx_col_.size() + qsx_row_arts_map_.size());
+  DREAL_ASSERT(!config_.use_phase_one_simplex() ||
+               static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
   for (const pair<int, Variable> kv : from_qsx_col_) {
     mpq_QSchange_bound(qsx_prob_, kv.first, 'L', mpq_NINFTY);
     mpq_QSchange_bound(qsx_prob_, kv.first, 'U', mpq_INFTY);
@@ -489,17 +491,36 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     if (qsx_rhs_.back() <= mpq_ninfty() || qsx_rhs_.back() >= mpq_infty()) {
       throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", qsx_rhs_.back());
     }
-#if 0  // TODO: finish implementing
-    if (!config_.phase_one_simplex()) {
-      int art_sign = needs_artificial(qsx_rhs_.back(), qsx_sense_.back());
+    if (!config_.use_phase_one_simplex()) {
+      CreateArtificialIfNeeded(qsx_row);
     }
-#endif
     // Update indexes
     to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
     DREAL_ASSERT(static_cast<size_t>(qsx_row) == from_qsx_row_.size());
     from_qsx_row_.push_back(make_pair(formulaVar, truth));
     DREAL_LOG_DEBUG("SatSolver::AddLinearLiteral({}{} ↦ {})",
                     truth ? "" : "¬", it->second, qsx_row);
+}
+
+void SatSolver::CreateArtificialIfNeeded(const int qsx_row) {
+  DREAL_ASSERT(!config_.use_phase_one_simplex());
+  const mpq_class& rhs{qsx_rhs_[qsx_row]};
+  const char sense{qsx_sense_[qsx_row]};
+  int sign = 0;
+  if ((sense == 'E' || sense == 'L') && rhs < 0) {
+    sign = -1;
+  } else if ((sense == 'E' || sense == 'G') && rhs > 0) {
+    sign = 1;
+  }
+  const int qsx_col{mpq_QSget_colcount(qsx_prob_)};
+  int status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY,
+                             NULL);
+  DREAL_ASSERT(!status);
+  mpq_t c_value;
+  mpq_init(c_value);
+  mpq_set_si(c_value, sign, 1);
+  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col, c_value);
+  mpq_clear(c_value);
 }
 
 void SatSolver::UpdateLookup(int lit, int learned) {

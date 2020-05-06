@@ -91,12 +91,12 @@ int LinearTheorySolver::CheckSat(const Box& box,
   for (const pair<int, Variable>& kv : var_map) {
     model_.Add(kv.second);
   }
-  DREAL_ASSERT(model_.size() == colcount);
+  DREAL_ASSERT(!config_.use_phase_one_simplex() || model_.size() == colcount);
 
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
-  lp_status = QS_LP_DELTA_FEASIBLE;
+  lp_status = QS_EXACT_DELTA_SAT;
   mpq_t temp;
   mpq_init(temp);
   for (const pair<int, Variable>& kv : var_map) {
@@ -108,7 +108,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
     DREAL_ASSERT(!res);
     mpq_class ub{temp};
     if (lb > ub) {
-      lp_status = QS_LP_INFEASIBLE;
+      lp_status = QS_EXACT_UNSAT;
       // Prevent the exact same LP from coming up again
       explanation_.clear();
       explanation_.insert(assertions.begin(), assertions.end());
@@ -127,34 +127,61 @@ int LinearTheorySolver::CheckSat(const Box& box,
     }
   }
   mpq_clear(temp);
-  if (lp_status == QS_LP_INFEASIBLE || rowcount == 0) {
+  if (lp_status == QS_EXACT_UNSAT || rowcount == 0) {
     DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: no need to call LP solver");
     return lp_status;
   }
 
   // Now we call the solver
   lp_status = -1;
-  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: calling QSdelta_solver()");
-  status = qsopt_ex::QSdelta_solver(prob, precision_.get_mpq_t(), x, NULL, NULL,
-                                    DUAL_SIMPLEX, &lp_status);
+  int sat_status = -1;
+  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: calling QSopt_ex (phase {})",
+                  config_.use_phase_one_simplex() ? "one" : "two");
 
-  if (status) {
-    throw DREAL_RUNTIME_ERROR("QSdelta_solver() returned {}", status);
+  mpq_class actual_precision{precision_};
+  if (config_.use_phase_one_simplex()) {
+    status = qsopt_ex::QSdelta_solver(prob, actual_precision.get_mpq_t(), x, NULL, NULL,
+                                      DUAL_SIMPLEX, &lp_status);
   } else {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSdelta_solver() returned");
+    status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, DUAL_SIMPLEX,
+                                            &sat_status, actual_precision.get_mpq_t());
   }
 
-  switch (lp_status) {
-  case QS_LP_FEASIBLE:
-  case QS_LP_DELTA_FEASIBLE:
+  if (status) {
+    throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
+  } else {
+    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
+                    actual_precision);
+  }
+
+  if (config_.use_phase_one_simplex()) {
+    switch (lp_status) {
+    case QS_LP_FEASIBLE:
+    case QS_LP_DELTA_FEASIBLE:
+      sat_status = QS_EXACT_DELTA_SAT;
+      break;
+    case QS_LP_INFEASIBLE:
+      sat_status = QS_EXACT_UNSAT;
+      break;
+    case QS_LP_UNSOLVED:
+      sat_status = QS_EXACT_UNKNOWN;
+      break;
+    default:
+      DREAL_UNREACHABLE();
+    }
+  }
+
+  switch (sat_status) {
+  case QS_EXACT_SAT:
+  case QS_EXACT_DELTA_SAT:
     // Copy delta-feasible point from x into model_
     for (const pair<int, Variable>& kv : var_map) {
       model_[kv.second] = x[kv.first];
     }
-    lp_status = QS_LP_DELTA_FEASIBLE;
+    sat_status = QS_EXACT_DELTA_SAT;
     break;
-  case QS_LP_INFEASIBLE:
-  case QS_LP_UNSOLVED:
+  case QS_EXACT_UNSAT:
+  case QS_EXACT_UNKNOWN:
     // Prevent the exact same LP from coming up again
     explanation_.clear();
     explanation_.insert(assertions.begin(), assertions.end());
@@ -163,7 +190,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
     DREAL_UNREACHABLE();
   }
 
-  return lp_status;
+  return sat_status;
 }
 
 const Box& LinearTheorySolver::GetModel() const {

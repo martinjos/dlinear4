@@ -113,6 +113,9 @@ class SatSolver {
   // Add a linear literal to the linear solver
   void AddLinearLiteral(const Variable& var, bool truth);
 
+  // Maybe create (redundant) artificial variable for LP solver
+  void CreateArtificialIfNeeded(int qsx_row);
+
   // Enable a linear literal in the linear solver
   void EnableLinearLiteral(const Variable& var, bool truth);
 
@@ -172,7 +175,6 @@ class SatSolver {
   // same Id.
   std::map<Variable::Id, int> to_qsx_col_;
   std::map<int, Variable> from_qsx_col_;
-  std::vector<int> qsx_row_arts_map_;
 
   // Map (symbolic::Variable, bool) <-> int (row in QSopt_ex problem).
   std::map<std::pair<Variable::Id, bool>, int> to_qsx_row_;

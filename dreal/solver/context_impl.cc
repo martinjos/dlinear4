@@ -156,18 +156,18 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
           theory_solver_.CheckSat(box, theory_model,
                                   sat_solver->GetLinearSolver(),
                                   sat_solver->GetLinearVarMap())};
-        if (theory_result == QS_LP_DELTA_FEASIBLE) {
+        if (theory_result == QS_EXACT_DELTA_SAT) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(
               "ContextImpl::CheckSatCore() - Theory Check = delta-SAT");
           Box model{theory_solver_.GetModel()};
           return model;
         } else {
-          if (theory_result == QS_LP_INFEASIBLE) {
+          if (theory_result == QS_EXACT_UNSAT) {
             // UNSAT from TheorySolver.
             DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theory Check = UNSAT");
           } else {
-            DREAL_ASSERT(theory_result == QS_LP_UNSOLVED);
+            DREAL_ASSERT(theory_result == QS_EXACT_UNKNOWN);
             DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theory Check = UNKNOWN");
             have_unsolved = true;  // Will prevent return of UNSAT
           }
