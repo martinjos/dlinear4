@@ -129,6 +129,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
     DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Found Model\n{}", box);
     return box;
   }
+  bool have_unsolved = false;
   while (true) {
     // Note that 'DREAL_CHECK_INTERRUPT' is only defined in setup.py,
     // when we build dReal python package.
@@ -151,16 +152,25 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Sat Check = SAT");
 
         // The selected assertions have already been enabled in the LP solver
-        if (theory_solver_.CheckSat(box, theory_model, sat_solver->GetLinearSolver(),
-                                    sat_solver->GetLinearVarMap())) {
+        int theory_result{
+          theory_solver_.CheckSat(box, theory_model,
+                                  sat_solver->GetLinearSolver(),
+                                  sat_solver->GetLinearVarMap())};
+        if (theory_result == QS_LP_DELTA_FEASIBLE) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(
-              "ContextImpl::CheckSatCore() - Theroy Check = delta-SAT");
+              "ContextImpl::CheckSatCore() - Theory Check = delta-SAT");
           Box model{theory_solver_.GetModel()};
           return model;
         } else {
-          // UNSAT from TheorySolver.
-          DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theroy Check = UNSAT");
+          if (theory_result == QS_LP_INFEASIBLE) {
+            // UNSAT from TheorySolver.
+            DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theory Check = UNSAT");
+          } else {
+            DREAL_ASSERT(theory_result == QS_LP_UNSOLVED);
+            DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theory Check = UNKNOWN");
+            have_unsolved = true;  // Will prevent return of UNSAT
+          }
           const LinearTheorySolver::LiteralSet& explanation{
                   theory_solver_.GetExplanation()};
           DREAL_LOG_DEBUG(
@@ -173,6 +183,11 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         return box;
       }
     } else {
+      if (have_unsolved) {
+        // Can't assert UNSAT, because some branches were unsolved.
+        DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Sat Check = UNKNOWN");
+        throw DREAL_RUNTIME_ERROR("LP solver failed to solve some instances");
+      }
       // UNSAT from SATSolver. Escape the loop.
       DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Sat Check = UNSAT");
       return {};

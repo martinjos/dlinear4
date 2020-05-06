@@ -63,10 +63,10 @@ bool LinearTheorySolver::LiteralComparator::operator()(const LinearTheorySolver:
   return a.second < b.second;
 }
 
-bool LinearTheorySolver::CheckSat(const Box& box,
-                                  const std::vector<Literal>& assertions,
-                                  const mpq_QSprob prob,
-                                  const std::vector<Variable>& var_map) {
+int LinearTheorySolver::CheckSat(const Box& box,
+                                 const std::vector<Literal>& assertions,
+                                 const mpq_QSprob prob,
+                                 const std::vector<Variable>& var_map) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
@@ -92,7 +92,7 @@ bool LinearTheorySolver::CheckSat(const Box& box,
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
-  lp_status = QS_LP_FEASIBLE;
+  lp_status = QS_LP_DELTA_FEASIBLE;
   mpq_t temp;
   mpq_init(temp);
   for (int i = 0; i < colcount; i++) {
@@ -125,7 +125,7 @@ bool LinearTheorySolver::CheckSat(const Box& box,
   mpq_clear(temp);
   if (lp_status == QS_LP_INFEASIBLE || rowcount == 0) {
     DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: no need to call LP solver");
-    return (lp_status == QS_LP_FEASIBLE);
+    return lp_status;
   }
 
   // Now we call the solver
@@ -147,17 +147,19 @@ bool LinearTheorySolver::CheckSat(const Box& box,
     for (int i = 0; i < colcount; i++) {
       model_[var_map[i]] = x[i];
     }
-    return true;
+    lp_status = QS_LP_DELTA_FEASIBLE;
+    break;
   case QS_LP_INFEASIBLE:
+  case QS_LP_UNSOLVED:
     // Prevent the exact same LP from coming up again
     explanation_.clear();
     explanation_.insert(assertions.begin(), assertions.end());
-    return false;
-  case QS_LP_UNSOLVED:
-    throw DREAL_RUNTIME_ERROR("QSdelta_solver() failed to solve LP");
+    break;
+  default:
+    DREAL_UNREACHABLE();
   }
 
-  DREAL_UNREACHABLE();
+  return lp_status;
 }
 
 const Box& LinearTheorySolver::GetModel() const {

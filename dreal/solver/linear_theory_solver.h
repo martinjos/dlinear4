@@ -27,9 +27,9 @@ class LinearTheorySolver {
 
   /// Checks consistency. Returns true if there is a satisfying
   /// assignment. Otherwise, return false.
-  bool CheckSat(const Box& box, const std::vector<Literal>& assertions,
-                const qsopt_ex::mpq_QSprob prob,
-                const std::vector<Variable>& var_map);
+  int CheckSat(const Box& box, const std::vector<Literal>& assertions,
+               const qsopt_ex::mpq_QSprob prob,
+               const std::vector<Variable>& var_map);
 
   /// Gets a satisfying Model.
   const Box& GetModel() const;
