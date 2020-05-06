@@ -134,6 +134,12 @@ void MainProgram::AddOptions() {
            "Use local optimization algorithm for exist-forall problems.\n",
            "--local-optimization");
 
+  opt_.add("false" /* Default */, false /* Required? */,
+           0 /* Number of args expected. */,
+           0 /* Delimiter if expecting multiple args. */,
+           "Use phase one simplex in linear problems.\n",
+           "--phase-one-simplex");
+
   opt_.add("1" /* Default */, false /* Required? */,
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */, "Number of jobs.\n",
@@ -337,6 +343,13 @@ void MainProgram::ExtractOptions() {
     config_.mutable_use_local_optimization().set_from_command_line(true);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --local-optimization = {}",
                     config_.use_local_optimization());
+  }
+
+  // --phase-one-simplex
+  if (opt_.isSet("--phase-one-simplex")) {
+    config_.mutable_use_phase_one_simplex().set_from_command_line(true);
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --phase-one-simplex = {}",
+                    config_.use_phase_one_simplex());
   }
 
   // --nlopt-ftol-rel
