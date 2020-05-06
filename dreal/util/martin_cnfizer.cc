@@ -101,10 +101,16 @@ Formula MartinCnfizer::VisitForall(const Formula& f) {
   const set<Formula> clauses{
       get_clauses(naive_cnfizer_.Convert(quantified_formula))};
   for (const Formula& clause : clauses) {
-    DREAL_ASSERT(is_clause(clause));
-    set<Formula> new_clause_set{get_operands(clause)};
-    new_clause_set.insert(!bvar);
+    set<Formula> new_clause_set{!bvar};
+    if (is_disjunction(clause)) {
+      DREAL_ASSERT(is_clause(clause));
+      set<Formula> temp{get_operands(clause)};
+      new_clause_set.insert(temp.begin(), temp.end());
+    } else {
+      new_clause_set.insert(clause);
+    }
     Formula new_clause{make_disjunction(new_clause_set)};
+    DREAL_ASSERT(is_clause(new_clause));
     // Only the old clause's variables can intersect
     if (HaveIntersection(clause.GetFreeVariables(), quantified_variables)) {
       aux_.emplace_back(forall(quantified_variables, new_clause));
