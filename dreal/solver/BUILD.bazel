@@ -135,7 +135,7 @@ dreal_cc_library(
         "//dreal/util:predicate_abstractor",
         "//dreal/util:scoped_unordered_map",
         "//dreal/util:scoped_unordered_set",
-        "//dreal/util:martin_cnfizer",
+        "//dreal/util:plaisted_greenbaum_cnfizer",
         "@picosat",
     ],
 )

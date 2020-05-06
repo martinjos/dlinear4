@@ -16,7 +16,7 @@
 #include "dreal/util/predicate_abstractor.h"
 #include "dreal/util/scoped_unordered_map.h"
 #include "dreal/util/scoped_unordered_set.h"
-#include "dreal/util/martin_cnfizer.h"
+#include "dreal/util/plaisted_greenbaum_cnfizer.h"
 #include "dreal/qsopt_ex.h"
 
 namespace dreal {
@@ -143,7 +143,7 @@ class SatSolver {
   // ----------------
   // Pointer to the PicoSat solver.
   PicoSAT* const sat_{};
-  MartinCnfizer cnfizer_;
+  PlaistedGreenbaumCnfizer cnfizer_;
   PredicateAbstractor predicate_abstractor_;
 
   // Map symbolic::Variable → int (Variable type in PicoSat).

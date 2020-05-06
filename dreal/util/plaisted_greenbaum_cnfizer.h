@@ -9,8 +9,9 @@
 
 namespace dreal {
 /// Transforms a symbolic formula @p f into an equi-satisfiable CNF
-/// formula by introducing extra Boolean variables.
-class MartinCnfizer {
+/// formula by introducing extra Boolean variables (Plaisted-Greenbaum
+/// transformation: https://doi.org/10.1016/S0747-7171(86)80028-1).
+class PlaistedGreenbaumCnfizer {
  public:
   /// Convert @p f into an equi-satisfiable formula @c f' in CNF.
   std::vector<Formula> Convert(const Formula& f);
@@ -56,7 +57,7 @@ class MartinCnfizer {
 
   // Makes VisitFormula a friend of this class so that it can use private
   // operator()s.
-  friend Formula drake::symbolic::VisitFormula<Formula, MartinCnfizer>(
-      MartinCnfizer*, const Formula&);
+  friend Formula drake::symbolic::VisitFormula<Formula, PlaistedGreenbaumCnfizer>(
+      PlaistedGreenbaumCnfizer*, const Formula&);
 };
 }  // namespace dreal

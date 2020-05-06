@@ -171,12 +171,12 @@ dreal_cc_library(
 )
 
 dreal_cc_library(
-    name = "martin_cnfizer",
+    name = "plaisted_greenbaum_cnfizer",
     srcs = [
-        "martin_cnfizer.cc",
+        "plaisted_greenbaum_cnfizer.cc",
     ],
     hdrs = [
-        "martin_cnfizer.h",
+        "plaisted_greenbaum_cnfizer.h",
     ],
     visibility = ["//dreal/solver:__pkg__"],
     deps = [
@@ -534,10 +534,10 @@ dreal_cc_googletest(
 )
 
 dreal_cc_googletest(
-    name = "martin_cnfizer_test",
+    name = "plaisted_greenbaum_cnfizer_test",
     tags = ["unit"],
     deps = [
-        ":martin_cnfizer",
+        ":plaisted_greenbaum_cnfizer",
         "//dreal/symbolic:symbolic_test_util",
     ],
 )

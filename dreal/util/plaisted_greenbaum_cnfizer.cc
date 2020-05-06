@@ -1,4 +1,4 @@
-#include "dreal/util/martin_cnfizer.h"
+#include "dreal/util/plaisted_greenbaum_cnfizer.h"
 
 #include <algorithm>
 #include <atomic>
@@ -23,21 +23,21 @@ using std::vector;
 
 namespace {
 // A class to show statistics information at destruction.
-class MartinCnfizerStat : public Stat {
+class PlaistedGreenbaumCnfizerStat : public Stat {
  public:
-  explicit MartinCnfizerStat(const bool enabled) : Stat{enabled} {}
-  MartinCnfizerStat(const MartinCnfizerStat&) = delete;
-  MartinCnfizerStat(MartinCnfizerStat&&) = delete;
-  MartinCnfizerStat& operator=(const MartinCnfizerStat&) = delete;
-  MartinCnfizerStat& operator=(MartinCnfizerStat&&) = delete;
-  ~MartinCnfizerStat() override {
+  explicit PlaistedGreenbaumCnfizerStat(const bool enabled) : Stat{enabled} {}
+  PlaistedGreenbaumCnfizerStat(const PlaistedGreenbaumCnfizerStat&) = delete;
+  PlaistedGreenbaumCnfizerStat(PlaistedGreenbaumCnfizerStat&&) = delete;
+  PlaistedGreenbaumCnfizerStat& operator=(const PlaistedGreenbaumCnfizerStat&) = delete;
+  PlaistedGreenbaumCnfizerStat& operator=(PlaistedGreenbaumCnfizerStat&&) = delete;
+  ~PlaistedGreenbaumCnfizerStat() override {
     if (enabled()) {
       using fmt::print;
       print(cout, "{:<45} @ {:<20} = {:>15}\n", "Total # of Convert",
-            "Martin Cnfizer", num_convert_);
+            "PlaistedGreenbaum Cnfizer", num_convert_);
       if (num_convert_ > 0) {
         print(cout, "{:<45} @ {:<20} = {:>15f} sec\n",
-              "Total time spent in Converting", "Martin Cnfizer",
+              "Total time spent in Converting", "PlaistedGreenbaum Cnfizer",
               timer_convert_.seconds());
       }
     }
@@ -52,8 +52,8 @@ class MartinCnfizerStat : public Stat {
 };
 }  // namespace
 
-vector<Formula> MartinCnfizer::Convert(const Formula& f) {
-  static MartinCnfizerStat stat{DREAL_LOG_INFO_ENABLED};
+vector<Formula> PlaistedGreenbaumCnfizer::Convert(const Formula& f) {
+  static PlaistedGreenbaumCnfizerStat stat{DREAL_LOG_INFO_ENABLED};
   TimerGuard timer_guard(&stat.timer_convert_, stat.enabled());
   stat.increase_num_convert();
   // Put the Formula into negation normal form
@@ -66,24 +66,24 @@ vector<Formula> MartinCnfizer::Convert(const Formula& f) {
   return aux_;
 }
 
-Formula MartinCnfizer::Visit(const Formula& f) {
+Formula PlaistedGreenbaumCnfizer::Visit(const Formula& f) {
   // TODO(soonho): use cache.
   return VisitFormula<Formula>(this, f);
 }
 
-Formula MartinCnfizer::VisitFalse(const Formula& f) { return f; }
-Formula MartinCnfizer::VisitTrue(const Formula& f) { return f; }
-Formula MartinCnfizer::VisitVariable(const Formula& f) { return f; }
-Formula MartinCnfizer::VisitEqualTo(const Formula& f) { return f; }
-Formula MartinCnfizer::VisitNotEqualTo(const Formula& f) { return f; }
-Formula MartinCnfizer::VisitGreaterThan(const Formula& f) { return f; }
-Formula MartinCnfizer::VisitGreaterThanOrEqualTo(const Formula& f) {
+Formula PlaistedGreenbaumCnfizer::VisitFalse(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitTrue(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitVariable(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitEqualTo(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitNotEqualTo(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitGreaterThan(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitGreaterThanOrEqualTo(const Formula& f) {
   return f;
 }
-Formula MartinCnfizer::VisitLessThan(const Formula& f) { return f; }
-Formula MartinCnfizer::VisitLessThanOrEqualTo(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitLessThan(const Formula& f) { return f; }
+Formula PlaistedGreenbaumCnfizer::VisitLessThanOrEqualTo(const Formula& f) { return f; }
 
-Formula MartinCnfizer::VisitForall(const Formula& f) {
+Formula PlaistedGreenbaumCnfizer::VisitForall(const Formula& f) {
   // We always need a variable
   static size_t id{0};
   const Variable bvar{string("forall") + to_string(id++),
@@ -124,7 +124,7 @@ Formula MartinCnfizer::VisitForall(const Formula& f) {
 
 // TODO: flatten nested conjunctions and disjunctions?
 
-Formula MartinCnfizer::VisitConjunction(const Formula& f) {
+Formula PlaistedGreenbaumCnfizer::VisitConjunction(const Formula& f) {
   static size_t id{0};
   // Introduce a new Boolean variable, `bvar` for `f`.
   const Variable bvar{string("conj") + to_string(id++),
@@ -136,7 +136,7 @@ Formula MartinCnfizer::VisitConjunction(const Formula& f) {
   return Formula{bvar};
 }
 
-Formula MartinCnfizer::VisitDisjunction(const Formula& f) {
+Formula PlaistedGreenbaumCnfizer::VisitDisjunction(const Formula& f) {
   static size_t id{0};
   // Introduce a new Boolean variable, `bvar` for `f`.
   const Variable bvar{string("disj") + to_string(id++),
@@ -150,7 +150,7 @@ Formula MartinCnfizer::VisitDisjunction(const Formula& f) {
   return Formula{bvar};
 }
 
-Formula MartinCnfizer::VisitNegation(const Formula& f) {
+Formula PlaistedGreenbaumCnfizer::VisitNegation(const Formula& f) {
   DREAL_ASSERT(is_atomic(get_operand(f)));
   return f;
 }
