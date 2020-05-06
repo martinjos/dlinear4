@@ -81,7 +81,7 @@ class SatSolver {
     return qsx_prob_;
   }
 
-  const std::vector<Variable>& GetLinearVarMap() const;
+  const std::map<int, Variable>& GetLinearVarMap() const;
 
  private:
   // Adds a formula @p f to the solver.
@@ -171,7 +171,8 @@ class SatSolver {
   // won't create duplicate columns.  No two Variable objects ever have the
   // same Id.
   std::map<Variable::Id, int> to_qsx_col_;
-  std::vector<Variable> from_qsx_col_;
+  std::map<int, Variable> from_qsx_col_;
+  std::vector<int> qsx_row_arts_map_;
 
   // Map (symbolic::Variable, bool) <-> int (row in QSopt_ex problem).
   std::map<std::pair<Variable::Id, bool>, int> to_qsx_row_;
@@ -186,6 +187,8 @@ class SatSolver {
   ///
   /// TODO(soonho): Remove this hack when it's not needed.
   bool has_picosat_pop_used_{false};
+
+  const Config& config_;
 };
 
 }  // namespace dreal

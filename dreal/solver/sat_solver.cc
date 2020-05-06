@@ -33,7 +33,7 @@ using qsopt_ex::mpq_infty;
 using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
 
 SatSolver::SatSolver(const Config& config) : sat_{picosat_init()},
-    cur_clause_start_{0} {
+    cur_clause_start_{0}, config_(config) {
   // Enable partial checks via picosat_deref_partial. See the call-site in
   // SatSolver::CheckSat().
   picosat_save_original_clauses(sat_);
@@ -310,10 +310,10 @@ void SatSolver::ResetLinearProblem() {
   }
   // Clear variable bounds
   const int qsx_cols{mpq_QSget_colcount(qsx_prob_)};
-  DREAL_ASSERT(static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
-  for (int i = 0; i < qsx_cols; i++) {
-    mpq_QSchange_bound(qsx_prob_, i, 'L', mpq_NINFTY);
-    mpq_QSchange_bound(qsx_prob_, i, 'U', mpq_INFTY);
+  DREAL_ASSERT(static_cast<size_t>(qsx_cols) == from_qsx_col_.size() + qsx_row_arts_map_.size());
+  for (const pair<int, Variable> kv : from_qsx_col_) {
+    mpq_QSchange_bound(qsx_prob_, kv.first, 'L', mpq_NINFTY);
+    mpq_QSchange_bound(qsx_prob_, kv.first, 'U', mpq_INFTY);
   }
 }
 
@@ -489,6 +489,12 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     if (qsx_rhs_.back() <= mpq_ninfty() || qsx_rhs_.back() >= mpq_infty()) {
       throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", qsx_rhs_.back());
     }
+#if 0  // TODO: finish implementing
+    if (!config_.phase_one_simplex()) {
+      int art_sign = needs_artificial(qsx_rhs_.back(), qsx_sense_.back());
+    }
+#endif
+    // Update indexes
     to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
     DREAL_ASSERT(static_cast<size_t>(qsx_row) == from_qsx_row_.size());
     from_qsx_row_.push_back(make_pair(formulaVar, truth));
@@ -580,17 +586,15 @@ void SatSolver::AddLinearVariable(const Variable& var) {
                              var.get_name().c_str());
   DREAL_ASSERT(!status);
   to_qsx_col_.emplace(make_pair(var.get_id(), qsx_col));
-  DREAL_ASSERT(static_cast<size_t>(qsx_col) == from_qsx_col_.size());
-  from_qsx_col_.push_back(var);
+  from_qsx_col_[qsx_col] = var;
   DREAL_LOG_DEBUG("SatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
 }
 
-const vector<Variable>& SatSolver::GetLinearVarMap() const {
+const std::map<int, Variable>& SatSolver::GetLinearVarMap() const {
   DREAL_LOG_TRACE("SatSolver::GetLinearVarMap(): from_qsx_col_ =");
   if (log()->should_log(spdlog::level::trace)) {
-    for (size_t i = 0; i < from_qsx_col_.size(); i++) {
-      const Variable& var = from_qsx_col_[i];
-      std::cerr << i << ": " << var << "\n";
+    for (const pair<int, Variable> kv : from_qsx_col_) {
+      std::cerr << kv.first << ": " << kv.second << "\n";
     }
   }
   return from_qsx_col_;

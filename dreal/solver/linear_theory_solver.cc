@@ -14,6 +14,7 @@ namespace dreal {
 using std::cout;
 using std::set;
 using std::vector;
+using std::pair;
 
 using qsopt_ex::mpq_QSprob;
 using qsopt_ex::MpqArray;
@@ -66,7 +67,7 @@ bool LinearTheorySolver::LiteralComparator::operator()(const LinearTheorySolver:
 int LinearTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
                                  const mpq_QSprob prob,
-                                 const std::vector<Variable>& var_map) {
+                                 const std::map<int, Variable>& var_map) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
@@ -86,7 +87,10 @@ int LinearTheorySolver::CheckSat(const Box& box,
   //    after the (colcount) "structural" variables.
   MpqArray x{colcount + rowcount};
 
-  model_ = Box(var_map);
+  model_ = Box();
+  for (const pair<int, Variable>& kv : var_map) {
+    model_.Add(kv.second);
+  }
   DREAL_ASSERT(model_.size() == colcount);
 
   // The solver can't handle problems with inverted bounds, so we need to
@@ -95,12 +99,12 @@ int LinearTheorySolver::CheckSat(const Box& box,
   lp_status = QS_LP_DELTA_FEASIBLE;
   mpq_t temp;
   mpq_init(temp);
-  for (int i = 0; i < colcount; i++) {
+  for (const pair<int, Variable>& kv : var_map) {
     int res;
-    res = mpq_QSget_bound(prob, i, 'L', &temp);
+    res = mpq_QSget_bound(prob, kv.first, 'L', &temp);
     DREAL_ASSERT(!res);
     mpq_class lb{temp};
-    res = mpq_QSget_bound(prob, i, 'U', &temp);
+    res = mpq_QSget_bound(prob, kv.first, 'U', &temp);
     DREAL_ASSERT(!res);
     mpq_class ub{temp};
     if (lb > ub) {
@@ -119,7 +123,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
       } else {
         val = 0;
       }
-      model_[var_map[i]] = val;
+      model_[kv.second] = val;
     }
   }
   mpq_clear(temp);
@@ -144,8 +148,8 @@ int LinearTheorySolver::CheckSat(const Box& box,
   case QS_LP_FEASIBLE:
   case QS_LP_DELTA_FEASIBLE:
     // Copy delta-feasible point from x into model_
-    for (int i = 0; i < colcount; i++) {
-      model_[var_map[i]] = x[i];
+    for (const pair<int, Variable>& kv : var_map) {
+      model_[kv.second] = x[kv.first];
     }
     lp_status = QS_LP_DELTA_FEASIBLE;
     break;
