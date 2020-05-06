@@ -245,6 +245,29 @@ TEST_F(ApiTest, CheckSatisfiabilityForall) {
 }
 #endif
 
+TEST_F(ApiTest, CheckSatisfiabilityLPSolve) {
+  const double delta{0.001};
+  const Formula f1{x_ >= 0 && y_ >= 0 && z_ >= 0 &&
+                   x_ + y_ <= 2 && z_ <= 0.5};
+  const Formula f2{x_ + z_ >= 2 && y_ + z_ >= 2};
+  const Formula f3{x_ + z_ >= 1 && y_ + z_ >= 1};
+  ASSERT_FALSE(CheckSatisfiability(f1 && f2, delta));
+  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3), delta));
+}
+
+TEST_F(ApiTest, CheckSatisfiabilityBoundsOnly) {
+  const double delta{0.001};
+  const Formula f1{x_ >= 0 && y_ >= 0 && z_ >= 0};
+  const Formula f2{x_ <= -1 || y_ <= -1};
+  const Formula f3{z_ <= 1};
+  ASSERT_FALSE(CheckSatisfiability(f1 && f2, delta));
+  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3), delta));
+  // And now with an inactive LP row
+  const Formula f4{x_ + y_ <= -10};
+  ASSERT_FALSE(CheckSatisfiability(f1 && (f2 || f4), delta));
+  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3 || f4), delta));
+}
+
 TEST_F(ApiTest, SatCheckDeterministicOutput) {
   const Formula f1{0 <= x_ && x_ <= 5};
   const Formula f2{0 <= y_ && y_ <= 5};

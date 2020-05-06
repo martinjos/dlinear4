@@ -17,6 +17,7 @@
 
 #include "dreal/symbolic/symbolic_expression.h"
 #include "dreal/symbolic/test/symbolic_test_util.h"
+#include "dreal/qsopt_ex.h"
 
 using std::count_if;
 using std::domain_error;
@@ -797,8 +798,6 @@ TEST_F(SymbolicExpressionTest, HashUnary) {
 }
 
 // Confirm that numeric_limits is appropriately specialized for Expression.
-// We'll just spot-test a few values, since our implementation is trivially
-// forwarding to numeric_limits<double>.
 TEST_F(SymbolicExpressionTest, NumericLimits) {
   using std::numeric_limits;
   using Limits = numeric_limits<Expression>;
@@ -818,6 +817,13 @@ TEST_F(SymbolicExpressionTest, NumericLimits) {
   EXPECT_THROW(num_infinity = Limits::infinity(), runtime_error);
   num_infinity = Expression::Infty();
   EXPECT_EQ(num_infinity.to_string(), "infinity");
+}
+
+TEST_F(SymbolicExpressionTest, TooLarge) {
+  EXPECT_THROW(Expression(::dreal::qsopt_ex::mpq_infty()), runtime_error);
+  EXPECT_THROW(Expression(::dreal::qsopt_ex::mpq_ninfty()), runtime_error);
+  EXPECT_THROW(Expression(1e300), runtime_error);
+  EXPECT_THROW(Expression(-1e300), runtime_error);
 }
 
 TEST_F(SymbolicExpressionTest, UnaryPlus) {
