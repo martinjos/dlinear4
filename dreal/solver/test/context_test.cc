@@ -30,6 +30,8 @@ TEST_F(ContextTest, MultipleCheckSat) {
   EXPECT_TRUE(result2);
 }
 
+// QSopt_ex changes: assertions don't modify the Box any more
+#if 0
 TEST_F(ContextTest, AssertionsAndBox) {
   const Formula f1{x_ >= 0};
   const Formula f2{x_ <= 5};
@@ -49,6 +51,7 @@ TEST_F(ContextTest, AssertionsAndBox) {
   EXPECT_EQ(box[x_].lb(), 0.0);
   EXPECT_EQ(box[x_].ub(), 5.0);
 }
+#endif
 
 }  // namespace
 }  // namespace dreal

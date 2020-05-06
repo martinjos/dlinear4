@@ -85,9 +85,10 @@ GTEST_TEST(Test, Example) {
 
   const Formula assert4{s2_v2};
 
-  assertions.push_back(assert1);
-  assertions.push_back(assert2_1 && assert2_2 && assert2_3 && assert2_4);
-  assertions.push_back(assert3_1 && assert3_2 && assert3_3 && assert3_4);
+  // QSopt_ex changes: `pow' not supported
+  //assertions.push_back(assert1);
+  assertions.push_back(/* assert2_1 && */ assert2_2 && assert2_3 && assert2_4);
+  assertions.push_back(/* assert3_1 && */ assert3_2 && assert3_3 && assert3_4);
   assertions.push_back(assert4);
 
   // ----------------------------

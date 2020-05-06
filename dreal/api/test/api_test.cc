@@ -54,6 +54,9 @@ TEST_F(ApiTest, CheckSatisfiabilityMixedBooleanAndContinuous) {
 }
 #endif
 
+// QSopt_ex changes: binary variables not supported.
+// (This first one works, but only by accident.)
+#if 0
 TEST_F(ApiTest, CheckSatisfiabilityBinaryVariables1) {
   const Formula f{2 * binary1_ + 4 * binary2_ == 0};
   const auto result = CheckSatisfiability(f, 0.001);
@@ -70,6 +73,7 @@ TEST_F(ApiTest, CheckSatisfiabilityBinaryVariables2) {
   const auto result = CheckSatisfiability(f, 0.001);
   EXPECT_FALSE(result);
 }
+#endif
 
 // Tests CheckSatisfiability (δ-SAT case).
 TEST_F(ApiTest, CheckSatisfiabilityDeltaSat) {

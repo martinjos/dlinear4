@@ -92,11 +92,11 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "18",
-    size = "small",
-)
-
+#smt2_test(
+#    name = "18",
+#    size = "small",
+#)
+#
 #smt2_test(
 #    name = "19",
 #    size = "small",
@@ -372,16 +372,16 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "get_model_01",
-    size = "small",
-)
-
-smt2_test(
-    name = "get_model_02",
-    size = "small",
-)
-
+#smt2_test(
+#    name = "get_model_01",
+#    size = "small",
+#)
+#
+#smt2_test(
+#    name = "get_model_02",
+#    size = "small",
+#)
+#
 #smt2_test(
 #    name = "hansen_simple",
 #    size = "small",
@@ -484,11 +484,11 @@ smt2_test(
     size = "small",
 )
 
-smt2_test(
-    name = "lia_01",
-    size = "small",
-)
-
+#smt2_test(
+#    name = "lia_01",
+#    size = "small",
+#)
+#
 #smt2_test(
 #    name = "mass_spring",
 #    size = "small",

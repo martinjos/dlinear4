@@ -87,6 +87,12 @@ Box::Box(const vector<Variable>& variables)
 }
 
 void Box::Add(const Variable& v) {
+  if (v.get_type() == Variable::Type::BINARY ||
+      v.get_type() == Variable::Type::INTEGER) {
+    // QSopt_ex changes
+    throw DREAL_RUNTIME_ERROR("Integer variables not supported");
+  }
+
   // Duplicate variables are not allowed.
   DREAL_ASSERT(find_if(variables_->begin(), variables_->end(),
                        [&v](const Variable& var) { return v.equal_to(var); }) ==
