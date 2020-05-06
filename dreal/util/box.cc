@@ -39,7 +39,8 @@ Box::Interval::Interval(Interval&& other) noexcept try {
 }
 
 std::pair<Box::Interval, Box::Interval> Box::Interval::bisect(const mpq_class& p) const {
-  return std::make_pair(Interval(lb_, p), Interval(p, ub_));
+  mpq_class midpoint{lb_ + p * (ub_ - lb_)};
+  return std::make_pair(Interval(lb_, midpoint), Interval(midpoint, ub_));
 }
 
 std::ostream& operator<<(std::ostream& os, const Box::Interval& iv) {

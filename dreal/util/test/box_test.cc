@@ -11,6 +11,7 @@
 
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/symbolic/symbolic_test_util.h"
+#include "dreal/qsopt_ex.h"
 
 using std::is_nothrow_move_constructible;
 using std::numeric_limits;
@@ -29,6 +30,7 @@ class BoxTest : public ::testing::Test {
   const Variable z_{"z"};
   const Variable w_{"w"};
 
+#if 0
   // Integer Variables.
   const Variable i_{"i", Variable::Type::INTEGER};
   const Variable j_{"j", Variable::Type::INTEGER};
@@ -36,8 +38,9 @@ class BoxTest : public ::testing::Test {
   // Binary Variables.
   const Variable b1_{"i", Variable::Type::BINARY};
   const Variable b2_{"j", Variable::Type::BINARY};
+#endif
 
-  const double inf_{numeric_limits<double>::infinity()};
+  const mpq_class inf_{dreal::qsopt_ex::mpq_infty()};
 };
 
 TEST_F(BoxTest, AddHasVariable) {
@@ -170,24 +173,23 @@ TEST_F(BoxTest, InplaceUnion) {
 TEST_F(BoxTest, BisectReal) {
   Box box;
   box.Add(x_, -10, 10);
-  box.Add(i_, -5, 5);
-  box.Add(b1_, 0, 1);
+  box.Add(y_, -5, 5);
 
   const pair<Box, Box> p{box.bisect(x_)};
   const Box& box1{p.first};
   const Box& box2{p.second};
 
   EXPECT_EQ(box1[x_].lb(), box[x_].lb());
-  EXPECT_EQ(box1[x_].ub(), 0.0);
-  EXPECT_EQ(box1[i_], box[i_]);
-  EXPECT_EQ(box1[b1_], box[b1_]);
+  EXPECT_EQ(box1[x_].ub(), 0);
+  EXPECT_EQ(box1[y_], box[y_]);
 
   EXPECT_EQ(box2[x_].lb(), box1[x_].ub());
   EXPECT_EQ(box2[x_].ub(), box[x_].ub());
-  EXPECT_EQ(box2[i_], box[i_]);
-  EXPECT_EQ(box2[b1_], box[b1_]);
+  EXPECT_EQ(box2[y_], box[y_]);
 }
 
+// QSopt_ex changes: Integer variables not supported (for now)
+#if 0
 TEST_F(BoxTest, BisectInteger) {
   Box box;
   box.Add(x_, -10, 10);
@@ -229,7 +231,10 @@ TEST_F(BoxTest, BisectBinary) {
   EXPECT_EQ(box2[x_], box[x_]);
   EXPECT_EQ(box2[i_], box[i_]);
 }
+#endif
 
+// mpq_class changes: Non-zero intervals are _always_ bisectable!
+#if 0
 TEST_F(BoxTest, NotBisectable) {
   Box box;
   // x = [10, 10 + ε]
@@ -241,6 +246,7 @@ TEST_F(BoxTest, NotBisectable) {
   // y is not in the box -> non-bisectable.
   EXPECT_THROW(box.bisect(y_), std::runtime_error);
 }
+#endif
 
 TEST_F(BoxTest, Equality) {
   Box b1;

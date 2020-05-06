@@ -411,6 +411,7 @@ dreal_cc_googletest(
     deps = [
         ":box",
         "//dreal/symbolic:symbolic_test_util",
+        "//dreal:qsopt-ex",
     ],
 )
 
