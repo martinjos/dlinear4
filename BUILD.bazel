@@ -80,7 +80,7 @@ cc_library(
     deps = [
         "//dreal/util:signal_handler_guard",
         "@fmt",
-        "@ibex",
+        #"@ibex",
         "@spdlog",
     ],
 )

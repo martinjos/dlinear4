@@ -29,39 +29,39 @@ dreal_cc_googletest(
     ],
 )
 
-cc_test(
-    name = "ibex_test",
-    size = "small",
-    srcs = ["ibex_test.cc"],
-    tags = ["extlib"],
-    deps = [
-        "@ibex",
-    ],
-)
-
-dreal_cc_googletest(
-    name = "ibex_bitset_test",
-    srcs = ["ibex_bitset_test.cc"],
-    tags = ["extlib"],
-    deps = [
-        "@ibex",
-    ],
-)
-
-cc_test(
-    name = "ibex_polytope_test",
-    size = "small",
-    srcs = [
-        "ibex_polytope_test.cc",
-    ],
-    data = [
-        "DiscreteBoundary-0100.bch",
-    ],
-    tags = ["extlib"],
-    deps = [
-        "@ibex",
-    ],
-)
+#cc_test(
+#    name = "ibex_test",
+#    size = "small",
+#    srcs = ["ibex_test.cc"],
+#    tags = ["extlib"],
+#    deps = [
+#        "@ibex",
+#    ],
+#)
+#
+#dreal_cc_googletest(
+#    name = "ibex_bitset_test",
+#    srcs = ["ibex_bitset_test.cc"],
+#    tags = ["extlib"],
+#    deps = [
+#        "@ibex",
+#    ],
+#)
+#
+#cc_test(
+#    name = "ibex_polytope_test",
+#    size = "small",
+#    srcs = [
+#        "ibex_polytope_test.cc",
+#    ],
+#    data = [
+#        "DiscreteBoundary-0100.bch",
+#    ],
+#    tags = ["extlib"],
+#    deps = [
+#        "@ibex",
+#    ],
+#)
 
 #dreal_cc_googletest(
 #    name = "nlopt_test",
