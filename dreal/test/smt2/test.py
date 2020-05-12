@@ -30,7 +30,7 @@ with open(expected_output_filename, "r") as myfile:
 try:
     # 1. Run dReal with smt2 file
     env = dict(os.environ)
-    env["LD_LIBRARY_PATH"] = qsoptex_lib_dir
+    env["LD_LIBRARY_PATH"] += ":" + qsoptex_lib_dir
     output = subprocess.check_output([dreal, smt2] + options,
                                      env=env).decode('UTF-8')
     output = output.splitlines()
