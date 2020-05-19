@@ -87,11 +87,14 @@ int LinearTheorySolver::CheckSat(const Box& box,
   //    after the (colcount) "structural" variables.
   MpqArray x{colcount + rowcount};
 
-  model_ = Box();
+  model_ = box;
   for (const pair<int, Variable>& kv : var_map) {
-    model_.Add(kv.second);
+    if (!model_.has_variable(kv.second)) {
+      // Variable should already be present
+      DREAL_LOG_WARN("LinearTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
+      model_.Add(kv.second);
+    }
   }
-  DREAL_ASSERT(!config_.use_phase_one_simplex() || model_.size() == colcount);
 
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
@@ -123,6 +126,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
       } else {
         val = 0;
       }
+      DREAL_ASSERT(model_[kv.second].lb() <= val && val <= model_[kv.second].ub());
       model_[kv.second] = val;
     }
   }
@@ -176,6 +180,8 @@ int LinearTheorySolver::CheckSat(const Box& box,
   case QS_EXACT_DELTA_SAT:
     // Copy delta-feasible point from x into model_
     for (const pair<int, Variable>& kv : var_map) {
+      DREAL_ASSERT(model_[kv.second].lb() <= mpq_class(x[kv.first]) &&
+                   mpq_class(x[kv.first]) <= model_[kv.second].ub());
       model_[kv.second] = x[kv.first];
     }
     sat_status = QS_EXACT_DELTA_SAT;

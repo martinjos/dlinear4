@@ -66,7 +66,7 @@ class SatSolver {
   ///
   /// @returns a witness, satisfying model if the problem is satisfiable.
   /// @returns nullopt if UNSAT.
-  optional<Model> CheckSat();
+  optional<Model> CheckSat(const Box& box);
 
   // TODO(soonho): Push/Pop cnfizer and predicate_abstractor?
   void Pop();
@@ -100,8 +100,9 @@ class SatSolver {
   // relationship between Variable ⇔ Literal (in SAT).
   void MakeSatVar(const Variable& var);
 
-  // Disable all literals in the linear solver
-  void ResetLinearProblem();
+  // Disable all literals in the linear solver, restricting variables to the
+  // given @p box only.
+  void ResetLinearProblem(const Box& box);
 
   // Add a symbolic formula @p f to @p clause.
   //

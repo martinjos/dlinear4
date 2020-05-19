@@ -140,10 +140,13 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
     }
 #endif
 
-    const auto optional_model = sat_solver->CheckSat();
+    // The box is passed in to the SAT solver solely to provide the LP solver
+    // with initial bounds on the numerical variables.
+    const auto optional_model = sat_solver->CheckSat(box);
     if (optional_model) {
       const vector<pair<Variable, bool>>& boolean_model{optional_model->first};
       for (const pair<Variable, bool>& p : boolean_model) {
+        // Here, we modify Boolean variables only (not used by the LP solver).
         box[p.first] = p.second ? 1 : 0;  // true -> 1 and false -> 0
       }
       const vector<pair<Variable, bool>>& theory_model{optional_model->second};

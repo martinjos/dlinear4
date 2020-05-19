@@ -177,7 +177,7 @@ set<int> SatSolver::GetMainActiveLiterals() const {
     return lits;
 }
 
-optional<SatSolver::Model> SatSolver::CheckSat() {
+optional<SatSolver::Model> SatSolver::CheckSat(const Box& box) {
   static SatSolverStat stat{DREAL_LOG_INFO_ENABLED};
   DREAL_LOG_DEBUG("SatSolver::CheckSat(#vars = {}, #clauses = {})",
                   picosat_variables(sat_),
@@ -193,7 +193,7 @@ optional<SatSolver::Model> SatSolver::CheckSat() {
   if (ret == PICOSAT_SATISFIABLE) {
     // SAT Case.
     set<int> lits{GetMainActiveLiterals()};
-    ResetLinearProblem();
+    ResetLinearProblem(box);
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
     for (int i : lits) {
       const auto it_var = to_sym_var_.find(abs(i));
@@ -300,8 +300,8 @@ void SatSolver::SetQSXVarBound(const Variable& var, const char type,
   mpq_clear(c_value);
 }
 
-void SatSolver::ResetLinearProblem() {
-  DREAL_LOG_TRACE("SatSolver::ResetLinearProblem()");
+void SatSolver::ResetLinearProblem(const Box& box) {
+  DREAL_LOG_TRACE("SatSolver::ResetLinearProblem(): Box =\n{}", box);
   // Clear constraint bounds
   const int qsx_rows{mpq_QSget_rowcount(qsx_prob_)};
   DREAL_ASSERT(static_cast<size_t>(qsx_rows) == from_qsx_row_.size());
@@ -314,8 +314,16 @@ void SatSolver::ResetLinearProblem() {
   DREAL_ASSERT(!config_.use_phase_one_simplex() ||
                static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
   for (const pair<int, Variable> kv : from_qsx_col_) {
-    mpq_QSchange_bound(qsx_prob_, kv.first, 'L', mpq_NINFTY);
-    mpq_QSchange_bound(qsx_prob_, kv.first, 'U', mpq_INFTY);
+    if (box.has_variable(kv.second)) {
+      DREAL_ASSERT(mpq_ninfty() <= box[kv.second].lb());
+      DREAL_ASSERT(box[kv.second].lb() <= box[kv.second].ub());
+      DREAL_ASSERT(box[kv.second].ub() <= mpq_infty());
+      mpq_QSchange_bound(qsx_prob_, kv.first, 'L', box[kv.second].lb().get_mpq_t());
+      mpq_QSchange_bound(qsx_prob_, kv.first, 'U', box[kv.second].ub().get_mpq_t());
+    } else {
+      mpq_QSchange_bound(qsx_prob_, kv.first, 'L', mpq_NINFTY);
+      mpq_QSchange_bound(qsx_prob_, kv.first, 'U', mpq_INFTY);
+    }
   }
 }
 
