@@ -395,11 +395,16 @@ term:           TK_TRUE { $$ = new Term(Formula::True()); }
         |       INT { $$ = new Term{convert_int64_to_rational($1)}; }
         |       SYMBOL {
             try {
-                const Variable& var = driver.lookup_variable(*$1);
-                if (var.get_type() == Variable::Type::BOOLEAN) {
-                    $$ = new Term(Formula(var));
+                const optional<Expression> expr = driver.lookup_const(*$1);
+                if (expr.has_value()) {
+                    $$ = new Term(*expr);
                 } else {
-                    $$ = new Term(Expression(var));
+                    const Variable& var = driver.lookup_variable(*$1);
+                    if (var.get_type() == Variable::Type::BOOLEAN) {
+                        $$ = new Term(Formula(var));
+                    } else {
+                        $$ = new Term(Expression(var));
+                    }
                 }
             } catch (std::runtime_error& e) {
                 std::cerr << @1 << " : " << e.what() << std::endl;
@@ -524,12 +529,15 @@ let_binding_list: '(' var_binding_list ')' {
                 const Term& term{ binding.second };
                 const bool is_formula = term.type() == Term::Type::FORMULA;
                 const Sort sort = is_formula ? Sort::Bool : Sort::Real;
-                const Variable v{ driver.DeclareLocalVariable(name, sort) };
                 if (is_formula) {
+                    const Variable v{ driver.DeclareLocalVariable(name, sort) };
                     const Formula fv{v};
                     const Formula& ft{ term.formula() };
                     driver.mutable_context().Assert((fv && ft) || (!fv && !ft));
+                } else if (is_constant(term.expression())) {
+                    driver.DefineLocalConstant(name, term.expression());
                 } else {
+                    const Variable v{ driver.DeclareLocalVariable(name, sort) };
                     driver.mutable_context().Assert(Expression{v} == term.expression());
                 }
             }

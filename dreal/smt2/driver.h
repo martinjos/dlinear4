@@ -6,6 +6,7 @@
 #include "dreal/smt2/scanner.h"
 #include "dreal/solver/context.h"
 #include "dreal/util/scoped_unordered_map.h"
+#include "dreal/util/optional.h"
 
 namespace dreal {
 
@@ -76,6 +77,9 @@ class Smt2Driver {
   /// cannot occur in an SMT-LIBv2 file.
   Variable DeclareLocalVariable(const std::string& name, Sort sort);
 
+  // Define a constant within the current scope.
+  void DefineLocalConstant(const std::string& name, const Expression& value);
+
   /// Returns a representation of a model computed by the solver in
   /// response to an invocation of the check-sat.
   void GetModel();
@@ -85,9 +89,12 @@ class Smt2Driver {
   /// @throws if no variable is associated with @p name.
   const Variable& lookup_variable(const std::string& name);
 
-  void PushScope() { scope_.push(); }
+  /// Returns a constant expression associated with a name @p name.
+  optional<Expression> lookup_const(const std::string& name);
 
-  void PopScope() { scope_.pop(); }
+  void PushScope() { scope_.push(); const_scope_.push(); }
+
+  void PopScope() { scope_.pop(); const_scope_.pop(); }
 
   static Variable ParseVariableSort(const std::string& name, Sort s);
 
@@ -116,6 +123,9 @@ class Smt2Driver {
 
   /** Scoped map from a string to a corresponding Variable. */
   ScopedUnorderedMap<std::string, Variable> scope_;
+
+  /** Scoped map from a string to a corresponding constant expression. */
+  ScopedUnorderedMap<std::string, Expression> const_scope_;
 
   /// Sequential value concatenated to names to make them unique.
   int64_t nextUniqueId_{};

@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "dreal/smt2/scanner.h"
-#include "dreal/util/optional.h"
 
 namespace dreal {
 
@@ -155,6 +154,19 @@ const Variable& Smt2Driver::lookup_variable(const string& name) {
 
 Variable Smt2Driver::ParseVariableSort(const string& name, const Sort s) {
   return Variable{name, SortToType(s)};
+}
+
+void Smt2Driver::DefineLocalConstant(const string& name, const Expression& value) {
+  DREAL_ASSERT(is_constant(value));
+  const_scope_.insert(name, value);
+}
+
+optional<Expression> Smt2Driver::lookup_const(const string& name) {
+  const auto it = const_scope_.find(name);
+  if (it == const_scope_.cend()) {
+    return optional<Expression>();
+  }
+  return it->second;
 }
 
 }  // namespace dreal

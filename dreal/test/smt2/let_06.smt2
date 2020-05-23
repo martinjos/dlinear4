@@ -3,4 +3,5 @@
 (declare-const b Real)
 (assert (let ((c (= a 5)) (d (> b 0))) (and c d)))
 (check-sat)
+(get-model)
 (exit)
