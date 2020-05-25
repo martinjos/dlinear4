@@ -175,6 +175,10 @@ int LinearTheorySolver::CheckSat(const Box& box,
     }
   }
 
+  if (sat_status == QS_EXACT_UNKNOWN) {
+    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSopt_ex failed to return a result");
+  }
+
   switch (sat_status) {
   case QS_EXACT_SAT:
   case QS_EXACT_DELTA_SAT:

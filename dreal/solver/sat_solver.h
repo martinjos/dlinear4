@@ -114,8 +114,8 @@ class SatSolver {
   // Add a linear literal to the linear solver
   void AddLinearLiteral(const Variable& var, bool truth);
 
-  // Maybe create (redundant) artificial variable for LP solver
-  void CreateArtificialIfNeeded(int qsx_row);
+  // Create (redundant) artificial variable for LP solver
+  void CreateArtificials(int qsx_row);
 
   // Enable a linear literal in the linear solver
   void EnableLinearLiteral(const Variable& var, bool truth);

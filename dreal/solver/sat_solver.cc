@@ -500,7 +500,7 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
       throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", qsx_rhs_.back());
     }
     if (!config_.use_phase_one_simplex()) {
-      CreateArtificialIfNeeded(qsx_row);
+      CreateArtificials(qsx_row);
     }
     // Update indexes
     to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
@@ -510,24 +510,23 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
                     truth ? "" : "¬", it->second, qsx_row);
 }
 
-void SatSolver::CreateArtificialIfNeeded(const int qsx_row) {
+void SatSolver::CreateArtificials(const int qsx_row) {
   DREAL_ASSERT(!config_.use_phase_one_simplex());
-  const mpq_class& rhs{qsx_rhs_[qsx_row]};
-  const char sense{qsx_sense_[qsx_row]};
-  int sign = 0;
-  if ((sense == 'E' || sense == 'L') && rhs < 0) {
-    sign = -1;
-  } else if ((sense == 'E' || sense == 'G') && rhs > 0) {
-    sign = 1;
-  }
-  const int qsx_col{mpq_QSget_colcount(qsx_prob_)};
-  int status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY,
-                             NULL);
+  const int qsx_col_1{mpq_QSget_colcount(qsx_prob_)};
+  const int qsx_col_2{qsx_col_1 + 1};
+  int status;
+  status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
   DREAL_ASSERT(!status);
+  status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
+  DREAL_ASSERT(!status);
+  DREAL_LOG_DEBUG("SatSolver::CreateArtificials({} -> ({}, {}))",
+                  qsx_row, qsx_col_1, qsx_col_2);
   mpq_t c_value;
   mpq_init(c_value);
-  mpq_set_si(c_value, sign, 1);
-  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col, c_value);
+  mpq_set_si(c_value, 1, 1);
+  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col_1, c_value);
+  mpq_set_si(c_value, -1, 1);
+  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col_2, c_value);
   mpq_clear(c_value);
 }
 
