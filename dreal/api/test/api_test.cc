@@ -5,6 +5,7 @@
 
 //#include "dreal/solver/formula_evaluator.h"
 #include "dreal/symbolic/symbolic_test_util.h"
+#include "dreal/api/api_test_util.h"
 
 namespace dreal {
 namespace {
@@ -21,6 +22,8 @@ class ApiTest : public ::testing::Test {
 
   const Variable b1_{"b1", Variable::Type::BOOLEAN};
   const Variable b2_{"b2", Variable::Type::BOOLEAN};
+
+  Config config_;
 };
 
 #if 0
@@ -76,7 +79,7 @@ TEST_F(ApiTest, CheckSatisfiabilityBinaryVariables2) {
 #endif
 
 // Tests CheckSatisfiability (δ-SAT case).
-TEST_F(ApiTest, CheckSatisfiabilityDeltaSat) {
+DREAL_TEST_F_PHASES(ApiTest, CheckSatisfiabilityDeltaSat) {
   // 0 ≤ x ≤ 5
   // 0 ≤ y ≤ 5
   // 0 ≤ z ≤ 5
@@ -88,7 +91,8 @@ TEST_F(ApiTest, CheckSatisfiabilityDeltaSat) {
 
   // Checks the API returning an optional.
   {
-    auto result = CheckSatisfiability(f1 && f2 && f3 && f4, 0.001);
+    config_.mutable_precision() = 0.001;
+    auto result = CheckSatisfiability(f1 && f2 && f3 && f4, config_);
     ASSERT_TRUE(result);
     //EXPECT_TRUE(CheckSolution(f4, *result));
   }
@@ -96,14 +100,15 @@ TEST_F(ApiTest, CheckSatisfiabilityDeltaSat) {
   // Checks the API returning a bool.
   {
     Box b;
-    const bool result{CheckSatisfiability(f1 && f2 && f3 && f4, 0.001, &b)};
+    config_.mutable_precision() = 0.001;
+    const bool result{CheckSatisfiability(f1 && f2 && f3 && f4, config_, &b)};
     ASSERT_TRUE(result);
     //EXPECT_TRUE(CheckSolution(f4, b));
   }
 }
 
 // Tests CheckSatisfiability (UNSAT case).
-TEST_F(ApiTest, CheckSatisfiabilityUnsat) {
+DREAL_TEST_F_PHASES(ApiTest, CheckSatisfiabilityUnsat) {
   // 2x² + 6x + 5 < 0
   // -10 ≤ x ≤ 10
   //const Formula f1{2 * x_ * x_ + 6 * x_ + 5 < 0};
@@ -115,14 +120,16 @@ TEST_F(ApiTest, CheckSatisfiabilityUnsat) {
 
   // Checks the API returning an optional.
   {
-    auto result = CheckSatisfiability(f1 && f2, 0.001);
+    config_.mutable_precision() = 0.001;
+    auto result = CheckSatisfiability(f1 && f2, config_);
     EXPECT_FALSE(result);
   }
 
   // Checks the API returning a bool.
   {
     Box b;
-    const bool result{CheckSatisfiability(f1 && f2, 0.001, &b)};
+    config_.mutable_precision() = 0.001;
+    const bool result{CheckSatisfiability(f1 && f2, config_, &b)};
     EXPECT_FALSE(result);
   }
 }
@@ -183,13 +190,14 @@ TEST_F(ApiTest, Minimize2) {
 }
 #endif
 
-TEST_F(ApiTest, CheckSatisfiabilityDisjunction) {
+DREAL_TEST_F_PHASES(ApiTest, CheckSatisfiabilityDisjunction) {
   const double delta{0.001};
   const Variable b1{"b1", Variable::Type::BOOLEAN};
   const Variable b2{"b2", Variable::Type::BOOLEAN};
   const Variable b3{"b3", Variable::Type::BOOLEAN};
-  EXPECT_TRUE(CheckSatisfiability(b1 || !b2 || b3, delta));
-  EXPECT_FALSE(CheckSatisfiability((b1 || b2) && (!b1 || b3) && (!b2 || b3) && !b3, delta));
+  config_.mutable_precision() = delta;
+  EXPECT_TRUE(CheckSatisfiability(b1 || !b2 || b3, config_));
+  EXPECT_FALSE(CheckSatisfiability((b1 || b2) && (!b1 || b3) && (!b2 || b3) && !b3, config_));
 
   // QSopt_ex changes: Boxes are not set correctly.
   // However, the solutions should still be correct.
@@ -210,24 +218,26 @@ TEST_F(ApiTest, CheckSatisfiabilityDisjunction) {
 #endif
 }
 
-TEST_F(ApiTest, CheckSatisfiabilityIfThenElse1) {
+DREAL_TEST_F_PHASES(ApiTest, CheckSatisfiabilityIfThenElse1) {
   const double delta{0.001};
   const Formula f1{if_then_else(x_ > y_, x_, y_) == z_};
   const Formula f2{x_ == 100};
   const Formula f3{y_ == 50};
-  const auto result = CheckSatisfiability(f1 && f2 && f3, delta);
+  config_.mutable_precision() = delta;
+  const auto result = CheckSatisfiability(f1 && f2 && f3, config_);
   ASSERT_TRUE(result);
   const Box& solution{*result};
   EXPECT_EQ(solution[z_].mid(), 100);
   EXPECT_EQ(solution.size(), 3);
 }
 
-TEST_F(ApiTest, CheckSatisfiabilityIfThenElse2) {
+DREAL_TEST_F_PHASES(ApiTest, CheckSatisfiabilityIfThenElse2) {
   const double delta{0.001};
   const Formula f1{if_then_else(x_ > y_, x_, y_) == z_};
   const Formula f2{x_ == 50};
   const Formula f3{y_ == 100};
-  const auto result = CheckSatisfiability(f1 && f2 && f3, delta);
+  config_.mutable_precision() = delta;
+  const auto result = CheckSatisfiability(f1 && f2 && f3, config_);
   ASSERT_TRUE(result);
   const Box& solution{*result};
   EXPECT_EQ(solution[z_].mid(), 100);
@@ -245,37 +255,40 @@ TEST_F(ApiTest, CheckSatisfiabilityForall) {
 }
 #endif
 
-TEST_F(ApiTest, CheckSatisfiabilityLPSolve) {
+DREAL_TEST_F_PHASES(ApiTest, CheckSatisfiabilityLPSolve) {
   const double delta{0.001};
   const Formula f1{x_ >= 0 && y_ >= 0 && z_ >= 0 &&
                    x_ + y_ <= 2 && z_ <= 0.5};
   const Formula f2{x_ + z_ >= 2 && y_ + z_ >= 2};
   const Formula f3{x_ + z_ >= 1 && y_ + z_ >= 1};
-  ASSERT_FALSE(CheckSatisfiability(f1 && f2, delta));
-  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3), delta));
+  config_.mutable_precision() = delta;
+  ASSERT_FALSE(CheckSatisfiability(f1 && f2, config_));
+  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3), config_));
 }
 
-TEST_F(ApiTest, CheckSatisfiabilityBoundsOnly) {
+DREAL_TEST_F_PHASES(ApiTest, CheckSatisfiabilityBoundsOnly) {
   const double delta{0.001};
   const Formula f1{x_ >= 0 && y_ >= 0 && z_ >= 0};
   const Formula f2{x_ <= -1 || y_ <= -1};
   const Formula f3{z_ <= 1};
-  ASSERT_FALSE(CheckSatisfiability(f1 && f2, delta));
-  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3), delta));
+  config_.mutable_precision() = delta;
+  ASSERT_FALSE(CheckSatisfiability(f1 && f2, config_));
+  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3), config_));
   // And now with an inactive LP row
   const Formula f4{x_ + y_ <= -10};
-  ASSERT_FALSE(CheckSatisfiability(f1 && (f2 || f4), delta));
-  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3 || f4), delta));
+  ASSERT_FALSE(CheckSatisfiability(f1 && (f2 || f4), config_));
+  ASSERT_TRUE(CheckSatisfiability(f1 && (f2 || f3 || f4), config_));
 }
 
-TEST_F(ApiTest, SatCheckDeterministicOutput) {
+DREAL_TEST_F_PHASES(ApiTest, SatCheckDeterministicOutput) {
   const Formula f1{0 <= x_ && x_ <= 5};
   const Formula f2{0 <= y_ && y_ <= 5};
   const Formula f3{0 <= z_ && z_ <= 5};
   const Formula f4{2 * x_ + y_ == z_};
 
-  const auto result1 = CheckSatisfiability(f1 && f2 && f3 && f4, 0.001);
-  const auto result2 = CheckSatisfiability(f1 && f2 && f3 && f4, 0.001);
+  config_.mutable_precision() = 0.001;
+  const auto result1 = CheckSatisfiability(f1 && f2 && f3 && f4, config_);
+  const auto result2 = CheckSatisfiability(f1 && f2 && f3 && f4, config_);
   ASSERT_TRUE(result1);
   ASSERT_TRUE(result2);
   EXPECT_EQ(*result1, *result2);

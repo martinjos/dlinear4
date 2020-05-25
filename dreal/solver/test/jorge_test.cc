@@ -15,9 +15,8 @@ using std::cerr;
 using std::endl;
 using std::vector;
 
-GTEST_TEST(Test, Example) {
-  DrakeSymbolicGuard guard_;
-
+// NOLINTNEXTLINE(runtime/references)
+static void do_example_test(Context& ctx) {
   // -----------------
   // Declare variables
   // -----------------
@@ -94,7 +93,6 @@ GTEST_TEST(Test, Example) {
   // ----------------------------
   // Add variables and assertions
   // ----------------------------
-  Context ctx;
   for (const Formula& f : assertions) {
     for (const Variable& v : f.GetFreeVariables()) {
       ctx.DeclareVariable(v);
@@ -109,6 +107,20 @@ GTEST_TEST(Test, Example) {
   EXPECT_TRUE(result);
   cerr << "delta-SAT" << endl;
   cerr << *result << endl;
+}
+
+GTEST_TEST(Test, ExamplePhase1) {
+  DrakeSymbolicGuard guard_;
+  Context ctx;
+  ctx.mutable_config().mutable_use_phase_one_simplex() = true;
+  do_example_test(ctx);
+}
+
+GTEST_TEST(Test, ExamplePhase2) {
+  DrakeSymbolicGuard guard_;
+  Context ctx;
+  ctx.mutable_config().mutable_use_phase_one_simplex() = false;
+  do_example_test(ctx);
 }
 
 }  // namespace

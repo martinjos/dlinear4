@@ -4,6 +4,7 @@
 
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/symbolic/symbolic_test_util.h"
+#include "dreal/api/api_test_util.h"
 #include "dreal/util/logging.h"
 
 namespace dreal {
@@ -19,9 +20,10 @@ class ContextTest : public ::testing::Test {
 
   const Variable x_{"x"};
   Context context_;
+  Config& config_{context_.mutable_config()};  // Object is never replaced
 };
 
-TEST_F(ContextTest, MultipleCheckSat) {
+DREAL_TEST_F_PHASES(ContextTest, MultipleCheckSat) {
   context_.Assert(x_ >= 0);
   const auto result1 = context_.CheckSat();
   EXPECT_TRUE(result1);

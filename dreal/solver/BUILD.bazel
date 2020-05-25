@@ -177,6 +177,7 @@ dreal_cc_googletest(
     deps = [
         ":solver",
         "//dreal/symbolic:symbolic_test_util",
+        "//dreal/api:api_test_util",
     ],
 )
 

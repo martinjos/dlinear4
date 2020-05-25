@@ -22,7 +22,14 @@ expected_output_filename = sys.argv[3]
 # 4rd Argument: qsopt_ex lib directory
 qsoptex_lib_dir = sys.argv[4]
 
-options = sys.argv[5:]
+# 5th Argument: simplex phase
+phase = int(sys.argv[5])
+assert phase in (1, 2)
+
+options = sys.argv[6:]
+
+if phase == 1:
+    options = ["--phase-one-simplex"] + options
 
 with open(expected_output_filename, "r") as myfile:
     expected_output = myfile.read().strip().splitlines()

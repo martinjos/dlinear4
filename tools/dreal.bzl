@@ -276,11 +276,19 @@ def dreal_cc_googletest(
 
 def smt2_test(
         name,
+        **kwargs):
+    smt2_phased_test(name, phase=1, **kwargs)
+    smt2_phased_test(name, phase=2, **kwargs)
+
+def smt2_phased_test(
+        name,
         smt2 = None,
         options = [],
         tags = [],
+        phase = None,
         **kwargs):
     """Create smt2 test."""
+    if phase not in (1, 2): fail("Phase must be 1 or 2", "phase")
     if not smt2:
         smt2 = name + ".smt2"
     expected = smt2 + ".expected"
@@ -288,12 +296,13 @@ def smt2_test(
         smt2 + "*",
     ])
     native.py_test(
-        name = name,
+        name = "{}_phase_{}".format(name, phase),
         args = [
             "$(location //dreal:dreal)",
             "$(location %s)" % smt2,
             "$(location %s)" % expected,
             "$(locations //:qsopt-ex-lib)",
+            str(phase),
         ] + options,
         tags = tags + ["smt2"],
         srcs = ["test.py"],

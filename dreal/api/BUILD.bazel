@@ -34,6 +34,15 @@ dreal_cc_library(
     ],
 )
 
+dreal_cc_library(
+    name = "api_test_util",
+    testonly = 1,
+    hdrs = [
+        "api_test_util.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 # -----
 # Tests
 # -----
@@ -42,6 +51,7 @@ dreal_cc_googletest(
     tags = ["unit"],
     deps = [
         ":api",
+        ":api_test_util",
         "//dreal/symbolic:symbolic_test_util",
     ],
 )

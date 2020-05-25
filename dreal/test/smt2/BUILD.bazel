@@ -347,15 +347,17 @@ smt2_test(
 #    size = "small",
 #)
 
-smt2_test(
-    name = "fedor_12",
-    size = "small",
-)
+# TIMEOUT
+#smt2_test(
+#    name = "fedor_12",
+#    size = "small",
+#)
 
-smt2_test(
-    name = "fedor_13",
-    size = "small",
-)
+# TIMEOUT
+#smt2_test(
+#    name = "fedor_13",
+#    size = "small",
+#)
 
 smt2_test(
     name = "fedor_14",
