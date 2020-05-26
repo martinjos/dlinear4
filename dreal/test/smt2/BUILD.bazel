@@ -431,6 +431,16 @@ smt2_test(
     size = "small",
 )
 
+smt2_test(
+    name = "ite_02",
+    size = "small",
+)
+
+smt2_test(
+    name = "ite_03",
+    size = "small",
+)
+
 #smt2_test(
 #    name = "lei_01",
 #    size = "small",

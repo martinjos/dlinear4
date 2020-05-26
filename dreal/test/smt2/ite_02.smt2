@@ -5,5 +5,4 @@
 (assert (= y -10))
 (assert (= 2 (ite (> x 0) (ite (> y 0) 1 2) (ite (> y 0) 3 4))))
 (check-sat)
-(get-model)
 (exit)
