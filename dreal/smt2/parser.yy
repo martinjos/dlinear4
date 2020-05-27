@@ -146,6 +146,7 @@ command:
                 command_assert
         |       command_check_sat
         |       command_declare_fun
+        |       command_define_fun
         |       command_exit
         |       command_get_model
 /*      |       command_maximize  */
@@ -190,6 +191,19 @@ command_declare_fun:
                     delete $3;
                     delete $6;
                     delete $8;
+                }
+                ;
+
+command_define_fun:
+                '(' TK_DEFINE_FUN SYMBOL '(' ')' sort term ')' {
+                    const Variable v{driver.DeclareVariable(*$3, $6)};
+                    if ($7->type() == Term::Type::FORMULA) {
+                        driver.mutable_context().Assert(v == $7->formula());
+                    } else {
+                        driver.mutable_context().Assert(v == $7->expression());
+                    }
+                    delete $3;
+                    delete $7;
                 }
                 ;
 

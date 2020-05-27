@@ -66,7 +66,7 @@ class Smt2Driver {
   Variable RegisterVariable(const std::string& name, Sort sort);
 
   /// Declare a variable with name @p name and sort @p sort.
-  void DeclareVariable(const std::string& name, Sort sort);
+  Variable DeclareVariable(const std::string& name, Sort sort);
 
   /// Declare a variable with name @p name and sort @p sort which is bounded by
   /// an interval `[lb, ub]`.
