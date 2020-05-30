@@ -66,6 +66,12 @@ class Config {
   /// Returns a mutable OptionValue for 'use_phase_one_simplex'.
   OptionValue<bool>& mutable_use_phase_one_simplex();
 
+  /// Returns verbosity level for simplex.
+  int verbose_simplex() const;
+
+  /// Returns a mutable OptionValue for 'verbose_simplex'.
+  OptionValue<int>& mutable_verbose_simplex();
+
   /// Returns the number of parallel jobs.
   int number_of_jobs() const;
 
@@ -154,6 +160,7 @@ class Config {
   OptionValue<bool> use_worklist_fixpoint_{false};
   OptionValue<bool> use_local_optimization_{false};
   OptionValue<bool> use_phase_one_simplex_{false};
+  OptionValue<int> verbose_simplex_{0};
   OptionValue<int> number_of_jobs_{1};
   OptionValue<bool> stack_left_box_first_{false};
 

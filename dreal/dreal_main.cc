@@ -140,6 +140,15 @@ void MainProgram::AddOptions() {
            "Use phase one simplex in linear problems.\n",
            "--phase-one-simplex");
 
+  auto* const verbose_simplex_option_validator = new ez::ezOptionValidator(
+      "s4", "in", "0,1,2,3");
+  opt_.add("0" /* Default */, false /* Required? */,
+           1 /* Number of args expected. */,
+           0 /* Delimiter if expecting multiple args. */,
+           "Verbosity level for simplex. "
+           "One of these (default = 0): 0, 1, 2, 3.\n",
+           "--verbose-simplex", verbose_simplex_option_validator);
+
   opt_.add("1" /* Default */, false /* Required? */,
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */, "Number of jobs.\n",
@@ -350,6 +359,15 @@ void MainProgram::ExtractOptions() {
     config_.mutable_use_phase_one_simplex().set_from_command_line(true);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --phase-one-simplex = {}",
                     config_.use_phase_one_simplex());
+  }
+
+  // --verbose-simplex
+  if (opt_.isSet("--verbose-simplex")) {
+    int verbose_simplex{0};
+    opt_.get("--verbose-simplex")->getInt(verbose_simplex);
+    config_.mutable_verbose_simplex().set_from_command_line(verbose_simplex);
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --verbose-simplex = {}",
+                    config_.verbose_simplex());
   }
 
   // --nlopt-ftol-rel

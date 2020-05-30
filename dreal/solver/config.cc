@@ -54,6 +54,13 @@ OptionValue<bool>& Config::mutable_use_phase_one_simplex() {
   return use_phase_one_simplex_;
 }
 
+int Config::verbose_simplex() const {
+  return verbose_simplex_.get();
+}
+OptionValue<int>& Config::mutable_verbose_simplex() {
+  return verbose_simplex_;
+}
+
 int Config::number_of_jobs() const { return number_of_jobs_.get(); }
 OptionValue<int>& Config::mutable_number_of_jobs() { return number_of_jobs_; }
 
@@ -125,6 +132,7 @@ ostream& operator<<(ostream& os, const Config& config) {
              "use_worklist_fixpoint = {}, "
              "use_local_optimization = {}, "
              "use_phase_one_simplex = {}, "
+             "verbose_simplex = {}, "
              "number_of_jobs = {}, "
              "nlopt_ftol_rel = {}, "
              "nlopt_ftol_abs = {}, "
@@ -136,7 +144,7 @@ ostream& operator<<(ostream& os, const Config& config) {
              config.precision(), config.produce_models(), config.use_polytope(),
              config.use_polytope_in_forall(), config.use_worklist_fixpoint(),
              config.use_local_optimization(), config.use_phase_one_simplex(),
-             config.number_of_jobs(),
+             config.verbose_simplex(), config.number_of_jobs(),
              config.nlopt_ftol_rel(), config.nlopt_ftol_abs(),
              config.nlopt_maxeval(), config.nlopt_maxtime(),
              config.sat_default_phase(), config.random_seed());

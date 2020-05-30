@@ -48,8 +48,8 @@ SatSolver::SatSolver(const Config& config) : sat_{picosat_init()},
                   config.sat_default_phase());
   qsx_prob_ = mpq_QScreate_prob(NULL, QS_MIN);
   DREAL_ASSERT(qsx_prob_);
-  if (log()->should_log(spdlog::level::trace)) {
-    mpq_QSset_param(qsx_prob_, QS_PARAM_SIMPLEX_DISPLAY, 1);
+  if (config_.verbose_simplex() >= 1) {
+    mpq_QSset_param(qsx_prob_, QS_PARAM_SIMPLEX_DISPLAY, config_.verbose_simplex());
   }
 }
 
