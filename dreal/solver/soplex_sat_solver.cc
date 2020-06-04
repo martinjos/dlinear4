@@ -1,4 +1,4 @@
-#include "dreal/solver/sat_solver.h"
+#include "dreal/solver/soplex_sat_solver.h"
 
 #include <ostream>
 #include <utility>
@@ -33,18 +33,18 @@ using qsopt_ex::mpq_infty;
 using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
 using qsopt_ex::__oneLpNum_mpq__;  // mpq_oneLpNum
 
-SatSolver::SatSolver(const Config& config) : sat_{picosat_init()},
+SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
     cur_clause_start_{0}, config_(config) {
   // Enable partial checks via picosat_deref_partial. See the call-site in
-  // SatSolver::CheckSat().
+  // SoplexSatSolver::CheckSat().
   picosat_save_original_clauses(sat_);
   if (config.random_seed() != 0) {
     picosat_set_seed(sat_, config.random_seed());
-    DREAL_LOG_DEBUG("SatSolver::Set Random Seed {}", config.random_seed());
+    DREAL_LOG_DEBUG("SoplexSatSolver::Set Random Seed {}", config.random_seed());
   }
   picosat_set_global_default_phase(
       sat_, static_cast<int>(config.sat_default_phase()));
-  DREAL_LOG_DEBUG("SatSolver::Set Default Phase {}",
+  DREAL_LOG_DEBUG("SoplexSatSolver::Set Default Phase {}",
                   config.sat_default_phase());
   qsx_prob_ = mpq_QScreate_prob(NULL, QS_MIN);
   DREAL_ASSERT(qsx_prob_);
@@ -53,18 +53,18 @@ SatSolver::SatSolver(const Config& config) : sat_{picosat_init()},
   }
 }
 
-SatSolver::SatSolver(const Config& config, const vector<Formula>& clauses)
-    : SatSolver{config} {
+SoplexSatSolver::SoplexSatSolver(const Config& config, const vector<Formula>& clauses)
+    : SoplexSatSolver{config} {
   AddClauses(clauses);
 }
 
-SatSolver::~SatSolver() {
+SoplexSatSolver::~SoplexSatSolver() {
   picosat_reset(sat_);
   mpq_QSfree_prob(qsx_prob_);
 }
 
-void SatSolver::AddFormula(const Formula& f) {
-  DREAL_LOG_DEBUG("SatSolver::AddFormula({})", f);
+void SoplexSatSolver::AddFormula(const Formula& f) {
+  DREAL_LOG_DEBUG("SoplexSatSolver::AddFormula({})", f);
   vector<Formula> clauses{cnfizer_.Convert(f)};
   // Collect CNF variables.
   for (const auto& p : cnfizer_.vars()) {
@@ -76,27 +76,27 @@ void SatSolver::AddFormula(const Formula& f) {
   AddClauses(clauses);
 }
 
-void SatSolver::AddFormulas(const vector<Formula>& formulas) {
+void SoplexSatSolver::AddFormulas(const vector<Formula>& formulas) {
   for (const Formula& f : formulas) {
     AddFormula(f);
   }
 }
 
-void SatSolver::AddLearnedClause(const LinearTheorySolver::LiteralSet& literals) {
+void SoplexSatSolver::AddLearnedClause(const LinearTheorySolver::LiteralSet& literals) {
   for (const Literal& l : literals) {
       AddLiteral(make_pair(l.first, !(l.second)), true);
   }
   picosat_add(sat_, 0);
 }
 
-void SatSolver::AddClauses(const vector<Formula>& formulas) {
+void SoplexSatSolver::AddClauses(const vector<Formula>& formulas) {
   for (const Formula& f : formulas) {
     AddClause(f);
   }
 }
 
-void SatSolver::AddClause(const Formula& f) {
-  DREAL_LOG_DEBUG("SatSolver::AddClause({})", f);
+void SoplexSatSolver::AddClause(const Formula& f) {
+  DREAL_LOG_DEBUG("SoplexSatSolver::AddClause({})", f);
   // Set up Variable ⇔ Literal (in SAT) map.
   for (const Variable& var : f.GetFreeVariables()) {
     MakeSatVar(var);
@@ -106,14 +106,14 @@ void SatSolver::AddClause(const Formula& f) {
 }
 
 namespace {
-class SatSolverStat : public Stat {
+class SoplexSatSolverStat : public Stat {
  public:
-  explicit SatSolverStat(const bool enabled) : Stat{enabled} {};
-  SatSolverStat(const SatSolverStat&) = default;
-  SatSolverStat(SatSolverStat&&) = default;
-  SatSolverStat& operator=(const SatSolverStat&) = delete;
-  SatSolverStat& operator=(SatSolverStat&&) = delete;
-  ~SatSolverStat() override {
+  explicit SoplexSatSolverStat(const bool enabled) : Stat{enabled} {};
+  SoplexSatSolverStat(const SoplexSatSolverStat&) = default;
+  SoplexSatSolverStat(SoplexSatSolverStat&&) = default;
+  SoplexSatSolverStat& operator=(const SoplexSatSolverStat&) = delete;
+  SoplexSatSolverStat& operator=(SoplexSatSolverStat&&) = delete;
+  ~SoplexSatSolverStat() override {
     if (enabled()) {
       using fmt::print;
       print(cout, "{:<45} @ {:<20} = {:>15}\n", "Total # of CheckSat",
@@ -131,7 +131,7 @@ class SatSolverStat : public Stat {
 
 // Collect active literals, removing those that are only required by learned
 // clauses.
-set<int> SatSolver::GetMainActiveLiterals() const {
+set<int> SoplexSatSolver::GetMainActiveLiterals() const {
     set<int> lits;
     for (int i = 1; i <= picosat_variables(sat_); ++i) {
       const int model_i{has_picosat_pop_used_ ? picosat_deref(sat_, i)
@@ -177,9 +177,9 @@ set<int> SatSolver::GetMainActiveLiterals() const {
     return lits;
 }
 
-optional<SatSolver::Model> SatSolver::CheckSat(const Box& box) {
-  static SatSolverStat stat{DREAL_LOG_INFO_ENABLED};
-  DREAL_LOG_DEBUG("SatSolver::CheckSat(#vars = {}, #clauses = {})",
+optional<SoplexSatSolver::Model> SoplexSatSolver::CheckSat(const Box& box) {
+  static SoplexSatSolverStat stat{DREAL_LOG_INFO_ENABLED};
+  DREAL_LOG_DEBUG("SoplexSatSolver::CheckSat(#vars = {}, #clauses = {})",
                   picosat_variables(sat_),
                   picosat_added_original_clauses(sat_));
   stat.num_check_sat_++;
@@ -206,27 +206,27 @@ optional<SatSolver::Model> SatSolver::CheckSat(const Box& box) {
       const Variable& var{it_var->second};
       const auto it = var_to_formula_map.find(var);
       if (it != var_to_formula_map.end()) {
-        DREAL_LOG_TRACE("SatSolver::CheckSat: Add theory literal {}{} to Model",
+        DREAL_LOG_TRACE("SoplexSatSolver::CheckSat: Add theory literal {}{} to Model",
                         i > 0 ? "" : "¬", var);
         auto& theory_model = model.second;
         theory_model.emplace_back(var, i > 0);
         EnableLinearLiteral(var, i > 0);
       } else if (cnf_variables_.count(var.get_id()) == 0) {
         DREAL_LOG_TRACE(
-            "SatSolver::CheckSat: Add Boolean literal {}{} to Model ",
+            "SoplexSatSolver::CheckSat: Add Boolean literal {}{} to Model ",
             i > 0 ? "" : "¬", var);
         auto& boolean_model = model.first;
         boolean_model.emplace_back(var, i > 0);
       } else {
         DREAL_LOG_TRACE(
-            "SatSolver::CheckSat: Skip {}{} which is a temporary variable.",
+            "SoplexSatSolver::CheckSat: Skip {}{} which is a temporary variable.",
             i > 0 ? "" : "¬", var);
       }
     }
-    DREAL_LOG_DEBUG("SatSolver::CheckSat() Found a model.");
+    DREAL_LOG_DEBUG("SoplexSatSolver::CheckSat() Found a model.");
     return model;
   } else if (ret == PICOSAT_UNSATISFIABLE) {
-    DREAL_LOG_DEBUG("SatSolver::CheckSat() No solution.");
+    DREAL_LOG_DEBUG("SoplexSatSolver::CheckSat() No solution.");
     // UNSAT Case.
     return {};
   } else {
@@ -236,10 +236,10 @@ optional<SatSolver::Model> SatSolver::CheckSat(const Box& box) {
   }
 }
 
-void SatSolver::Pop() {
+void SoplexSatSolver::Pop() {
   // FIXME: disabled for QSopt_ex changes
-  throw DREAL_RUNTIME_ERROR("SatSolver::Pop() currently unsupported");
-  DREAL_LOG_DEBUG("SatSolver::Pop()");
+  throw DREAL_RUNTIME_ERROR("SoplexSatSolver::Pop() currently unsupported");
+  DREAL_LOG_DEBUG("SoplexSatSolver::Pop()");
   cnf_variables_.pop();
   to_sym_var_.pop();
   to_sat_var_.pop();
@@ -247,17 +247,17 @@ void SatSolver::Pop() {
   has_picosat_pop_used_ = true;
 }
 
-void SatSolver::Push() {
+void SoplexSatSolver::Push() {
   // FIXME: disabled for QSopt_ex changes
-  throw DREAL_RUNTIME_ERROR("SatSolver::Push() currently unsupported");
-  DREAL_LOG_DEBUG("SatSolver::Push()");
+  throw DREAL_RUNTIME_ERROR("SoplexSatSolver::Push() currently unsupported");
+  DREAL_LOG_DEBUG("SoplexSatSolver::Push()");
   picosat_push(sat_);
   to_sat_var_.push();
   to_sym_var_.push();
   cnf_variables_.push();
 }
 
-void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
+void SoplexSatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
                               const mpq_class& value) {
   const auto it = to_qsx_col_.find(var.get_id());
   if (it == to_qsx_col_.end()) {
@@ -273,7 +273,7 @@ void SatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
   mpq_clear(c_value);
 }
 
-void SatSolver::SetQSXVarBound(const Variable& var, const char type,
+void SoplexSatSolver::SetQSXVarBound(const Variable& var, const char type,
                                const mpq_class& value) {
   if (type == 'B') {
     // Both
@@ -300,8 +300,8 @@ void SatSolver::SetQSXVarBound(const Variable& var, const char type,
   mpq_clear(c_value);
 }
 
-void SatSolver::ResetLinearProblem(const Box& box) {
-  DREAL_LOG_TRACE("SatSolver::ResetLinearProblem(): Box =\n{}", box);
+void SoplexSatSolver::ResetLinearProblem(const Box& box) {
+  DREAL_LOG_TRACE("SoplexSatSolver::ResetLinearProblem(): Box =\n{}", box);
   // Clear constraint bounds
   const int qsx_rows{mpq_QSget_rowcount(qsx_prob_)};
   DREAL_ASSERT(static_cast<size_t>(qsx_rows) == from_qsx_row_.size());
@@ -365,14 +365,14 @@ static bool is_less_or_whatever(const Formula& formula, bool truth) {
   return is_greater_or_whatever(formula, !truth);
 }
 
-void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
+void SoplexSatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
     const auto it_row = to_qsx_row_.find(make_pair(var.get_id(), truth));
     if (it_row != to_qsx_row_.end()) {
       // A non-trivial linear literal from the input problem
       const int qsx_row = it_row->second;
       mpq_QSchange_sense(qsx_prob_, qsx_row, qsx_sense_[qsx_row]);
       mpq_QSchange_rhscoef(qsx_prob_, qsx_row, qsx_rhs_[qsx_row].get_mpq_t());
-      DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral({})", qsx_row);
+      DREAL_LOG_TRACE("SoplexSatSolver::EnableLinearLiteral({})", qsx_row);
       return;
     }
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
@@ -382,7 +382,7 @@ void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
       const Formula& formula{it->second};
       const Expression& lhs{get_lhs_expression(formula)};
       const Expression& rhs{get_rhs_expression(formula)};
-      DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral({}{})",
+      DREAL_LOG_TRACE("SoplexSatSolver::EnableLinearLiteral({}{})",
                       truth ? "" : "¬", formula);
       if (is_equal_or_whatever(formula, truth)) {
         if (is_variable(lhs) && is_constant(rhs)) {
@@ -418,11 +418,11 @@ void SatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
     }
     // Either a learned literal, or a not-equal literal from the input
     // problem.
-    DREAL_LOG_TRACE("SatSolver::EnableLinearLiteral: ignoring ({}, {})",
+    DREAL_LOG_TRACE("SoplexSatSolver::EnableLinearLiteral: ignoring ({}, {})",
                     var, truth);
 }
 
-void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
+void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
     const auto it = var_to_formula_map.find(formulaVar);
     if (it == var_to_formula_map.end()) {
@@ -506,11 +506,11 @@ void SatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
     DREAL_ASSERT(static_cast<size_t>(qsx_row) == from_qsx_row_.size());
     from_qsx_row_.push_back(make_pair(formulaVar, truth));
-    DREAL_LOG_DEBUG("SatSolver::AddLinearLiteral({}{} ↦ {})",
+    DREAL_LOG_DEBUG("SoplexSatSolver::AddLinearLiteral({}{} ↦ {})",
                     truth ? "" : "¬", it->second, qsx_row);
 }
 
-void SatSolver::CreateArtificials(const int qsx_row) {
+void SoplexSatSolver::CreateArtificials(const int qsx_row) {
   DREAL_ASSERT(!config_.use_phase_one_simplex());
   const int qsx_col_1{mpq_QSget_colcount(qsx_prob_)};
   const int qsx_col_2{qsx_col_1 + 1};
@@ -519,7 +519,7 @@ void SatSolver::CreateArtificials(const int qsx_row) {
   DREAL_ASSERT(!status);
   status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
   DREAL_ASSERT(!status);
-  DREAL_LOG_DEBUG("SatSolver::CreateArtificials({} -> ({}, {}))",
+  DREAL_LOG_DEBUG("SoplexSatSolver::CreateArtificials({} -> ({}, {}))",
                   qsx_row, qsx_col_1, qsx_col_2);
   mpq_t c_value;
   mpq_init(c_value);
@@ -530,7 +530,7 @@ void SatSolver::CreateArtificials(const int qsx_row) {
   mpq_clear(c_value);
 }
 
-void SatSolver::UpdateLookup(int lit, int learned) {
+void SoplexSatSolver::UpdateLookup(int lit, int learned) {
   if (learned) {
     learned_clause_lits_.insert(lit);
   } else {
@@ -539,7 +539,7 @@ void SatSolver::UpdateLookup(int lit, int learned) {
   }
 }
 
-void SatSolver::AddLiteral(const Literal& l, bool learned) {
+void SoplexSatSolver::AddLiteral(const Literal& l, bool learned) {
   if (l.second) {
     // f = b
     const Variable& var{l.first};
@@ -565,7 +565,7 @@ void SatSolver::AddLiteral(const Literal& l, bool learned) {
   }
 }
 
-void SatSolver::AddLiteral(const Formula& f) {
+void SoplexSatSolver::AddLiteral(const Formula& f) {
   DREAL_ASSERT(is_variable(f) ||
                (is_negation(f) && is_variable(get_operand(f))));
   if (is_variable(f)) {
@@ -575,7 +575,7 @@ void SatSolver::AddLiteral(const Formula& f) {
   }
 }
 
-void SatSolver::DoAddClause(const Formula& f) {
+void SoplexSatSolver::DoAddClause(const Formula& f) {
   cur_clause_start_ = main_clauses_copy_.size();
   if (is_disjunction(f)) {
     // f = l₁ ∨ ... ∨ lₙ
@@ -590,7 +590,7 @@ void SatSolver::DoAddClause(const Formula& f) {
   main_clauses_copy_.push_back(0);
 }
 
-void SatSolver::MakeSatVar(const Variable& var) {
+void SoplexSatSolver::MakeSatVar(const Variable& var) {
   auto it = to_sat_var_.find(var.get_id());
   if (it != to_sat_var_.end()) {
     // Found.
@@ -600,10 +600,10 @@ void SatSolver::MakeSatVar(const Variable& var) {
   const int sat_var{picosat_inc_max_var(sat_)};
   to_sat_var_.insert(var.get_id(), sat_var);
   to_sym_var_.insert(sat_var, var);
-  DREAL_LOG_DEBUG("SatSolver::MakeSatVar({} ↦ {})", var, sat_var);
+  DREAL_LOG_DEBUG("SoplexSatSolver::MakeSatVar({} ↦ {})", var, sat_var);
 }
 
-void SatSolver::AddLinearVariable(const Variable& var) {
+void SoplexSatSolver::AddLinearVariable(const Variable& var) {
   auto it = to_qsx_col_.find(var.get_id());
   if (it != to_qsx_col_.end()) {
     // Found.
@@ -615,11 +615,11 @@ void SatSolver::AddLinearVariable(const Variable& var) {
   DREAL_ASSERT(!status);
   to_qsx_col_.emplace(make_pair(var.get_id(), qsx_col));
   from_qsx_col_[qsx_col] = var;
-  DREAL_LOG_DEBUG("SatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
+  DREAL_LOG_DEBUG("SoplexSatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
 }
 
-const std::map<int, Variable>& SatSolver::GetLinearVarMap() const {
-  DREAL_LOG_TRACE("SatSolver::GetLinearVarMap(): from_qsx_col_ =");
+const std::map<int, Variable>& SoplexSatSolver::GetLinearVarMap() const {
+  DREAL_LOG_TRACE("SoplexSatSolver::GetLinearVarMap(): from_qsx_col_ =");
   if (log()->should_log(spdlog::level::trace)) {
     for (const pair<int, Variable> kv : from_qsx_col_) {
       std::cerr << kv.first << ": " << kv.second << "\n";

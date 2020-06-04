@@ -21,32 +21,32 @@
 
 namespace dreal {
 
-class SatSolver {
+class SoplexSatSolver {
  public:
   using Literal = std::pair<Variable, bool>;
 
   // Boolean model + Theory model.
   using Model = std::pair<std::vector<Literal>, std::vector<Literal>>;
 
-  /// Constructs a SatSolver.
-  explicit SatSolver(const Config& config);
+  /// Constructs a SoplexSatSolver.
+  explicit SoplexSatSolver(const Config& config);
 
-  /// Constructs a SatSolver while asserting @p clauses.
-  SatSolver(const Config& config, const std::vector<Formula>& clauses);
+  /// Constructs a SoplexSatSolver while asserting @p clauses.
+  SoplexSatSolver(const Config& config, const std::vector<Formula>& clauses);
 
   /// Deleted copy constructor.
-  SatSolver(const SatSolver&) = delete;
+  SoplexSatSolver(const SoplexSatSolver&) = delete;
 
   /// Deleted move constructor.
-  SatSolver(SatSolver&&) = delete;
+  SoplexSatSolver(SoplexSatSolver&&) = delete;
 
   /// Deleted copy-assignment operator.
-  SatSolver& operator=(const SatSolver&) = delete;
+  SoplexSatSolver& operator=(const SoplexSatSolver&) = delete;
 
   /// Deleted move-assignment operator.
-  SatSolver& operator=(SatSolver&&) = delete;
+  SoplexSatSolver& operator=(SoplexSatSolver&&) = delete;
 
-  ~SatSolver();
+  ~SoplexSatSolver();
 
   /// Adds a formula @p f to the solver.
   ///

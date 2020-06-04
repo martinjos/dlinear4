@@ -1,4 +1,4 @@
-#include "dreal/solver/linear_theory_solver.h"
+#include "dreal/solver/soplex_theory_solver.h"
 
 #include <atomic>
 #include <iostream>
@@ -21,7 +21,7 @@ using qsopt_ex::MpqArray;
 using qsopt_ex::mpq_infty;
 using qsopt_ex::mpq_ninfty;
 
-LinearTheorySolver::LinearTheorySolver(const Config& config)
+SoplexTheorySolver::SoplexTheorySolver(const Config& config)
     : config_{config} {
 }
 
@@ -54,8 +54,8 @@ class TheorySolverStat : public Stat {
 
 }  // namespace
 
-bool LinearTheorySolver::LiteralComparator::operator()(const LinearTheorySolver::Literal& a,
-                                                       const LinearTheorySolver::Literal& b) const {
+bool SoplexTheorySolver::LiteralComparator::operator()(const SoplexTheorySolver::Literal& a,
+                                                       const SoplexTheorySolver::Literal& b) const {
   if (a.first.get_id() < b.first.get_id()) {
     return true;
   } else if (a.first.get_id() > b.first.get_id()) {
@@ -64,7 +64,7 @@ bool LinearTheorySolver::LiteralComparator::operator()(const LinearTheorySolver:
   return a.second < b.second;
 }
 
-int LinearTheorySolver::CheckSat(const Box& box,
+int SoplexTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
                                  const mpq_QSprob prob,
                                  const std::map<int, Variable>& var_map) {
@@ -73,7 +73,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
                                    true /* start_timer */);
 
-  DREAL_LOG_TRACE("LinearTheorySolver::CheckSat: Box = \n{}", box);
+  DREAL_LOG_TRACE("SoplexTheorySolver::CheckSat: Box = \n{}", box);
 
   int status = -1;
   int lp_status = -1;
@@ -91,7 +91,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   for (const pair<int, Variable>& kv : var_map) {
     if (!model_.has_variable(kv.second)) {
       // Variable should already be present
-      DREAL_LOG_WARN("LinearTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
+      DREAL_LOG_WARN("SoplexTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
       model_.Add(kv.second);
     }
   }
@@ -132,14 +132,14 @@ int LinearTheorySolver::CheckSat(const Box& box,
   }
   mpq_clear(temp);
   if (lp_status == QS_EXACT_UNSAT || rowcount == 0) {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: no need to call LP solver");
+    DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: no need to call LP solver");
     return lp_status;
   }
 
   // Now we call the solver
   lp_status = -1;
   int sat_status = -1;
-  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: calling QSopt_ex (phase {})",
+  DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: calling QSopt_ex (phase {})",
                   config_.use_phase_one_simplex() ? "one" : "two");
 
   mpq_class actual_precision{precision_};
@@ -154,7 +154,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   if (status) {
     throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
   } else {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
+    DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
                     actual_precision);
   }
 
@@ -176,7 +176,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   }
 
   if (sat_status == QS_EXACT_UNKNOWN) {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSopt_ex failed to return a result");
+    DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: QSopt_ex failed to return a result");
   }
 
   switch (sat_status) {
@@ -203,12 +203,12 @@ int LinearTheorySolver::CheckSat(const Box& box,
   return sat_status;
 }
 
-const Box& LinearTheorySolver::GetModel() const {
-  DREAL_LOG_DEBUG("LinearTheorySolver::GetModel():\n{}", model_);
+const Box& SoplexTheorySolver::GetModel() const {
+  DREAL_LOG_DEBUG("SoplexTheorySolver::GetModel():\n{}", model_);
   return model_;
 }
 
-const LinearTheorySolver::LiteralSet& LinearTheorySolver::GetExplanation() const {
+const SoplexTheorySolver::LiteralSet& SoplexTheorySolver::GetExplanation() const {
   return explanation_;
 }
 

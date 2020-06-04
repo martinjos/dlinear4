@@ -15,7 +15,7 @@
 namespace dreal {
 
 /// Theory solver for linear theory over the Reals.
-class LinearTheorySolver {
+class SoplexTheorySolver {
  public:
   using Literal = std::pair<Variable, bool>;
   struct LiteralComparator {
@@ -23,8 +23,8 @@ class LinearTheorySolver {
   };
   using LiteralSet = std::set<Literal, LiteralComparator>;
 
-  LinearTheorySolver() = delete;
-  explicit LinearTheorySolver(const Config& config);
+  SoplexTheorySolver() = delete;
+  explicit SoplexTheorySolver(const Config& config);
 
   /// Checks consistency. Returns true if there is a satisfying
   /// assignment. Otherwise, return false.
