@@ -16,10 +16,7 @@ using std::set;
 using std::vector;
 using std::pair;
 
-using qsopt_ex::mpq_QSprob;
-using qsopt_ex::MpqArray;
-using qsopt_ex::mpq_infty;
-using qsopt_ex::mpq_ninfty;
+using soplex::SoPlex;
 
 SoplexTheorySolver::SoplexTheorySolver(const Config& config)
     : config_{config} {
@@ -66,7 +63,7 @@ bool SoplexTheorySolver::LiteralComparator::operator()(const SoplexTheorySolver:
 
 int SoplexTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
-                                 const mpq_QSprob prob,
+                                 SoPlex& prob,
                                  const std::map<int, Variable>& var_map) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();

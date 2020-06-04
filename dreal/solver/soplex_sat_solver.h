@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <soplex.h>
 
 #include "./picosat.h"
 
@@ -17,7 +18,6 @@
 #include "dreal/util/scoped_unordered_map.h"
 #include "dreal/util/scoped_unordered_set.h"
 #include "dreal/util/plaisted_greenbaum_cnfizer.h"
-#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 
@@ -77,8 +77,8 @@ class SoplexSatSolver {
     return predicate_abstractor_[var];
   }
 
-  qsopt_ex::mpq_QSprob GetLinearSolver() const {
-    return qsx_prob_;
+  soplex::SoPlex& GetLinearSolver() {
+    return spx_prob_;
   }
 
   const std::map<int, Variable>& GetLinearVarMap() const;
@@ -115,7 +115,7 @@ class SoplexSatSolver {
   void AddLinearLiteral(const Variable& var, bool truth);
 
   // Create (redundant) artificial variable for LP solver
-  void CreateArtificials(int qsx_row);
+  void CreateArtificials(int spx_row);
 
   // Enable a linear literal in the linear solver
   void EnableLinearLiteral(const Variable& var, bool truth);
@@ -125,11 +125,11 @@ class SoplexSatSolver {
 
   // Set the variable's coefficient for the given constraint row in the linear
   // solver
-  void SetQSXVarCoef(int qsx_row, const Variable& var, const mpq_class& value);
+  void SetSPXVarCoef(int spx_row, const Variable& var, const mpq_class& value);
 
   // Set one of the variable's bounds ('L' - lower or 'U' - upper) in the
   // linear solver, in addition to bounds already asserted.
-  void SetQSXVarBound(const Variable& var, const char type,
+  void SetSPXVarBound(const Variable& var, const char type,
                       const mpq_class& value);
 
   // Add a clause @p f to sat solver.
@@ -167,22 +167,22 @@ class SoplexSatSolver {
   /// transformations.
   ScopedUnorderedSet<Variable::Id> cnf_variables_;
 
-  // Exact LP solver (QSopt_ex)
-  qsopt_ex::mpq_QSprob qsx_prob_;
+  // Exact LP solver (SoPlex)
+  soplex::SoPlex spx_prob_;
 
   // Map symbolic::Variable <-> int (column in QSopt_ex problem).
   // We don't used the scoped version because we'd like to be sure that we
   // won't create duplicate columns.  No two Variable objects ever have the
   // same Id.
-  std::map<Variable::Id, int> to_qsx_col_;
-  std::map<int, Variable> from_qsx_col_;
+  std::map<Variable::Id, int> to_spx_col_;
+  std::map<int, Variable> from_spx_col_;
 
   // Map (symbolic::Variable, bool) <-> int (row in QSopt_ex problem).
-  std::map<std::pair<Variable::Id, bool>, int> to_qsx_row_;
-  std::vector<Literal> from_qsx_row_;
+  std::map<std::pair<Variable::Id, bool>, int> to_spx_row_;
+  std::vector<Literal> from_spx_row_;
 
-  std::vector<mpq_class> qsx_rhs_;
-  std::vector<char> qsx_sense_;
+  std::vector<mpq_class> spx_rhs_;
+  std::vector<char> spx_sense_;
 
   /// @note We found an issue when picosat_deref_partial is used with
   /// picosat_pop. When this variable is true, we use `picosat_deref`

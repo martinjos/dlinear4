@@ -85,6 +85,8 @@ dreal_cc_library(
         #"theory_solver.cc",
         "linear_theory_solver.cc",
         "sat_solver.cc",
+        "soplex_sat_solver.cc",
+        "soplex_theory_solver.cc",
     ],
     hdrs = [
         "context.h",
@@ -96,6 +98,8 @@ dreal_cc_library(
         #"theory_solver.h",
         "linear_theory_solver.h",
         "sat_solver.h",
+        "soplex_theory_solver.h",
+        "soplex_sat_solver.h",
     ],
     visibility = [
         "//:__pkg__",
@@ -131,6 +135,7 @@ dreal_cc_library(
         "//third_party/com_github_progschj_threadpool:thread_pool",
         "@fmt",
         "//dreal:qsopt-ex",
+        "//:soplex",
         "//dreal/util:optional",
         "//dreal/util:predicate_abstractor",
         "//dreal/util:scoped_unordered_map",

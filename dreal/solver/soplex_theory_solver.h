@@ -5,11 +5,11 @@
 #include <map>
 #include <functional>
 #include <utility>
+#include <soplex.h>
 
 #include "dreal/solver/config.h"
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/box.h"
-#include "dreal/qsopt_ex.h"
 #include "dreal/gmp.h"
 
 namespace dreal {
@@ -29,7 +29,7 @@ class SoplexTheorySolver {
   /// Checks consistency. Returns true if there is a satisfying
   /// assignment. Otherwise, return false.
   int CheckSat(const Box& box, const std::vector<Literal>& assertions,
-               const qsopt_ex::mpq_QSprob prob,
+               soplex::SoPlex& prob,
                const std::map<int, Variable>& var_map);
 
   /// Gets a satisfying Model.

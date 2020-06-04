@@ -18,20 +18,6 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 using std::abs;
-using qsopt_ex::mpq_QScreate_prob;
-using qsopt_ex::mpq_QSset_param;
-using qsopt_ex::mpq_QSfree_prob;
-using qsopt_ex::mpq_QSchange_coef;
-using qsopt_ex::mpq_QSget_rowcount;
-using qsopt_ex::mpq_QSnew_row;
-using qsopt_ex::mpq_QSget_colcount;
-using qsopt_ex::mpq_QSnew_col;
-using qsopt_ex::mpq_ILL_MINDOUBLE;  // mpq_NINFTY
-using qsopt_ex::mpq_ILL_MAXDOUBLE;  // mpq_INFTY
-using qsopt_ex::mpq_ninfty;  // mpq_class versions
-using qsopt_ex::mpq_infty;
-using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
-using qsopt_ex::__oneLpNum_mpq__;  // mpq_oneLpNum
 
 SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
     cur_clause_start_{0}, config_(config) {
@@ -46,10 +32,10 @@ SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
       sat_, static_cast<int>(config.sat_default_phase()));
   DREAL_LOG_DEBUG("SoplexSatSolver::Set Default Phase {}",
                   config.sat_default_phase());
-  qsx_prob_ = mpq_QScreate_prob(NULL, QS_MIN);
-  DREAL_ASSERT(qsx_prob_);
+  spx_prob_ = mpq_QScreate_prob(NULL, QS_MIN);
+  DREAL_ASSERT(spx_prob_);
   if (config_.verbose_simplex() >= 1) {
-    mpq_QSset_param(qsx_prob_, QS_PARAM_SIMPLEX_DISPLAY, config_.verbose_simplex());
+    mpq_QSset_param(spx_prob_, QS_PARAM_SIMPLEX_DISPLAY, config_.verbose_simplex());
   }
 }
 
@@ -60,7 +46,7 @@ SoplexSatSolver::SoplexSatSolver(const Config& config, const vector<Formula>& cl
 
 SoplexSatSolver::~SoplexSatSolver() {
   picosat_reset(sat_);
-  mpq_QSfree_prob(qsx_prob_);
+  mpq_QSfree_prob(spx_prob_);
 }
 
 void SoplexSatSolver::AddFormula(const Formula& f) {
@@ -257,10 +243,10 @@ void SoplexSatSolver::Push() {
   cnf_variables_.push();
 }
 
-void SoplexSatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
+void SoplexSatSolver::SetSPXVarCoef(int spx_row, const Variable& var,
                               const mpq_class& value) {
-  const auto it = to_qsx_col_.find(var.get_id());
-  if (it == to_qsx_col_.end()) {
+  const auto it = to_spx_col_.find(var.get_id());
+  if (it == to_spx_col_.end()) {
     throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
   }
   if (value <= mpq_ninfty() || value >= mpq_infty()) {
@@ -269,21 +255,21 @@ void SoplexSatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
   mpq_t c_value;
   mpq_init(c_value);
   mpq_set(c_value, value.get_mpq_t());
-  mpq_QSchange_coef(qsx_prob_, qsx_row, it->second, c_value);
+  mpq_QSchange_coef(spx_prob_, spx_row, it->second, c_value);
   mpq_clear(c_value);
 }
 
-void SoplexSatSolver::SetQSXVarBound(const Variable& var, const char type,
+void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
                                const mpq_class& value) {
   if (type == 'B') {
     // Both
-    SetQSXVarBound(var, 'L', value);
-    SetQSXVarBound(var, 'U', value);
+    SetSPXVarBound(var, 'L', value);
+    SetSPXVarBound(var, 'U', value);
     return;
   }
   DREAL_ASSERT(type == 'L' || type == 'U');
-  const auto it = to_qsx_col_.find(var.get_id());
-  if (it == to_qsx_col_.end()) {
+  const auto it = to_spx_col_.find(var.get_id());
+  if (it == to_spx_col_.end()) {
     throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
   }
   if (value <= mpq_ninfty() || value >= mpq_infty()) {
@@ -291,11 +277,11 @@ void SoplexSatSolver::SetQSXVarBound(const Variable& var, const char type,
   }
   mpq_t c_value;
   mpq_init(c_value);
-  mpq_QSget_bound(qsx_prob_, it->second, type, &c_value);
+  mpq_QSget_bound(spx_prob_, it->second, type, &c_value);
   mpq_class existing{c_value};
   if ((type == 'L' && existing < value) || (type == 'U' && value < existing)) {
     mpq_set(c_value, value.get_mpq_t());
-    mpq_QSchange_bound(qsx_prob_, it->second, type, c_value);
+    mpq_QSchange_bound(spx_prob_, it->second, type, c_value);
   }
   mpq_clear(c_value);
 }
@@ -303,26 +289,26 @@ void SoplexSatSolver::SetQSXVarBound(const Variable& var, const char type,
 void SoplexSatSolver::ResetLinearProblem(const Box& box) {
   DREAL_LOG_TRACE("SoplexSatSolver::ResetLinearProblem(): Box =\n{}", box);
   // Clear constraint bounds
-  const int qsx_rows{mpq_QSget_rowcount(qsx_prob_)};
-  DREAL_ASSERT(static_cast<size_t>(qsx_rows) == from_qsx_row_.size());
-  for (int i = 0; i < qsx_rows; i++) {
-    mpq_QSchange_sense(qsx_prob_, i, 'G');
-    mpq_QSchange_rhscoef(qsx_prob_, i, mpq_NINFTY);
+  const int spx_rows{mpq_QSget_rowcount(spx_prob_)};
+  DREAL_ASSERT(static_cast<size_t>(spx_rows) == from_spx_row_.size());
+  for (int i = 0; i < spx_rows; i++) {
+    mpq_QSchange_sense(spx_prob_, i, 'G');
+    mpq_QSchange_rhscoef(spx_prob_, i, mpq_NINFTY);
   }
   // Clear variable bounds
-  const int qsx_cols{mpq_QSget_colcount(qsx_prob_)};
+  const int spx_cols{mpq_QSget_colcount(spx_prob_)};
   DREAL_ASSERT(!config_.use_phase_one_simplex() ||
-               static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
-  for (const pair<int, Variable> kv : from_qsx_col_) {
+               static_cast<size_t>(spx_cols) == from_spx_col_.size());
+  for (const pair<int, Variable> kv : from_spx_col_) {
     if (box.has_variable(kv.second)) {
       DREAL_ASSERT(mpq_ninfty() <= box[kv.second].lb());
       DREAL_ASSERT(box[kv.second].lb() <= box[kv.second].ub());
       DREAL_ASSERT(box[kv.second].ub() <= mpq_infty());
-      mpq_QSchange_bound(qsx_prob_, kv.first, 'L', box[kv.second].lb().get_mpq_t());
-      mpq_QSchange_bound(qsx_prob_, kv.first, 'U', box[kv.second].ub().get_mpq_t());
+      mpq_QSchange_bound(spx_prob_, kv.first, 'L', box[kv.second].lb().get_mpq_t());
+      mpq_QSchange_bound(spx_prob_, kv.first, 'U', box[kv.second].ub().get_mpq_t());
     } else {
-      mpq_QSchange_bound(qsx_prob_, kv.first, 'L', mpq_NINFTY);
-      mpq_QSchange_bound(qsx_prob_, kv.first, 'U', mpq_INFTY);
+      mpq_QSchange_bound(spx_prob_, kv.first, 'L', mpq_NINFTY);
+      mpq_QSchange_bound(spx_prob_, kv.first, 'U', mpq_INFTY);
     }
   }
 }
@@ -366,13 +352,13 @@ static bool is_less_or_whatever(const Formula& formula, bool truth) {
 }
 
 void SoplexSatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
-    const auto it_row = to_qsx_row_.find(make_pair(var.get_id(), truth));
-    if (it_row != to_qsx_row_.end()) {
+    const auto it_row = to_spx_row_.find(make_pair(var.get_id(), truth));
+    if (it_row != to_spx_row_.end()) {
       // A non-trivial linear literal from the input problem
-      const int qsx_row = it_row->second;
-      mpq_QSchange_sense(qsx_prob_, qsx_row, qsx_sense_[qsx_row]);
-      mpq_QSchange_rhscoef(qsx_prob_, qsx_row, qsx_rhs_[qsx_row].get_mpq_t());
-      DREAL_LOG_TRACE("SoplexSatSolver::EnableLinearLiteral({})", qsx_row);
+      const int spx_row = it_row->second;
+      mpq_QSchange_sense(spx_prob_, spx_row, spx_sense_[spx_row]);
+      mpq_QSchange_rhscoef(spx_prob_, spx_row, spx_rhs_[spx_row].get_mpq_t());
+      DREAL_LOG_TRACE("SoplexSatSolver::EnableLinearLiteral({})", spx_row);
       return;
     }
     const auto& var_to_formula_map = predicate_abstractor_.var_to_formula_map();
@@ -386,25 +372,25 @@ void SoplexSatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
                       truth ? "" : "¬", formula);
       if (is_equal_or_whatever(formula, truth)) {
         if (is_variable(lhs) && is_constant(rhs)) {
-          SetQSXVarBound(get_variable(lhs), 'B', get_constant_value(rhs));
+          SetSPXVarBound(get_variable(lhs), 'B', get_constant_value(rhs));
         } else if (is_constant(lhs) && is_variable(rhs)) {
-          SetQSXVarBound(get_variable(rhs), 'B', get_constant_value(lhs));
+          SetSPXVarBound(get_variable(rhs), 'B', get_constant_value(lhs));
         } else {
           DREAL_UNREACHABLE();
         }
       } else if (is_greater_or_whatever(formula, truth)) {
         if (is_variable(lhs) && is_constant(rhs)) {
-          SetQSXVarBound(get_variable(lhs), 'L', get_constant_value(rhs));
+          SetSPXVarBound(get_variable(lhs), 'L', get_constant_value(rhs));
         } else if (is_constant(lhs) && is_variable(rhs)) {
-          SetQSXVarBound(get_variable(rhs), 'U', get_constant_value(lhs));
+          SetSPXVarBound(get_variable(rhs), 'U', get_constant_value(lhs));
         } else {
           DREAL_UNREACHABLE();
         }
       } else if (is_less_or_whatever(formula, truth)) {
         if (is_variable(lhs) && is_constant(rhs)) {
-          SetQSXVarBound(get_variable(lhs), 'U', get_constant_value(rhs));
+          SetSPXVarBound(get_variable(lhs), 'U', get_constant_value(rhs));
         } else if (is_constant(lhs) && is_variable(rhs)) {
-          SetQSXVarBound(get_variable(rhs), 'L', get_constant_value(lhs));
+          SetSPXVarBound(get_variable(rhs), 'L', get_constant_value(lhs));
         } else {
           DREAL_UNREACHABLE();
         }
@@ -429,8 +415,8 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
       // Boolean variable - no need to involve theory solver
       return;
     }
-    const auto it2 = to_qsx_row_.find(make_pair(formulaVar.get_id(), truth));
-    if (it2 != to_qsx_row_.end()) {
+    const auto it2 = to_spx_row_.find(make_pair(formulaVar.get_id(), truth));
+    if (it2 != to_spx_row_.end()) {
       // Found.
       return;
     }
@@ -444,17 +430,17 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
       if (is_simple_bound(formula)) {
         return;  // Just create simple bound in LP
       }
-      qsx_sense_.push_back('E');
+      spx_sense_.push_back('E');
     } else if (is_greater_or_whatever(formula, truth)) {
       if (is_simple_bound(formula)) {
         return;
       }
-      qsx_sense_.push_back('G');
+      spx_sense_.push_back('G');
     } else if (is_less_or_whatever(formula, truth)) {
       if (is_simple_bound(formula)) {
         return;
       }
-      qsx_sense_.push_back('L');
+      spx_sense_.push_back('L');
     } else if (is_not_equal_or_whatever(formula, truth)) {
       // Nothing to do, because this constraint is always delta-sat for
       // delta > 0.
@@ -464,15 +450,15 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     }
     Expression expr;
     expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
-    const int qsx_row{mpq_QSget_rowcount(qsx_prob_)};
-    mpq_QSnew_row(qsx_prob_, mpq_NINFTY, 'G', NULL);  // Inactive
-    DREAL_ASSERT(static_cast<size_t>(qsx_row) == qsx_sense_.size() - 1);
-    DREAL_ASSERT(static_cast<size_t>(qsx_row) == qsx_rhs_.size());
-    qsx_rhs_.push_back(0);
+    const int spx_row{mpq_QSget_rowcount(spx_prob_)};
+    mpq_QSnew_row(spx_prob_, mpq_NINFTY, 'G', NULL);  // Inactive
+    DREAL_ASSERT(static_cast<size_t>(spx_row) == spx_sense_.size() - 1);
+    DREAL_ASSERT(static_cast<size_t>(spx_row) == spx_rhs_.size());
+    spx_rhs_.push_back(0);
     if (is_constant(expr)) {
-      qsx_rhs_.back() = -get_constant_value(expr);
+      spx_rhs_.back() = -get_constant_value(expr);
     } else if (is_variable(expr)) {
-      SetQSXVarCoef(qsx_row, get_variable(expr), 1);
+      SetSPXVarCoef(spx_row, get_variable(expr), 1);
     } else if (is_multiplication(expr)) {
       std::map<Expression,Expression> map = get_base_to_exponent_map_in_multiplication(expr);
       if (map.size() != 1
@@ -481,7 +467,7 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
        || get_constant_value(map.begin()->second) != 1) {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
       }
-      SetQSXVarCoef(qsx_row,
+      SetSPXVarCoef(spx_row,
                     get_variable(map.begin()->first),
                     get_constant_in_multiplication(expr));
     } else if (is_addition(expr)) {
@@ -490,43 +476,43 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
         if (!is_variable(pair.first)) {
           throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
         }
-        SetQSXVarCoef(qsx_row, get_variable(pair.first), pair.second);
+        SetSPXVarCoef(spx_row, get_variable(pair.first), pair.second);
       }
-      qsx_rhs_.back() = -get_constant_in_addition(expr);
+      spx_rhs_.back() = -get_constant_in_addition(expr);
     } else {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
     }
-    if (qsx_rhs_.back() <= mpq_ninfty() || qsx_rhs_.back() >= mpq_infty()) {
-      throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", qsx_rhs_.back());
+    if (spx_rhs_.back() <= mpq_ninfty() || spx_rhs_.back() >= mpq_infty()) {
+      throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", spx_rhs_.back());
     }
     if (!config_.use_phase_one_simplex()) {
-      CreateArtificials(qsx_row);
+      CreateArtificials(spx_row);
     }
     // Update indexes
-    to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
-    DREAL_ASSERT(static_cast<size_t>(qsx_row) == from_qsx_row_.size());
-    from_qsx_row_.push_back(make_pair(formulaVar, truth));
+    to_spx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), spx_row));
+    DREAL_ASSERT(static_cast<size_t>(spx_row) == from_spx_row_.size());
+    from_spx_row_.push_back(make_pair(formulaVar, truth));
     DREAL_LOG_DEBUG("SoplexSatSolver::AddLinearLiteral({}{} ↦ {})",
-                    truth ? "" : "¬", it->second, qsx_row);
+                    truth ? "" : "¬", it->second, spx_row);
 }
 
-void SoplexSatSolver::CreateArtificials(const int qsx_row) {
+void SoplexSatSolver::CreateArtificials(const int spx_row) {
   DREAL_ASSERT(!config_.use_phase_one_simplex());
-  const int qsx_col_1{mpq_QSget_colcount(qsx_prob_)};
-  const int qsx_col_2{qsx_col_1 + 1};
+  const int spx_col_1{mpq_QSget_colcount(spx_prob_)};
+  const int spx_col_2{spx_col_1 + 1};
   int status;
-  status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
+  status = mpq_QSnew_col(spx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
   DREAL_ASSERT(!status);
-  status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
+  status = mpq_QSnew_col(spx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
   DREAL_ASSERT(!status);
   DREAL_LOG_DEBUG("SoplexSatSolver::CreateArtificials({} -> ({}, {}))",
-                  qsx_row, qsx_col_1, qsx_col_2);
+                  spx_row, spx_col_1, spx_col_2);
   mpq_t c_value;
   mpq_init(c_value);
   mpq_set_si(c_value, 1, 1);
-  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col_1, c_value);
+  mpq_QSchange_coef(spx_prob_, spx_row, spx_col_1, c_value);
   mpq_set_si(c_value, -1, 1);
-  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col_2, c_value);
+  mpq_QSchange_coef(spx_prob_, spx_row, spx_col_2, c_value);
   mpq_clear(c_value);
 }
 
@@ -604,27 +590,27 @@ void SoplexSatSolver::MakeSatVar(const Variable& var) {
 }
 
 void SoplexSatSolver::AddLinearVariable(const Variable& var) {
-  auto it = to_qsx_col_.find(var.get_id());
-  if (it != to_qsx_col_.end()) {
+  auto it = to_spx_col_.find(var.get_id());
+  if (it != to_spx_col_.end()) {
     // Found.
     return;
   }
-  const int qsx_col{mpq_QSget_colcount(qsx_prob_)};
-  int status = mpq_QSnew_col(qsx_prob_, mpq_zeroLpNum, mpq_NINFTY, mpq_INFTY,
+  const int spx_col{mpq_QSget_colcount(spx_prob_)};
+  int status = mpq_QSnew_col(spx_prob_, mpq_zeroLpNum, mpq_NINFTY, mpq_INFTY,
                              var.get_name().c_str());
   DREAL_ASSERT(!status);
-  to_qsx_col_.emplace(make_pair(var.get_id(), qsx_col));
-  from_qsx_col_[qsx_col] = var;
-  DREAL_LOG_DEBUG("SoplexSatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
+  to_spx_col_.emplace(make_pair(var.get_id(), spx_col));
+  from_spx_col_[spx_col] = var;
+  DREAL_LOG_DEBUG("SoplexSatSolver::AddLinearVariable({} ↦ {})", var, spx_col);
 }
 
 const std::map<int, Variable>& SoplexSatSolver::GetLinearVarMap() const {
-  DREAL_LOG_TRACE("SoplexSatSolver::GetLinearVarMap(): from_qsx_col_ =");
+  DREAL_LOG_TRACE("SoplexSatSolver::GetLinearVarMap(): from_spx_col_ =");
   if (log()->should_log(spdlog::level::trace)) {
-    for (const pair<int, Variable> kv : from_qsx_col_) {
+    for (const pair<int, Variable> kv : from_spx_col_) {
       std::cerr << kv.first << ": " << kv.second << "\n";
     }
   }
-  return from_qsx_col_;
+  return from_spx_col_;
 }
 }  // namespace dreal

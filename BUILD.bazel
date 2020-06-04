@@ -34,6 +34,20 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "soplex",
+    srcs = ["soplex/lib/libsoplex-pic.a"],
+    hdrs = glob(["soplex/include/**/*.h*"]),
+    includes = ["soplex/include"],
+    copts = ["-Isoplex/include"],
+    visibility = [
+        "//dreal:__subpackages__",
+    ],
+    deps = [
+        "@linux_libs//:gmp",
+    ],
+)
+
 filegroup(
     name = "qsopt-ex-lib",
     srcs = ["qsopt-ex/lib"],
