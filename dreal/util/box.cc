@@ -10,6 +10,7 @@
 #include "dreal/util/exception.h"
 #include "dreal/util/logging.h"
 #include "dreal/util/math.h"
+#include "dreal/qsopt_ex.h"
 
 using std::equal;
 using std::find_if;
@@ -26,6 +27,8 @@ using dreal::qsopt_ex::mpq_ninfty;
 using dreal::qsopt_ex::mpq_infty;
 
 namespace dreal {
+
+Box::Interval::Interval() : lb_(mpq_ninfty()), ub_(mpq_infty()) {}
 
 Box::Interval::Interval(Interval&& other) noexcept try {
   try {

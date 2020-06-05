@@ -279,9 +279,8 @@ void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
   }
   LPColRational col;
   spx_prob_.getColRational(it->second, col);
-  mpq_class existing;
-  existing = type == 'L' ? col.lower() : col.upper();
-  if ((type == 'L' && existing < value) || (type == 'U' && value < existing)) {
+  const Rational& existing = type == 'L' ? col.lower() : col.upper();
+  if ((type == 'L' && existing < to_mpq_t(value)) || (type == 'U' && to_mpq_t(value) < existing)) {
     if (type == 'L') {
       spx_prob_.changeLowerRational(it->second, to_mpq_t(value));
     } else {
@@ -361,8 +360,8 @@ void SoplexSatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
       const char sense{spx_sense_[spx_row]};
       const mpq_class& rhs{spx_rhs_[spx_row]};
       spx_prob_.changeRangeRational(spx_row,
-        sense == 'G' || sense == 'E' ? to_mpq_t(rhs) : -soplex::infinity,
-        sense == 'L' || sense == 'E' ? to_mpq_t(rhs) : soplex::infinity);
+        sense == 'G' || sense == 'E' ? Rational(to_mpq_t(rhs)) : Rational(-soplex::infinity),
+        sense == 'L' || sense == 'E' ? Rational(to_mpq_t(rhs)) : Rational(soplex::infinity));
       DREAL_LOG_TRACE("SoplexSatSolver::EnableLinearLiteral({})", spx_row);
       return;
     }

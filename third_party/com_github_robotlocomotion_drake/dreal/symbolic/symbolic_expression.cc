@@ -16,6 +16,7 @@
 #include "dreal/symbolic/symbolic_formula.h"
 #include "dreal/symbolic/symbolic_variable.h"
 #include "dreal/symbolic/symbolic_variables.h"
+#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 namespace drake {
@@ -1033,3 +1034,7 @@ Expression operator-(const Variable& var) { return -Expression{var}; }
 }  // namespace symbolic
 }  // namespace drake
 }  // namespace dreal
+
+mpq_class std::numeric_limits<dreal::drake::symbolic::Expression>::infinity() {
+  return dreal::qsopt_ex::mpq_infty();
+}

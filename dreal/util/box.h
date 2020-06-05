@@ -9,7 +9,6 @@
 #include "dreal/util/assert.h"
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/gmp.h"
-#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 
@@ -18,7 +17,7 @@ class Box {
  public:
   class Interval {
    public:
-    Interval() : lb_(dreal::qsopt_ex::mpq_NINFTY), ub_(dreal::qsopt_ex::mpq_INFTY) {}
+    Interval();
     Interval(Interval&& other) noexcept;
     Interval(const Interval& other) : lb_(other.lb_), ub_(other.ub_) {}
     explicit Interval(const mpq_class& val) : lb_(val), ub_(val) {}

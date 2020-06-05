@@ -73,6 +73,12 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_library(
+    name = "z",
+    srcs = ["libz.so"],
+    visibility = ["//visibility:public"],
+)
+
 """
 )
 

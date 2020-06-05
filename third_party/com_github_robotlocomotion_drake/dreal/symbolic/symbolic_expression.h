@@ -19,7 +19,6 @@
 #include "dreal/symbolic/symbolic_variables.h"
 
 #include "dreal/gmp.h"
-#include "dreal/qsopt_ex.h"
 
 namespace dreal {
 namespace drake {
@@ -759,7 +758,7 @@ template <>
 struct numeric_limits<dreal::drake::symbolic::Expression>
     : public numeric_limits<mpq_class> {
   static const bool has_infinity = true;
-  static mpq_class infinity() { return dreal::qsopt_ex::mpq_infty(); }
+  static mpq_class infinity();
 };
 
 }  // namespace std
