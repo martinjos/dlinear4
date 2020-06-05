@@ -74,7 +74,7 @@ void SoplexSatSolver::AddFormulas(const vector<Formula>& formulas) {
   }
 }
 
-void SoplexSatSolver::AddLearnedClause(const LinearTheorySolver::LiteralSet& literals) {
+void SoplexSatSolver::AddLearnedClause(const LiteralSet& literals) {
   for (const Literal& l : literals) {
       AddLiteral(make_pair(l.first, !(l.second)), true);
   }

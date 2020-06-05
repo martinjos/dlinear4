@@ -141,6 +141,7 @@ dreal_cc_library(
         "//dreal/util:scoped_unordered_map",
         "//dreal/util:scoped_unordered_set",
         "//dreal/util:plaisted_greenbaum_cnfizer",
+        "//dreal/util:literal",
         "@picosat",
     ],
 )

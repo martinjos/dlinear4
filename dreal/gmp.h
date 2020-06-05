@@ -53,10 +53,10 @@ mpz_class ceil(const mpq_class& val);
 // We can then take a reference to the mpq_t.
 // The address of this reference also has the same value as the (mpq_t *).
 //
-const mpq_t& to_mpq_t(const mpq_class& cla) {
+const inline mpq_t& to_mpq_t(const mpq_class& cla) {
     return *reinterpret_cast<const mpq_t*>(cla.get_mpq_t());
 }
-mpq_t& to_mpq_t(mpq_class& cla) {
+inline mpq_t& to_mpq_t(mpq_class& cla) {
     return *reinterpret_cast<mpq_t*>(cla.get_mpq_t());
 }
 

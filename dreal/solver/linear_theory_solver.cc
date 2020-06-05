@@ -54,16 +54,6 @@ class TheorySolverStat : public Stat {
 
 }  // namespace
 
-bool LinearTheorySolver::LiteralComparator::operator()(const LinearTheorySolver::Literal& a,
-                                                       const LinearTheorySolver::Literal& b) const {
-  if (a.first.get_id() < b.first.get_id()) {
-    return true;
-  } else if (a.first.get_id() > b.first.get_id()) {
-    return false;
-  }
-  return a.second < b.second;
-}
-
 int LinearTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
                                  const mpq_QSprob prob,
@@ -208,7 +198,7 @@ const Box& LinearTheorySolver::GetModel() const {
   return model_;
 }
 
-const LinearTheorySolver::LiteralSet& LinearTheorySolver::GetExplanation() const {
+const LiteralSet& LinearTheorySolver::GetExplanation() const {
   return explanation_;
 }
 

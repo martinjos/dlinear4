@@ -10,13 +10,13 @@
 #include "./picosat.h"
 
 #include "dreal/solver/config.h"
-#include "dreal/solver/linear_theory_solver.h"  // For LiteralSet
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/optional.h"
 #include "dreal/util/predicate_abstractor.h"
 #include "dreal/util/scoped_unordered_map.h"
 #include "dreal/util/scoped_unordered_set.h"
 #include "dreal/util/plaisted_greenbaum_cnfizer.h"
+#include "dreal/util/literal.h"
 #include "dreal/gmp.h"
 #include "dreal/soplex.h"
 
@@ -24,8 +24,6 @@ namespace dreal {
 
 class SoplexSatSolver {
  public:
-  using Literal = std::pair<Variable, bool>;
-
   // Boolean model + Theory model.
   using Model = std::pair<std::vector<Literal>, std::vector<Literal>>;
 
@@ -61,7 +59,7 @@ class SoplexSatSolver {
 
   /// Given a @p formulas = {f₁, ..., fₙ}, adds a clause (¬f₁ ∨ ... ∨ ¬ fₙ) to
   /// the solver.
-  void AddLearnedClause(const LinearTheorySolver::LiteralSet& literals);
+  void AddLearnedClause(const LiteralSet& literals);
 
   /// Checks the satisfiability of the current configuration.
   ///

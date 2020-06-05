@@ -402,6 +402,23 @@ dreal_cc_library(
     ],
 )
 
+dreal_cc_library(
+    name = "literal",
+    srcs = [
+        "literal.cc",
+    ],
+    hdrs = [
+        "literal.h",
+    ],
+    visibility = [
+        "//:__pkg__",
+        "//dreal:__subpackages__",
+    ],
+    deps = [
+        "//dreal/symbolic",
+    ],
+)
+
 # -----
 # Tests
 # -----

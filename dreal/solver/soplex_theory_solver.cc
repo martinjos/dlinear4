@@ -51,16 +51,6 @@ class TheorySolverStat : public Stat {
 
 }  // namespace
 
-bool SoplexTheorySolver::LiteralComparator::operator()(const SoplexTheorySolver::Literal& a,
-                                                       const SoplexTheorySolver::Literal& b) const {
-  if (a.first.get_id() < b.first.get_id()) {
-    return true;
-  } else if (a.first.get_id() > b.first.get_id()) {
-    return false;
-  }
-  return a.second < b.second;
-}
-
 int SoplexTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
                                  SoPlex& prob,
@@ -205,7 +195,7 @@ const Box& SoplexTheorySolver::GetModel() const {
   return model_;
 }
 
-const SoplexTheorySolver::LiteralSet& SoplexTheorySolver::GetExplanation() const {
+const LiteralSet& SoplexTheorySolver::GetExplanation() const {
   return explanation_;
 }
 

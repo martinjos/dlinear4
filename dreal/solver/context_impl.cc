@@ -17,6 +17,7 @@
 #include "dreal/util/if_then_else_eliminator.h"
 #include "dreal/util/interrupt.h"
 #include "dreal/util/logging.h"
+#include "dreal/util/literal.h"
 
 namespace dreal {
 
@@ -174,8 +175,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
             DREAL_LOG_DEBUG("ContextImpl::CheckSatCore() - Theory Check = UNKNOWN");
             have_unsolved = true;  // Will prevent return of UNSAT
           }
-          const LinearTheorySolver::LiteralSet& explanation{
-                  theory_solver_.GetExplanation()};
+          const LiteralSet& explanation{theory_solver_.GetExplanation()};
           DREAL_LOG_DEBUG(
               "ContextImpl::CheckSatCore() - size of explanation = {} - stack "
               "size = {}",

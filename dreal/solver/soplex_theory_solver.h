@@ -9,6 +9,7 @@
 #include "dreal/solver/config.h"
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/box.h"
+#include "dreal/util/literal.h"
 #include "dreal/gmp.h"
 #include "dreal/soplex.h"
 
@@ -17,12 +18,6 @@ namespace dreal {
 /// Theory solver for linear theory over the Reals.
 class SoplexTheorySolver {
  public:
-  using Literal = std::pair<Variable, bool>;
-  struct LiteralComparator {
-    bool operator()(const Literal& a, const Literal& b) const;
-  };
-  using LiteralSet = std::set<Literal, LiteralComparator>;
-
   SoplexTheorySolver() = delete;
   explicit SoplexTheorySolver(const Config& config);
 
