@@ -5,12 +5,12 @@
 #include <map>
 #include <functional>
 #include <utility>
-#include <soplex.h>
 
 #include "dreal/solver/config.h"
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/box.h"
 #include "dreal/gmp.h"
+#include "dreal/soplex.h"
 
 namespace dreal {
 

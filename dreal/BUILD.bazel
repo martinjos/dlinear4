@@ -50,6 +50,20 @@ dreal_cc_library(
 )
 
 dreal_cc_library(
+    name = "soplex",
+    hdrs = [
+        "soplex.h",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//:soplex",
+        "@linux_libs//:gmpxx",
+    ],
+)
+
+dreal_cc_library(
     name = "gmp",
     srcs = [
         "gmp.cc",

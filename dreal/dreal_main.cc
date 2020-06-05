@@ -141,12 +141,12 @@ void MainProgram::AddOptions() {
            "--phase-one-simplex");
 
   auto* const verbose_simplex_option_validator = new ez::ezOptionValidator(
-      "s4", "in", "0,1,2,3");
+      "s4", "in", "0,1,2,3,4,5");
   opt_.add("0" /* Default */, false /* Required? */,
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */,
            "Verbosity level for simplex. "
-           "One of these (default = 0): 0, 1, 2, 3.\n",
+           "One of these (default = 0): 0, 1, 2, 3, 4, 5.\n",
            "--verbose-simplex", verbose_simplex_option_validator);
 
   opt_.add("1" /* Default */, false /* Required? */,

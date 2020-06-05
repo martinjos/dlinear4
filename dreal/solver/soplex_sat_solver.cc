@@ -19,6 +19,13 @@ using std::pair;
 using std::make_pair;
 using std::abs;
 
+using soplex::Rational;
+using soplex::DSVectorRational;
+using soplex::LPRowRational;
+using soplex::LPColRational;
+
+using dreal::gmp::to_mpq_t;
+
 SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
     cur_clause_start_{0}, config_(config) {
   // Enable partial checks via picosat_deref_partial. See the call-site in
@@ -32,10 +39,10 @@ SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
       sat_, static_cast<int>(config.sat_default_phase()));
   DREAL_LOG_DEBUG("SoplexSatSolver::Set Default Phase {}",
                   config.sat_default_phase());
-  spx_prob_ = mpq_QScreate_prob(NULL, QS_MIN);
-  DREAL_ASSERT(spx_prob_);
+  // Default is maximize
+  spx_prob_.setIntParam(spx_prob_.OBJSENSE, spx_prob_.OBJSENSE_MINIMIZE);
   if (config_.verbose_simplex() >= 1) {
-    mpq_QSset_param(spx_prob_, QS_PARAM_SIMPLEX_DISPLAY, config_.verbose_simplex());
+    spx_prob_.setIntParam(spx_prob_.VERBOSITY, config_.verbose_simplex());
   }
 }
 
@@ -46,7 +53,6 @@ SoplexSatSolver::SoplexSatSolver(const Config& config, const vector<Formula>& cl
 
 SoplexSatSolver::~SoplexSatSolver() {
   picosat_reset(sat_);
-  mpq_QSfree_prob(spx_prob_);
 }
 
 void SoplexSatSolver::AddFormula(const Formula& f) {
@@ -243,24 +249,20 @@ void SoplexSatSolver::Push() {
   cnf_variables_.push();
 }
 
-void SoplexSatSolver::SetSPXVarCoef(int spx_row, const Variable& var,
-                              const mpq_class& value) {
+void SoplexSatSolver::SetSPXVarCoef(DSVectorRational& coeffs, const Variable& var,
+                                    const mpq_class& value) {
   const auto it = to_spx_col_.find(var.get_id());
   if (it == to_spx_col_.end()) {
     throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
   }
-  if (value <= mpq_ninfty() || value >= mpq_infty()) {
+  if (value <= -soplex::infinity || value >= soplex::infinity) {
     throw DREAL_RUNTIME_ERROR("LP coefficient too large: {}", value);
   }
-  mpq_t c_value;
-  mpq_init(c_value);
-  mpq_set(c_value, value.get_mpq_t());
-  mpq_QSchange_coef(spx_prob_, spx_row, it->second, c_value);
-  mpq_clear(c_value);
+  coeffs.add(it->second, to_mpq_t(value));
 }
 
 void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
-                               const mpq_class& value) {
+                                     const mpq_class& value) {
   if (type == 'B') {
     // Both
     SetSPXVarBound(var, 'L', value);
@@ -272,43 +274,43 @@ void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
   if (it == to_spx_col_.end()) {
     throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
   }
-  if (value <= mpq_ninfty() || value >= mpq_infty()) {
+  if (value <= -soplex::infinity || value >= soplex::infinity) {
     throw DREAL_RUNTIME_ERROR("Simple bound too large: {}", value);
   }
-  mpq_t c_value;
-  mpq_init(c_value);
-  mpq_QSget_bound(spx_prob_, it->second, type, &c_value);
-  mpq_class existing{c_value};
+  LPColRational col;
+  spx_prob_.getColRational(it->second, col);
+  mpq_class existing;
+  existing = type == 'L' ? col.lower() : col.upper();
   if ((type == 'L' && existing < value) || (type == 'U' && value < existing)) {
-    mpq_set(c_value, value.get_mpq_t());
-    mpq_QSchange_bound(spx_prob_, it->second, type, c_value);
+    if (type == 'L') {
+      spx_prob_.changeLowerRational(it->second, to_mpq_t(value));
+    } else {
+      spx_prob_.changeUpperRational(it->second, to_mpq_t(value));
+    }
   }
-  mpq_clear(c_value);
 }
 
 void SoplexSatSolver::ResetLinearProblem(const Box& box) {
   DREAL_LOG_TRACE("SoplexSatSolver::ResetLinearProblem(): Box =\n{}", box);
   // Clear constraint bounds
-  const int spx_rows{mpq_QSget_rowcount(spx_prob_)};
+  const int spx_rows{spx_prob_.numRowsRational()};
   DREAL_ASSERT(static_cast<size_t>(spx_rows) == from_spx_row_.size());
   for (int i = 0; i < spx_rows; i++) {
-    mpq_QSchange_sense(spx_prob_, i, 'G');
-    mpq_QSchange_rhscoef(spx_prob_, i, mpq_NINFTY);
+    spx_prob_.changeRangeRational(i, -soplex::infinity, soplex::infinity);
   }
   // Clear variable bounds
-  const int spx_cols{mpq_QSget_colcount(spx_prob_)};
+  const int spx_cols{spx_prob_.numColsRational()};
   DREAL_ASSERT(!config_.use_phase_one_simplex() ||
                static_cast<size_t>(spx_cols) == from_spx_col_.size());
   for (const pair<int, Variable> kv : from_spx_col_) {
     if (box.has_variable(kv.second)) {
-      DREAL_ASSERT(mpq_ninfty() <= box[kv.second].lb());
+      DREAL_ASSERT(-soplex::infinity <= box[kv.second].lb());
       DREAL_ASSERT(box[kv.second].lb() <= box[kv.second].ub());
-      DREAL_ASSERT(box[kv.second].ub() <= mpq_infty());
-      mpq_QSchange_bound(spx_prob_, kv.first, 'L', box[kv.second].lb().get_mpq_t());
-      mpq_QSchange_bound(spx_prob_, kv.first, 'U', box[kv.second].ub().get_mpq_t());
+      DREAL_ASSERT(box[kv.second].ub() <= soplex::infinity);
+      spx_prob_.changeBoundsRational(kv.first, to_mpq_t(box[kv.second].lb()),
+                                               to_mpq_t(box[kv.second].ub()));
     } else {
-      mpq_QSchange_bound(spx_prob_, kv.first, 'L', mpq_NINFTY);
-      mpq_QSchange_bound(spx_prob_, kv.first, 'U', mpq_INFTY);
+      spx_prob_.changeBoundsRational(kv.first, -soplex::infinity, soplex::infinity);
     }
   }
 }
@@ -356,8 +358,11 @@ void SoplexSatSolver::EnableLinearLiteral(const Variable& var, bool truth) {
     if (it_row != to_spx_row_.end()) {
       // A non-trivial linear literal from the input problem
       const int spx_row = it_row->second;
-      mpq_QSchange_sense(spx_prob_, spx_row, spx_sense_[spx_row]);
-      mpq_QSchange_rhscoef(spx_prob_, spx_row, spx_rhs_[spx_row].get_mpq_t());
+      const char sense{spx_sense_[spx_row]};
+      const mpq_class& rhs{spx_rhs_[spx_row]};
+      spx_prob_.changeRangeRational(spx_row,
+        sense == 'G' || sense == 'E' ? to_mpq_t(rhs) : -soplex::infinity,
+        sense == 'L' || sense == 'E' ? to_mpq_t(rhs) : soplex::infinity);
       DREAL_LOG_TRACE("SoplexSatSolver::EnableLinearLiteral({})", spx_row);
       return;
     }
@@ -450,15 +455,15 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     }
     Expression expr;
     expr = (get_lhs_expression(formula) - get_rhs_expression(formula)).Expand();
-    const int spx_row{mpq_QSget_rowcount(spx_prob_)};
-    mpq_QSnew_row(spx_prob_, mpq_NINFTY, 'G', NULL);  // Inactive
+    const int spx_row{spx_prob_.numRowsRational()};
+    DSVectorRational coeffs;
     DREAL_ASSERT(static_cast<size_t>(spx_row) == spx_sense_.size() - 1);
     DREAL_ASSERT(static_cast<size_t>(spx_row) == spx_rhs_.size());
     spx_rhs_.push_back(0);
     if (is_constant(expr)) {
       spx_rhs_.back() = -get_constant_value(expr);
     } else if (is_variable(expr)) {
-      SetSPXVarCoef(spx_row, get_variable(expr), 1);
+      SetSPXVarCoef(coeffs, get_variable(expr), 1);
     } else if (is_multiplication(expr)) {
       std::map<Expression,Expression> map = get_base_to_exponent_map_in_multiplication(expr);
       if (map.size() != 1
@@ -467,7 +472,7 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
        || get_constant_value(map.begin()->second) != 1) {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
       }
-      SetSPXVarCoef(spx_row,
+      SetSPXVarCoef(coeffs,
                     get_variable(map.begin()->first),
                     get_constant_in_multiplication(expr));
     } else if (is_addition(expr)) {
@@ -476,15 +481,17 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
         if (!is_variable(pair.first)) {
           throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
         }
-        SetSPXVarCoef(spx_row, get_variable(pair.first), pair.second);
+        SetSPXVarCoef(coeffs, get_variable(pair.first), pair.second);
       }
       spx_rhs_.back() = -get_constant_in_addition(expr);
     } else {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
     }
-    if (spx_rhs_.back() <= mpq_ninfty() || spx_rhs_.back() >= mpq_infty()) {
+    if (spx_rhs_.back() <= -soplex::infinity || spx_rhs_.back() >= soplex::infinity) {
       throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", spx_rhs_.back());
     }
+    // Inactive
+    spx_prob_.addRowRational(LPRowRational(-soplex::infinity, coeffs, soplex::infinity));
     if (!config_.use_phase_one_simplex()) {
       CreateArtificials(spx_row);
     }
@@ -498,22 +505,15 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
 
 void SoplexSatSolver::CreateArtificials(const int spx_row) {
   DREAL_ASSERT(!config_.use_phase_one_simplex());
-  const int spx_col_1{mpq_QSget_colcount(spx_prob_)};
-  const int spx_col_2{spx_col_1 + 1};
-  int status;
-  status = mpq_QSnew_col(spx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
-  DREAL_ASSERT(!status);
-  status = mpq_QSnew_col(spx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
-  DREAL_ASSERT(!status);
+  const int spx_col_1{spx_prob_.numColsRational()};
+  DSVectorRational coeffsPos;
+  coeffsPos.add(spx_row, 1);
+  spx_prob_.addColRational(LPColRational(1, coeffsPos, soplex::infinity, 0));
+  DSVectorRational coeffsNeg;
+  coeffsNeg.add(spx_row, -1);
+  spx_prob_.addColRational(LPColRational(1, coeffsNeg, soplex::infinity, 0));
   DREAL_LOG_DEBUG("SoplexSatSolver::CreateArtificials({} -> ({}, {}))",
-                  spx_row, spx_col_1, spx_col_2);
-  mpq_t c_value;
-  mpq_init(c_value);
-  mpq_set_si(c_value, 1, 1);
-  mpq_QSchange_coef(spx_prob_, spx_row, spx_col_1, c_value);
-  mpq_set_si(c_value, -1, 1);
-  mpq_QSchange_coef(spx_prob_, spx_row, spx_col_2, c_value);
-  mpq_clear(c_value);
+                  spx_row, spx_col_1, spx_col_1 + 1);
 }
 
 void SoplexSatSolver::UpdateLookup(int lit, int learned) {
@@ -595,10 +595,10 @@ void SoplexSatSolver::AddLinearVariable(const Variable& var) {
     // Found.
     return;
   }
-  const int spx_col{mpq_QSget_colcount(spx_prob_)};
-  int status = mpq_QSnew_col(spx_prob_, mpq_zeroLpNum, mpq_NINFTY, mpq_INFTY,
-                             var.get_name().c_str());
-  DREAL_ASSERT(!status);
+  const int spx_col{spx_prob_.numColsRational()};
+  // obj, coeffs, upper, lower
+  spx_prob_.addColRational(LPColRational(0, DSVectorRational(),
+                                         soplex::infinity, -soplex::infinity));
   to_spx_col_.emplace(make_pair(var.get_id(), spx_col));
   from_spx_col_[spx_col] = var;
   DREAL_LOG_DEBUG("SoplexSatSolver::AddLinearVariable({} ↦ {})", var, spx_col);

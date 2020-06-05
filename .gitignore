@@ -13,3 +13,4 @@ doxygen_cxx
 dreal.egg-info/
 logs/
 /qsopt-ex
+/soplex

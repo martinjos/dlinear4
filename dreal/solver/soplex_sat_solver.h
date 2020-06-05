@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
-#include <soplex.h>
 
 #include "./picosat.h"
 
@@ -18,6 +17,8 @@
 #include "dreal/util/scoped_unordered_map.h"
 #include "dreal/util/scoped_unordered_set.h"
 #include "dreal/util/plaisted_greenbaum_cnfizer.h"
+#include "dreal/gmp.h"
+#include "dreal/soplex.h"
 
 namespace dreal {
 
@@ -125,7 +126,8 @@ class SoplexSatSolver {
 
   // Set the variable's coefficient for the given constraint row in the linear
   // solver
-  void SetSPXVarCoef(int spx_row, const Variable& var, const mpq_class& value);
+  void SetSPXVarCoef(soplex::DSVectorRational& coeffs, const Variable& var,
+                     const mpq_class& value);
 
   // Set one of the variable's bounds ('L' - lower or 'U' - upper) in the
   // linear solver, in addition to bounds already asserted.
@@ -170,14 +172,14 @@ class SoplexSatSolver {
   // Exact LP solver (SoPlex)
   soplex::SoPlex spx_prob_;
 
-  // Map symbolic::Variable <-> int (column in QSopt_ex problem).
+  // Map symbolic::Variable <-> int (column in SoPlex problem).
   // We don't used the scoped version because we'd like to be sure that we
   // won't create duplicate columns.  No two Variable objects ever have the
   // same Id.
   std::map<Variable::Id, int> to_spx_col_;
   std::map<int, Variable> from_spx_col_;
 
-  // Map (symbolic::Variable, bool) <-> int (row in QSopt_ex problem).
+  // Map (symbolic::Variable, bool) <-> int (row in SoPlex problem).
   std::map<std::pair<Variable::Id, bool>, int> to_spx_row_;
   std::vector<Literal> from_spx_row_;
 
