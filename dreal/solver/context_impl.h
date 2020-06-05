@@ -7,8 +7,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "dreal/solver/sat_solver.h"
-#include "dreal/solver/linear_theory_solver.h"
+#include "dreal/solver/soplex_sat_solver.h"
+#include "dreal/solver/soplex_theory_solver.h"
 #include "dreal/util/scoped_vector.h"
 
 namespace dreal {
@@ -53,7 +53,7 @@ class Context::Impl {
 
   // Returns the current box in the stack.
   optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box,
-                             SatSolver* sat_solver);
+                             SoplexSatSolver* sat_solver);
 
   // Marks variable @p v as a model variable
   void mark_model_variable(const Variable& v);
@@ -76,9 +76,9 @@ class Context::Impl {
   ScopedVector<Box> boxes_;
   // Stack of asserted formulas.
   ScopedVector<Formula> stack_;
-  SatSolver sat_solver_;
+  SoplexSatSolver sat_solver_;
   std::unordered_set<Variable::Id> model_variables_;
-  LinearTheorySolver theory_solver_;
+  SoplexTheorySolver theory_solver_;
 
   // Stores the result of the latest checksat.
   // Note that if the checksat result was UNSAT, this box holds an empty box.

@@ -13,6 +13,11 @@
 #include "dreal/gmp.h"
 #include "dreal/soplex.h"
 
+#define QS_EXACT_UNKNOWN   0
+#define QS_EXACT_UNSAT     1
+#define QS_EXACT_SAT       2
+#define QS_EXACT_DELTA_SAT 3
+
 namespace dreal {
 
 /// Theory solver for linear theory over the Reals.

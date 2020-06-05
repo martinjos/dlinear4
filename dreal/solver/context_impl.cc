@@ -113,7 +113,7 @@ void Context::Impl::Assert(const Formula& f) {
 
 optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
                                           Box box,
-                                          SatSolver* const sat_solver) {
+                                          SoplexSatSolver* const sat_solver) {
   DREAL_LOG_DEBUG("ContextImpl::CheckSatCore()");
   DREAL_LOG_TRACE("ContextImpl::CheckSat: Box =\n{}", box);
   if (box.empty()) {
