@@ -86,7 +86,7 @@ dreal_cc_library(
         "linear_theory_solver.cc",
         "sat_solver.cc",
         "soplex_sat_solver.cc",
-        #"soplex_theory_solver.cc",
+        "soplex_theory_solver.cc",
     ],
     hdrs = [
         "context.h",
@@ -98,7 +98,7 @@ dreal_cc_library(
         #"theory_solver.h",
         "linear_theory_solver.h",
         "sat_solver.h",
-        #"soplex_theory_solver.h",
+        "soplex_theory_solver.h",
         "soplex_sat_solver.h",
     ],
     visibility = [

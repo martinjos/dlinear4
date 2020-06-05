@@ -9,6 +9,11 @@
 #include "dreal/util/stat.h"
 #include "dreal/util/timer.h"
 
+#define QS_EXACT_UNKNOWN   0
+#define QS_EXACT_UNSAT     1
+#define QS_EXACT_SAT       2
+#define QS_EXACT_DELTA_SAT 3
+
 namespace dreal {
 
 using std::cout;
@@ -17,6 +22,13 @@ using std::vector;
 using std::pair;
 
 using soplex::SoPlex;
+using soplex::SPxSolver;
+using soplex::VectorRational;
+using soplex::LPColRational;
+using soplex::Rational;
+
+using dreal::gmp::to_mpq_t;
+using dreal::gmp::to_mpq_class;
 
 SoplexTheorySolver::SoplexTheorySolver(const Config& config)
     : config_{config} {
@@ -62,17 +74,14 @@ int SoplexTheorySolver::CheckSat(const Box& box,
 
   DREAL_LOG_TRACE("SoplexTheorySolver::CheckSat: Box = \n{}", box);
 
-  int status = -1;
+  SPxSolver::Status status = SPxSolver::Status::UNKNOWN;
   int lp_status = -1;
 
   precision_ = config_.precision();
 
-  int rowcount = mpq_QSget_rowcount(prob);
-  int colcount = mpq_QSget_colcount(prob);
-  // x: * must be allocated/deallocated using QSopt_ex.
-  //    * should have room for the (rowcount) "logical" variables, which come
-  //    after the (colcount) "structural" variables.
-  MpqArray x{colcount + rowcount};
+  int rowcount = prob.numRowsRational();
+  int colcount = prob.numColsRational();
+  VectorRational x;
 
   model_ = box;
   for (const pair<int, Variable>& kv : var_map) {
@@ -86,17 +95,13 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
+  // FIXME: check whether SoPlex can handle all this; if so, remove it.
   lp_status = QS_EXACT_DELTA_SAT;
-  mpq_t temp;
-  mpq_init(temp);
   for (const pair<int, Variable>& kv : var_map) {
-    int res;
-    res = mpq_QSget_bound(prob, kv.first, 'L', &temp);
-    DREAL_ASSERT(!res);
-    mpq_class lb{temp};
-    res = mpq_QSget_bound(prob, kv.first, 'U', &temp);
-    DREAL_ASSERT(!res);
-    mpq_class ub{temp};
+    LPColRational col;
+    prob.getColRational(kv.first, col);
+    const Rational& lb{col.lower()};
+    const Rational& ub{col.upper()};
     if (lb > ub) {
       lp_status = QS_EXACT_UNSAT;
       // Prevent the exact same LP from coming up again
@@ -105,77 +110,98 @@ int SoplexTheorySolver::CheckSat(const Box& box,
       break;
     }
     if (rowcount == 0) {
-      mpq_class val;
-      if (mpq_ninfty() < lb) {
+      Rational val;
+      if (-soplex::infinity < lb) {
         val = lb;
-      } else if (ub < mpq_infty()) {
+      } else if (ub < soplex::infinity) {
         val = ub;
       } else {
         val = 0;
       }
-      DREAL_ASSERT(model_[kv.second].lb() <= val && val <= model_[kv.second].ub());
-      model_[kv.second] = val;
+      DREAL_ASSERT(to_mpq_t(model_[kv.second].lb()) <= val &&
+                   val <= to_mpq_t(model_[kv.second].ub()));
+      model_[kv.second] = val.getMpqRef();
     }
   }
-  mpq_clear(temp);
   if (lp_status == QS_EXACT_UNSAT || rowcount == 0) {
     DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: no need to call LP solver");
     return lp_status;
   }
 
   // Now we call the solver
-  lp_status = -1;
   int sat_status = -1;
-  DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: calling QSopt_ex (phase {})",
+  DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: calling SoPlex (phase {})",
                   config_.use_phase_one_simplex() ? "one" : "two");
 
   mpq_class actual_precision{precision_};
-  if (config_.use_phase_one_simplex()) {
-    status = qsopt_ex::QSdelta_solver(prob, actual_precision.get_mpq_t(), x, NULL, NULL,
-                                      DUAL_SIMPLEX, &lp_status);
-  } else {
-    status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, DUAL_SIMPLEX,
-                                            &sat_status, actual_precision.get_mpq_t());
-  }
+  status = prob.optimize();
+  actual_precision = 0;  // Because we always solve exactly, at present
 
-  if (status) {
-    throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
+  if ((!config_.use_phase_one_simplex() && status != SPxSolver::Status::OPTIMAL) ||
+      (status != SPxSolver::Status::OPTIMAL &&
+       status != SPxSolver::Status::UNBOUNDED &&
+       status != SPxSolver::Status::INFEASIBLE)) {
+    throw DREAL_RUNTIME_ERROR("SoPlex returned {}", status);
   } else {
-    DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
+    DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: SoPlex has returned with precision = {}",
                     actual_precision);
   }
 
+  bool haveSoln = prob.getPrimalRational(x);
+  DREAL_ASSERT(!haveSoln || x.dim() == colcount);
+  DREAL_ASSERT(status != SPxSolver::Status::OPTIMAL || haveSoln);
+
   if (config_.use_phase_one_simplex()) {
-    switch (lp_status) {
-    case QS_LP_FEASIBLE:
-    case QS_LP_DELTA_FEASIBLE:
+    switch (status) {
+    case SPxSolver::Status::OPTIMAL:
+    case SPxSolver::Status::UNBOUNDED:
       sat_status = QS_EXACT_DELTA_SAT;
       break;
-    case QS_LP_INFEASIBLE:
+    case SPxSolver::Status::INFEASIBLE:
       sat_status = QS_EXACT_UNSAT;
       break;
-    case QS_LP_UNSOLVED:
-      sat_status = QS_EXACT_UNKNOWN;
-      break;
+    //case QS_LP_UNSOLVED:
+    //  sat_status = QS_EXACT_UNKNOWN;
+    //  break;
     default:
       DREAL_UNREACHABLE();
+    }
+  } else {
+    // The feasibility LP should always be feasible & bounded
+    DREAL_ASSERT(status == SPxSolver::Status::OPTIMAL);
+    VectorRational obj;
+    prob.getObjRational(obj);
+    DREAL_ASSERT(obj.dim() == colcount);
+    bool ok = true;
+    // ok = std::ranges::all_of(0, colcount, [&] (int i) { return obj[i] == 0 || x[i] == 0; });
+    for (int i = 0; i < colcount; ++i) {
+      if (!(ok = (obj[i] == 0 || x[i] == 0))) {
+        break;
+      }
+    }
+    if (ok) {
+      sat_status = QS_EXACT_DELTA_SAT;
+    } else {
+      sat_status = QS_EXACT_UNSAT;
     }
   }
 
   if (sat_status == QS_EXACT_UNKNOWN) {
-    DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: QSopt_ex failed to return a result");
+    DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: SoPlex failed to return a result");
   }
 
   switch (sat_status) {
-  case QS_EXACT_SAT:
   case QS_EXACT_DELTA_SAT:
+    if (haveSoln) {
     // Copy delta-feasible point from x into model_
-    for (const pair<int, Variable>& kv : var_map) {
-      DREAL_ASSERT(model_[kv.second].lb() <= mpq_class(x[kv.first]) &&
-                   mpq_class(x[kv.first]) <= model_[kv.second].ub());
-      model_[kv.second] = x[kv.first];
+      for (const pair<int, Variable>& kv : var_map) {
+        DREAL_ASSERT(model_[kv.second].lb() <= to_mpq_class(x[kv.first].getMpqRef()) &&
+                     to_mpq_class(x[kv.first].getMpqRef()) <= model_[kv.second].ub());
+        model_[kv.second] = x[kv.first].getMpqRef();
+      }
+    } else {
+      throw DREAL_RUNTIME_ERROR("delta-sat but no solution available");
     }
-    sat_status = QS_EXACT_DELTA_SAT;
     break;
   case QS_EXACT_UNSAT:
   case QS_EXACT_UNKNOWN:

@@ -54,10 +54,21 @@ mpz_class ceil(const mpq_class& val);
 // The address of this reference also has the same value as the (mpq_t *).
 //
 const inline mpq_t& to_mpq_t(const mpq_class& cla) {
-    return *reinterpret_cast<const mpq_t*>(cla.get_mpq_t());
+  return *reinterpret_cast<const mpq_t*>(cla.get_mpq_t());
 }
 inline mpq_t& to_mpq_t(mpq_class& cla) {
-    return *reinterpret_cast<mpq_t*>(cla.get_mpq_t());
+  return *reinterpret_cast<mpq_t*>(cla.get_mpq_t());
+}
+
+// This works because the internal representation of an mpq_class is exactly
+// the same as that of an mpq_t (and, because we only take a reference, no
+// constructor or destructor is ever called).
+//
+const inline mpq_class& to_mpq_class(const mpq_t& mpq) {
+  return reinterpret_cast<const mpq_class&>(mpq);
+}
+inline mpq_class& to_mpq_class(mpq_t& mpq) {
+  return reinterpret_cast<mpq_class&>(mpq);
 }
 
 }  // namespace gmp
