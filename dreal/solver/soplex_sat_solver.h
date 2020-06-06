@@ -80,6 +80,14 @@ class SoplexSatSolver {
     return spx_prob_;
   }
 
+  const soplex::VectorRational& GetLowerBounds() const {
+    return spx_lower_;
+  }
+
+  const soplex::VectorRational& GetUpperBounds() const {
+    return spx_upper_;
+  }
+
   const std::map<int, Variable>& GetLinearVarMap() const;
 
  private:
@@ -169,6 +177,8 @@ class SoplexSatSolver {
 
   // Exact LP solver (SoPlex)
   soplex::SoPlex spx_prob_;
+  soplex::VectorRational spx_lower_;
+  soplex::VectorRational spx_upper_;
 
   // Map symbolic::Variable <-> int (column in SoPlex problem).
   // We don't used the scoped version because we'd like to be sure that we

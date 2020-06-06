@@ -61,6 +61,8 @@ class TheorySolverStat : public Stat {
 int SoplexTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
                                  SoPlex& prob,
+                                 const VectorRational& lower,
+                                 const VectorRational& upper,
                                  const std::map<int, Variable>& var_map) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
@@ -90,13 +92,10 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
-  // FIXME: check whether SoPlex can handle all this; if so, remove it.
   lp_status = QS_EXACT_DELTA_SAT;
   for (const pair<int, Variable>& kv : var_map) {
-    LPColRational col;
-    prob.getColRational(kv.first, col);
-    const Rational& lb{col.lower()};
-    const Rational& ub{col.upper()};
+    const Rational& lb{lower[kv.first]};
+    const Rational& ub{upper[kv.first]};
     if (lb > ub) {
       lp_status = QS_EXACT_UNSAT;
       // Prevent the exact same LP from coming up again
@@ -122,6 +121,9 @@ int SoplexTheorySolver::CheckSat(const Box& box,
     DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: no need to call LP solver");
     return lp_status;
   }
+
+  prob.changeLowerRational(lower);
+  prob.changeUpperRational(upper);
 
   // Now we call the solver
   int sat_status = -1;

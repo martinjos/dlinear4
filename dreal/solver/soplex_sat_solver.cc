@@ -281,14 +281,14 @@ void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
   if (value <= -soplex::infinity || value >= soplex::infinity) {
     throw DREAL_RUNTIME_ERROR("Simple bound too large: {}", value);
   }
-  LPColRational col;
-  spx_prob_.getColRational(it->second, col);
-  const Rational& existing = type == 'L' ? col.lower() : col.upper();
-  if ((type == 'L' && existing < to_mpq_t(value)) || (type == 'U' && to_mpq_t(value) < existing)) {
-    if (type == 'L') {
-      spx_prob_.changeLowerRational(it->second, to_mpq_t(value));
-    } else {
-      spx_prob_.changeUpperRational(it->second, to_mpq_t(value));
+  const Rational& existing = type == 'L' ? spx_lower_[it->second] : spx_upper_[it->second];
+  if (type == 'L') {
+    if (existing < to_mpq_t(value)) {
+      spx_lower_[it->second] = to_mpq_t(value);
+    }
+  } else if (type == 'U') {
+    if (to_mpq_t(value) < existing) {
+      spx_upper_[it->second] = to_mpq_t(value);
     }
   }
 }
@@ -508,7 +508,11 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
 
 void SoplexSatSolver::CreateArtificials(const int spx_row) {
   DREAL_ASSERT(!config_.use_phase_one_simplex());
-  const int spx_col_1{spx_prob_.numColsRational()};
+  const int spx_cols{spx_prob_.numColsRational()};
+  spx_lower_.reDim(spx_cols + 2, true);  // Set lower bounds to zero
+  spx_upper_.reDim(spx_cols + 2, false);
+  spx_upper_[spx_cols] = soplex::infinity;  // Set upper bounds to infinity
+  spx_upper_[spx_cols + 1] = soplex::infinity;
   DSVectorRational coeffsPos;
   coeffsPos.add(spx_row, 1);
   spx_prob_.addColRational(LPColRational(1, coeffsPos, soplex::infinity, 0));
@@ -516,7 +520,7 @@ void SoplexSatSolver::CreateArtificials(const int spx_row) {
   coeffsNeg.add(spx_row, -1);
   spx_prob_.addColRational(LPColRational(1, coeffsNeg, soplex::infinity, 0));
   DREAL_LOG_DEBUG("SoplexSatSolver::CreateArtificials({} -> ({}, {}))",
-                  spx_row, spx_col_1, spx_col_1 + 1);
+                  spx_row, spx_cols, spx_cols + 1);
 }
 
 void SoplexSatSolver::UpdateLookup(int lit, int learned) {
@@ -599,6 +603,10 @@ void SoplexSatSolver::AddLinearVariable(const Variable& var) {
     return;
   }
   const int spx_col{spx_prob_.numColsRational()};
+  spx_lower_.reDim(spx_col + 1, false);
+  spx_upper_.reDim(spx_col + 1, false);
+  spx_lower_[spx_col] = -soplex::infinity;  // Set unbounded
+  spx_upper_[spx_col] = soplex::infinity;
   // obj, coeffs, upper, lower
   spx_prob_.addColRational(LPColRational(0, DSVectorRational(),
                                          soplex::infinity, -soplex::infinity));

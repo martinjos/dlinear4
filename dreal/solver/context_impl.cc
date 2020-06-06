@@ -159,6 +159,8 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         int theory_result{
           theory_solver_.CheckSat(box, theory_model,
                                   sat_solver->GetLinearSolver(),
+                                  sat_solver->GetLowerBounds(),
+                                  sat_solver->GetUpperBounds(),
                                   sat_solver->GetLinearVarMap())};
         if (theory_result == QS_EXACT_DELTA_SAT) {
           // SAT from TheorySolver.
