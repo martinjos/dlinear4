@@ -41,6 +41,10 @@ SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
                   config.sat_default_phase());
   // Default is maximize
   spx_prob_.setIntParam(spx_prob_.OBJSENSE, spx_prob_.OBJSENSE_MINIMIZE);
+  spx_prob_.setIntParam(spx_prob_.READMODE, spx_prob_.READMODE_RATIONAL);
+  spx_prob_.setIntParam(spx_prob_.SOLVEMODE, spx_prob_.SOLVEMODE_RATIONAL);
+  spx_prob_.setIntParam(spx_prob_.CHECKMODE, spx_prob_.CHECKMODE_RATIONAL);
+  spx_prob_.setIntParam(spx_prob_.SYNCMODE, spx_prob_.SYNCMODE_MANUAL);
   if (config_.verbose_simplex() >= 1) {
     spx_prob_.setIntParam(spx_prob_.VERBOSITY, config_.verbose_simplex());
   }

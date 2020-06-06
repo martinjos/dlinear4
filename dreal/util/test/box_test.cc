@@ -11,7 +11,7 @@
 
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/symbolic/symbolic_test_util.h"
-#include "dreal/qsopt_ex.h"
+#include "dreal/util/infty.h"
 
 using std::is_nothrow_move_constructible;
 using std::numeric_limits;
@@ -40,7 +40,7 @@ class BoxTest : public ::testing::Test {
   const Variable b2_{"j", Variable::Type::BINARY};
 #endif
 
-  const mpq_class inf_{dreal::qsopt_ex::mpq_infty()};
+  const mpq_class inf_{dreal::util::mpq_infty()};
 };
 
 TEST_F(BoxTest, AddHasVariable) {

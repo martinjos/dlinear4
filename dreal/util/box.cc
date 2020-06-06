@@ -10,7 +10,7 @@
 #include "dreal/util/exception.h"
 #include "dreal/util/logging.h"
 #include "dreal/util/math.h"
-#include "dreal/qsopt_ex.h"
+#include "dreal/util/infty.h"
 
 using std::equal;
 using std::find_if;
@@ -23,8 +23,8 @@ using std::unordered_map;
 using std::vector;
 using dreal::gmp::ceil;
 using dreal::gmp::floor;
-using dreal::qsopt_ex::mpq_ninfty;
-using dreal::qsopt_ex::mpq_infty;
+using dreal::util::mpq_ninfty;
+using dreal::util::mpq_infty;
 
 namespace dreal {
 

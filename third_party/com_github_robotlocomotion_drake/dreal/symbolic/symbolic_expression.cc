@@ -16,7 +16,7 @@
 #include "dreal/symbolic/symbolic_formula.h"
 #include "dreal/symbolic/symbolic_variable.h"
 #include "dreal/symbolic/symbolic_variables.h"
-#include "dreal/qsopt_ex.h"
+#include "dreal/util/infty.h"
 
 namespace dreal {
 namespace drake {
@@ -31,8 +31,8 @@ using std::string;
 using std::vector;
 using std::isinf;
 using std::isnan;
-using dreal::qsopt_ex::mpq_infty;
-using dreal::qsopt_ex::mpq_ninfty;
+using dreal::util::mpq_infty;
+using dreal::util::mpq_ninfty;
 
 bool operator<(ExpressionKind k1, ExpressionKind k2) {
   return static_cast<int>(k1) < static_cast<int>(k2);
@@ -1036,5 +1036,5 @@ Expression operator-(const Variable& var) { return -Expression{var}; }
 }  // namespace dreal
 
 mpq_class std::numeric_limits<dreal::drake::symbolic::Expression>::infinity() {
-  return dreal::qsopt_ex::mpq_infty();
+  return dreal::util::mpq_infty();
 }

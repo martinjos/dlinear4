@@ -8,6 +8,7 @@
 #include "dreal/util/logging.h"
 #include "dreal/util/stat.h"
 #include "dreal/util/timer.h"
+#include "dreal/util/infty.h"
 
 namespace dreal {
 
@@ -18,8 +19,8 @@ using std::pair;
 
 using qsopt_ex::mpq_QSprob;
 using qsopt_ex::MpqArray;
-using qsopt_ex::mpq_infty;
-using qsopt_ex::mpq_ninfty;
+using dreal::util::mpq_infty;
+using dreal::util::mpq_ninfty;
 
 LinearTheorySolver::LinearTheorySolver(const Config& config)
     : config_{config} {

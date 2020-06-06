@@ -9,6 +9,7 @@
 #include "dreal/util/logging.h"
 #include "dreal/util/stat.h"
 #include "dreal/util/timer.h"
+#include "dreal/util/infty.h"
 
 namespace dreal {
 
@@ -28,8 +29,8 @@ using qsopt_ex::mpq_QSget_colcount;
 using qsopt_ex::mpq_QSnew_col;
 using qsopt_ex::mpq_ILL_MINDOUBLE;  // mpq_NINFTY
 using qsopt_ex::mpq_ILL_MAXDOUBLE;  // mpq_INFTY
-using qsopt_ex::mpq_ninfty;  // mpq_class versions
-using qsopt_ex::mpq_infty;
+using dreal::util::mpq_ninfty;  // mpq_class versions
+using dreal::util::mpq_infty;
 using qsopt_ex::__zeroLpNum_mpq__;  // mpq_zeroLpNum
 using qsopt_ex::__oneLpNum_mpq__;  // mpq_oneLpNum
 

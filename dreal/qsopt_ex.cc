@@ -45,29 +45,12 @@ MpqArray::~MpqArray() {
     mpq_EGlpNumFreeArray(array);
 }
 
-mpq_class* mpq_class_infinity = nullptr;
-mpq_class* mpq_class_ninfinity = nullptr;
-
 void QSXStart() {
   QSexactStart();
-  mpq_class_infinity = new mpq_class(mpq_INFTY);
-  mpq_class_ninfinity = new mpq_class(mpq_NINFTY);
 }
 
 void QSXFinish() {
-  delete mpq_class_infinity;
-  delete mpq_class_ninfinity;
   QSexactClear();
-}
-
-// Important: must call QSXStart() first!
-
-const mpq_class& mpq_infty() {
-  return *mpq_class_infinity;
-}
-
-const mpq_class& mpq_ninfty() {
-  return *mpq_class_ninfinity;
 }
 
 }  // namespace qsopt_ex

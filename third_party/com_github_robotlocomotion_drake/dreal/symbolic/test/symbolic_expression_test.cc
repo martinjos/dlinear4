@@ -17,7 +17,7 @@
 
 #include "dreal/symbolic/symbolic_expression.h"
 #include "dreal/symbolic/test/symbolic_test_util.h"
-#include "dreal/qsopt_ex.h"
+#include "dreal/util/infty.h"
 
 using std::count_if;
 using std::domain_error;
@@ -820,8 +820,8 @@ TEST_F(SymbolicExpressionTest, NumericLimits) {
 }
 
 TEST_F(SymbolicExpressionTest, TooLarge) {
-  EXPECT_THROW(Expression(::dreal::qsopt_ex::mpq_infty()), runtime_error);
-  EXPECT_THROW(Expression(::dreal::qsopt_ex::mpq_ninfty()), runtime_error);
+  EXPECT_THROW(Expression(::dreal::util::mpq_infty()), runtime_error);
+  EXPECT_THROW(Expression(::dreal::util::mpq_ninfty()), runtime_error);
   EXPECT_THROW(Expression(1e300), runtime_error);
   EXPECT_THROW(Expression(-1e300), runtime_error);
 }

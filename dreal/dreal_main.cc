@@ -15,7 +15,9 @@
 #include "dreal/util/filesystem.h"
 #include "dreal/util/logging.h"
 #include "dreal/util/rounding_mode_guard.h"
+#include "dreal/util/infty.h"
 #include "dreal/qsopt_ex.h"
+#include "dreal/soplex.h"
 
 namespace dreal {
 
@@ -25,6 +27,9 @@ using std::endl;
 using std::string;
 using std::vector;
 using std::numeric_limits;
+
+using dreal::util::InftyStart;
+using dreal::util::InftyFinish;
 
 namespace {
 string get_version_string() {
@@ -431,13 +436,16 @@ void MainProgram::ExtractOptions() {
 }
 
 void MainProgram::Init() {
-  qsopt_ex::QSXStart();
+  //qsopt_ex::QSXStart();
+  //InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
+  InftyStart(soplex::infinity);
   Expression::InitConstants();
 }
 
 void MainProgram::DeInit() {
   Expression::DeInitConstants();
-  qsopt_ex::QSXFinish();
+  InftyFinish();
+  //qsopt_ex::QSXFinish();
 }
 
 int MainProgram::Run() {

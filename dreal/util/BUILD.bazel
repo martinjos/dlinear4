@@ -40,7 +40,7 @@ dreal_cc_library(
         "//dreal/symbolic",
         #"@ibex",
         "//dreal:gmp",
-        "//dreal:qsopt-ex",
+        "//dreal/util:infty",
     ],
 )
 
@@ -419,6 +419,20 @@ dreal_cc_library(
     ],
 )
 
+dreal_cc_library(
+    name = "infty",
+    srcs = [
+        "infty.cc",
+    ],
+    hdrs = [
+        "infty.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@linux_libs//:gmpxx",
+    ],
+)
+
 # -----
 # Tests
 # -----
@@ -428,7 +442,7 @@ dreal_cc_googletest(
     deps = [
         ":box",
         "//dreal/symbolic:symbolic_test_util",
-        "//dreal:qsopt-ex",
+        "//dreal/util:infty",
     ],
 )
 

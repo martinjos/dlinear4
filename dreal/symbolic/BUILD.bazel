@@ -57,6 +57,7 @@ dreal_cc_library(
     ],
     deps = [
         ":symbolic",
+        "//third_party/com_github_robotlocomotion_drake:drake_symbolic_test_util",
     ],
 )
 

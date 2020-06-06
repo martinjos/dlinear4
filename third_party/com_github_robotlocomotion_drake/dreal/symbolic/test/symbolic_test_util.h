@@ -6,7 +6,9 @@
 #include "dreal/symbolic/symbolic_expression.h"
 #include "dreal/symbolic/symbolic_formula.h"
 #include "dreal/symbolic/symbolic_variable.h"
+#include "dreal/util/infty.h"  // For InftyStart()/InftyFinish()
 #include "dreal/qsopt_ex.h"  // For QSXStart()/QSXFinish()
+#include "dreal/soplex.h"  // For soplex::infinity
 
 #define EXPECT_MPQ_EQ_DOUBLE(mpq, d) EXPECT_DOUBLE_EQ((mpq).get_d(), d)
 #define EXPECT_MPQ_NEAR(mpq, d, tol) EXPECT_NEAR((mpq).get_d(), d, tol)
@@ -18,12 +20,15 @@ namespace test {
 
 struct DrakeSymbolicGuard {
   DrakeSymbolicGuard() {
-    dreal::qsopt_ex::QSXStart();
+    //dreal::qsopt_ex::QSXStart();
+    //dreal::util::InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
+    dreal::util::InftyStart(soplex::infinity);
     Expression::InitConstants();
   }
   ~DrakeSymbolicGuard() {
     Expression::DeInitConstants();
-    dreal::qsopt_ex::QSXFinish();
+    dreal::util::InftyFinish();
+    //dreal::qsopt_ex::QSXFinish();
   }
 };
 
