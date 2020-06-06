@@ -42,8 +42,9 @@ string get_version_string() {
   if (!repo_stat.empty()) {
     repo_stat = " (repository: " + repo_stat + ")";
   }
-  return fmt::format("v{} ({} Build){} (qsopt-ex: {})",
+  return fmt::format("v{} ({} Build){} (soplex: {}) (qsopt-ex: {})",
                      Context::version(), build_type, repo_stat,
+                     soplex::getGitHash(),
                      qsopt_ex::QSopt_ex_repository_status());
 }
 }  // namespace
