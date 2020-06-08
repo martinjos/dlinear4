@@ -452,6 +452,7 @@ dreal_cc_googletest(
     deps = [
         ":box",
         ":cds",
+        "//dreal/symbolic:symbolic_test_util",
     ],
 )
 

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "dreal/util/box.h"
+#include "dreal/symbolic/symbolic_test_util.h"
 
 namespace dreal {
 namespace {
@@ -34,6 +35,8 @@ GTEST_TEST(CdsTest, PriorityQueueInt) {
 }
 
 GTEST_TEST(CdsTest, PriorityQueueBox) {
+  DrakeSymbolicGuard guard;
+
   struct BoxComparator {
     int operator()(const Box& b1, const Box& b2) {
       const mpq_class& diam1 = b1.MaxDiam().first;
