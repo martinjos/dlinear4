@@ -98,6 +98,8 @@ int SoplexTheorySolver::CheckSat(const Box& box,
     const Rational& lb{lower[kv.first]};
     const Rational& ub{upper[kv.first]};
     if (lb > ub) {
+      DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: variable {} has invalid bounds [{}, {}]",
+                      kv.second, lb, ub);
       lp_status = QS_EXACT_UNSAT;
       // Prevent the exact same LP from coming up again
       explanation_.clear();

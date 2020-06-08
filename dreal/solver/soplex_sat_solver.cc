@@ -266,13 +266,7 @@ void SoplexSatSolver::SetSPXVarCoef(DSVectorRational* coeffs, const Variable& va
 
 void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
                                      const mpq_class& value) {
-  if (type == 'B') {
-    // Both
-    SetSPXVarBound(var, 'L', value);
-    SetSPXVarBound(var, 'U', value);
-    return;
-  }
-  DREAL_ASSERT(type == 'L' || type == 'U');
+  DREAL_ASSERT(type == 'L' || type == 'U' || type == 'B');
   const auto it = to_spx_col_.find(var.get_id());
   if (it == to_spx_col_.end()) {
     throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
@@ -280,14 +274,18 @@ void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
   if (value <= -soplex::infinity || value >= soplex::infinity) {
     throw DREAL_RUNTIME_ERROR("Simple bound too large: {}", value);
   }
-  const Rational& existing = type == 'L' ? spx_lower_[it->second] : spx_upper_[it->second];
-  if (type == 'L') {
-    if (existing < to_mpq_t(value)) {
+  if (type == 'L' || type == 'B') {
+    if (to_mpq_t(value) > spx_lower_[it->second]) {
       spx_lower_[it->second] = to_mpq_t(value);
+      DREAL_LOG_TRACE("SoplexSatSolver::SetSPXVarBound ('{}'): set lower bound of {} to {}",
+                      type, var, spx_lower_[it->second]);
     }
-  } else if (type == 'U') {
-    if (to_mpq_t(value) < existing) {
+  }
+  if (type == 'U' || type == 'B') {
+    if (to_mpq_t(value) < spx_upper_[it->second]) {
       spx_upper_[it->second] = to_mpq_t(value);
+      DREAL_LOG_TRACE("SoplexSatSolver::SetSPXVarBound ('{}'): set upper bound of {} to {}",
+                      type, var, spx_upper_[it->second]);
     }
   }
 }
@@ -305,15 +303,18 @@ void SoplexSatSolver::ResetLinearProblem(const Box& box) {
   DREAL_ASSERT(!config_.use_phase_one_simplex() ||
                static_cast<size_t>(spx_cols) == from_spx_col_.size());
   for (const pair<int, Variable> kv : from_spx_col_) {
+    DREAL_ASSERT(0 <= kv.first && kv.first < spx_cols);
     if (box.has_variable(kv.second)) {
       DREAL_ASSERT(-soplex::infinity <= box[kv.second].lb());
       DREAL_ASSERT(box[kv.second].lb() <= box[kv.second].ub());
       DREAL_ASSERT(box[kv.second].ub() <= soplex::infinity);
-      spx_prob_.changeBoundsRational(kv.first, to_mpq_t(box[kv.second].lb()),
-                                               to_mpq_t(box[kv.second].ub()));
+      spx_lower_[kv.first] = to_mpq_t(box[kv.second].lb());
+      spx_upper_[kv.first] = to_mpq_t(box[kv.second].ub());
     } else {
-      spx_prob_.changeBoundsRational(kv.first, -soplex::infinity, soplex::infinity);
+      spx_lower_[kv.first] = -soplex::infinity;
+      spx_upper_[kv.first] = soplex::infinity;
     }
+    spx_prob_.changeBoundsRational(kv.first, -soplex::infinity, soplex::infinity);
   }
 }
 
