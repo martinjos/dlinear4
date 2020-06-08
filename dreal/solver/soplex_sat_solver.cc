@@ -45,9 +45,7 @@ SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
   spx_prob_.setIntParam(spx_prob_.SOLVEMODE, spx_prob_.SOLVEMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.CHECKMODE, spx_prob_.CHECKMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.SYNCMODE, spx_prob_.SYNCMODE_MANUAL);
-  if (config_.verbose_simplex() >= 1) {
-    spx_prob_.setIntParam(spx_prob_.VERBOSITY, config_.verbose_simplex());
-  }
+  spx_prob_.setIntParam(spx_prob_.VERBOSITY, config_.verbose_simplex());
 }
 
 SoplexSatSolver::SoplexSatSolver(const Config& config, const vector<Formula>& clauses)
