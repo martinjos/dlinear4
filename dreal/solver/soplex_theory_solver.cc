@@ -60,10 +60,11 @@ class TheorySolverStat : public Stat {
 
 int SoplexTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
-                                 SoPlex& prob,
+                                 SoPlex* prob,
                                  const VectorRational& lower,
                                  const VectorRational& upper,
                                  const std::map<int, Variable>& var_map) {
+  DREAL_ASSERT(prob != nullptr);
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
@@ -76,8 +77,8 @@ int SoplexTheorySolver::CheckSat(const Box& box,
 
   precision_ = config_.precision();
 
-  int rowcount = prob.numRowsRational();
-  int colcount = prob.numColsRational();
+  int rowcount = prob->numRowsRational();
+  int colcount = prob->numColsRational();
   VectorRational x;
 
   model_ = box;
@@ -122,8 +123,8 @@ int SoplexTheorySolver::CheckSat(const Box& box,
     return lp_status;
   }
 
-  prob.changeLowerRational(lower);
-  prob.changeUpperRational(upper);
+  prob->changeLowerRational(lower);
+  prob->changeUpperRational(upper);
 
   // Now we call the solver
   int sat_status = -1;
@@ -131,8 +132,8 @@ int SoplexTheorySolver::CheckSat(const Box& box,
                   config_.use_phase_one_simplex() ? "one" : "two");
 
   mpq_class actual_precision{precision_};
-  prob.syncLPReal();  // Copies (rounded) rational LP into real LP
-  status = prob.optimize();
+  prob->syncLPReal();  // Copies (rounded) rational LP into real LP
+  status = prob->optimize();
   actual_precision = 0;  // Because we always solve exactly, at present
 
   if ((!config_.use_phase_one_simplex() && status != SPxSolver::Status::OPTIMAL) ||
@@ -146,7 +147,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   }
 
   x.reDim(colcount);
-  bool haveSoln = prob.getPrimalRational(x);
+  bool haveSoln = prob->getPrimalRational(x);
   DREAL_ASSERT(!haveSoln || x.dim() == colcount);
   DREAL_ASSERT(status != SPxSolver::Status::OPTIMAL || haveSoln);
 
@@ -169,7 +170,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
     // The feasibility LP should always be feasible & bounded
     DREAL_ASSERT(status == SPxSolver::Status::OPTIMAL);
     VectorRational obj;
-    prob.getObjRational(obj);
+    prob->getObjRational(obj);
     DREAL_ASSERT(obj.dim() == colcount);
     bool ok = true;
     // ok = std::ranges::all_of(0, colcount, [&] (int i) { return obj[i] == 0 || x[i] == 0; });

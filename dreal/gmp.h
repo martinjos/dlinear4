@@ -56,6 +56,7 @@ mpz_class ceil(const mpq_class& val);
 const inline mpq_t& to_mpq_t(const mpq_class& cla) {
   return *reinterpret_cast<const mpq_t*>(cla.get_mpq_t());
 }
+// NOLINTNEXTLINE(runtime/references)
 inline mpq_t& to_mpq_t(mpq_class& cla) {
   return *reinterpret_cast<mpq_t*>(cla.get_mpq_t());
 }
@@ -67,6 +68,7 @@ inline mpq_t& to_mpq_t(mpq_class& cla) {
 const inline mpq_class& to_mpq_class(const mpq_t& mpq) {
   return reinterpret_cast<const mpq_class&>(mpq);
 }
+// NOLINTNEXTLINE(runtime/references)
 inline mpq_class& to_mpq_class(mpq_t& mpq) {
   return reinterpret_cast<mpq_class&>(mpq);
 }

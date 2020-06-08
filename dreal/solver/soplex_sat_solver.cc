@@ -251,8 +251,9 @@ void SoplexSatSolver::Push() {
   cnf_variables_.push();
 }
 
-void SoplexSatSolver::SetSPXVarCoef(DSVectorRational& coeffs, const Variable& var,
+void SoplexSatSolver::SetSPXVarCoef(DSVectorRational* coeffs, const Variable& var,
                                     const mpq_class& value) {
+  DREAL_ASSERT(coeffs != nullptr);
   const auto it = to_spx_col_.find(var.get_id());
   if (it == to_spx_col_.end()) {
     throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
@@ -260,7 +261,7 @@ void SoplexSatSolver::SetSPXVarCoef(DSVectorRational& coeffs, const Variable& va
   if (value <= -soplex::infinity || value >= soplex::infinity) {
     throw DREAL_RUNTIME_ERROR("LP coefficient too large: {}", value);
   }
-  coeffs.add(it->second, to_mpq_t(value));
+  coeffs->add(it->second, to_mpq_t(value));
 }
 
 void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
@@ -464,7 +465,7 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     if (is_constant(expr)) {
       spx_rhs_.back() = -get_constant_value(expr);
     } else if (is_variable(expr)) {
-      SetSPXVarCoef(coeffs, get_variable(expr), 1);
+      SetSPXVarCoef(&coeffs, get_variable(expr), 1);
     } else if (is_multiplication(expr)) {
       std::map<Expression,Expression> map = get_base_to_exponent_map_in_multiplication(expr);
       if (map.size() != 1
@@ -473,7 +474,7 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
        || get_constant_value(map.begin()->second) != 1) {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
       }
-      SetSPXVarCoef(coeffs,
+      SetSPXVarCoef(&coeffs,
                     get_variable(map.begin()->first),
                     get_constant_in_multiplication(expr));
     } else if (is_addition(expr)) {
@@ -482,7 +483,7 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
         if (!is_variable(pair.first)) {
           throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
         }
-        SetSPXVarCoef(coeffs, get_variable(pair.first), pair.second);
+        SetSPXVarCoef(&coeffs, get_variable(pair.first), pair.second);
       }
       spx_rhs_.back() = -get_constant_in_addition(expr);
     } else {

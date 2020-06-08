@@ -76,8 +76,8 @@ class SoplexSatSolver {
     return predicate_abstractor_[var];
   }
 
-  soplex::SoPlex& GetLinearSolver() {
-    return spx_prob_;
+  soplex::SoPlex* GetLinearSolverPtr() {
+    return &spx_prob_;
   }
 
   const soplex::VectorRational& GetLowerBounds() const {
@@ -132,7 +132,7 @@ class SoplexSatSolver {
 
   // Set the variable's coefficient for the given constraint row in the linear
   // solver
-  void SetSPXVarCoef(soplex::DSVectorRational& coeffs, const Variable& var,
+  void SetSPXVarCoef(soplex::DSVectorRational* coeffs, const Variable& var,
                      const mpq_class& value);
 
   // Set one of the variable's bounds ('L' - lower or 'U' - upper) in the

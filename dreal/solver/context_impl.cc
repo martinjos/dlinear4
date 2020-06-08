@@ -158,7 +158,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
         // The selected assertions have already been enabled in the LP solver
         int theory_result{
           theory_solver_.CheckSat(box, theory_model,
-                                  sat_solver->GetLinearSolver(),
+                                  sat_solver->GetLinearSolverPtr(),
                                   sat_solver->GetLowerBounds(),
                                   sat_solver->GetUpperBounds(),
                                   sat_solver->GetLinearVarMap())};
