@@ -145,6 +145,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
                     actual_precision);
   }
 
+  x.reDim(colcount);
   bool haveSoln = prob.getPrimalRational(x);
   DREAL_ASSERT(!haveSoln || x.dim() == colcount);
   DREAL_ASSERT(status != SPxSolver::Status::OPTIMAL || haveSoln);
