@@ -39,13 +39,14 @@ SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
       sat_, static_cast<int>(config.sat_default_phase()));
   DREAL_LOG_DEBUG("SoplexSatSolver::Set Default Phase {}",
                   config.sat_default_phase());
-  // Default is maximize
-  spx_prob_.setIntParam(spx_prob_.OBJSENSE, spx_prob_.OBJSENSE_MINIMIZE);
   spx_prob_.setIntParam(spx_prob_.READMODE, spx_prob_.READMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.SOLVEMODE, spx_prob_.SOLVEMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.CHECKMODE, spx_prob_.CHECKMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.SYNCMODE, spx_prob_.SYNCMODE_MANUAL);
   spx_prob_.setIntParam(spx_prob_.VERBOSITY, config_.verbose_simplex());
+  // Default is maximize. Must come after setting SYNCMODE to SYNCMODE_MANUAL
+  // so that _rationalLP is initialized.
+  spx_prob_.setIntParam(spx_prob_.OBJSENSE, spx_prob_.OBJSENSE_MINIMIZE);
 }
 
 SoplexSatSolver::SoplexSatSolver(const Config& config, const vector<Formula>& clauses)
