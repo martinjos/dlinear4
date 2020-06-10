@@ -150,7 +150,11 @@ int SoplexTheorySolver::CheckSat(const Box& box,
 
   x.reDim(colcount);
   bool haveSoln = prob->getPrimalRational(x);
-  DREAL_ASSERT(!haveSoln || x.dim() == colcount);
+  if (haveSoln && x.dim() != colcount) {
+    DREAL_ASSERT(x.dim() >= colcount);
+    DREAL_LOG_WARN("SoplexTheorySolver::CheckSat: colcount = {} but x.dim() = {} after getPrimalRational()",
+                   colcount, x.dim());
+  }
   DREAL_ASSERT(status != SPxSolver::Status::OPTIMAL || haveSoln);
 
   if (config_.use_phase_one_simplex()) {
