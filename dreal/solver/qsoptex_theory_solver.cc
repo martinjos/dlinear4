@@ -1,4 +1,4 @@
-#include "dreal/solver/linear_theory_solver.h"
+#include "dreal/solver/qsoptex_theory_solver.h"
 
 #include <atomic>
 #include <iostream>
@@ -22,7 +22,7 @@ using qsopt_ex::MpqArray;
 using dreal::util::mpq_infty;
 using dreal::util::mpq_ninfty;
 
-LinearTheorySolver::LinearTheorySolver(const Config& config)
+QsoptexTheorySolver::QsoptexTheorySolver(const Config& config)
     : config_{config} {
 }
 
@@ -55,7 +55,7 @@ class TheorySolverStat : public Stat {
 
 }  // namespace
 
-int LinearTheorySolver::CheckSat(const Box& box,
+int QsoptexTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
                                  const mpq_QSprob prob,
                                  const std::map<int, Variable>& var_map) {
@@ -64,7 +64,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
                                    true /* start_timer */);
 
-  DREAL_LOG_TRACE("LinearTheorySolver::CheckSat: Box = \n{}", box);
+  DREAL_LOG_TRACE("QsoptexTheorySolver::CheckSat: Box = \n{}", box);
 
   int status = -1;
   int lp_status = -1;
@@ -82,7 +82,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   for (const pair<int, Variable>& kv : var_map) {
     if (!model_.has_variable(kv.second)) {
       // Variable should already be present
-      DREAL_LOG_WARN("LinearTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
+      DREAL_LOG_WARN("QsoptexTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
       model_.Add(kv.second);
     }
   }
@@ -123,14 +123,14 @@ int LinearTheorySolver::CheckSat(const Box& box,
   }
   mpq_clear(temp);
   if (lp_status == QS_EXACT_UNSAT || rowcount == 0) {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: no need to call LP solver");
+    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: no need to call LP solver");
     return lp_status;
   }
 
   // Now we call the solver
   lp_status = -1;
   int sat_status = -1;
-  DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: calling QSopt_ex (phase {})",
+  DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: calling QSopt_ex (phase {})",
                   config_.use_phase_one_simplex() ? "one" : "two");
 
   mpq_class actual_precision{precision_};
@@ -145,7 +145,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   if (status) {
     throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
   } else {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
+    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
                     actual_precision);
   }
 
@@ -167,7 +167,7 @@ int LinearTheorySolver::CheckSat(const Box& box,
   }
 
   if (sat_status == QS_EXACT_UNKNOWN) {
-    DREAL_LOG_DEBUG("LinearTheorySolver::CheckSat: QSopt_ex failed to return a result");
+    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex failed to return a result");
   }
 
   switch (sat_status) {
@@ -194,12 +194,12 @@ int LinearTheorySolver::CheckSat(const Box& box,
   return sat_status;
 }
 
-const Box& LinearTheorySolver::GetModel() const {
-  DREAL_LOG_DEBUG("LinearTheorySolver::GetModel():\n{}", model_);
+const Box& QsoptexTheorySolver::GetModel() const {
+  DREAL_LOG_DEBUG("QsoptexTheorySolver::GetModel():\n{}", model_);
   return model_;
 }
 
-const LiteralSet& LinearTheorySolver::GetExplanation() const {
+const LiteralSet& QsoptexTheorySolver::GetExplanation() const {
   return explanation_;
 }
 

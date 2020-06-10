@@ -21,30 +21,30 @@
 
 namespace dreal {
 
-class SatSolver {
+class QsoptexSatSolver {
  public:
   // Boolean model + Theory model.
   using Model = std::pair<std::vector<Literal>, std::vector<Literal>>;
 
-  /// Constructs a SatSolver.
-  explicit SatSolver(const Config& config);
+  /// Constructs a QsoptexSatSolver.
+  explicit QsoptexSatSolver(const Config& config);
 
-  /// Constructs a SatSolver while asserting @p clauses.
-  SatSolver(const Config& config, const std::vector<Formula>& clauses);
+  /// Constructs a QsoptexSatSolver while asserting @p clauses.
+  QsoptexSatSolver(const Config& config, const std::vector<Formula>& clauses);
 
   /// Deleted copy constructor.
-  SatSolver(const SatSolver&) = delete;
+  QsoptexSatSolver(const QsoptexSatSolver&) = delete;
 
   /// Deleted move constructor.
-  SatSolver(SatSolver&&) = delete;
+  QsoptexSatSolver(QsoptexSatSolver&&) = delete;
 
   /// Deleted copy-assignment operator.
-  SatSolver& operator=(const SatSolver&) = delete;
+  QsoptexSatSolver& operator=(const QsoptexSatSolver&) = delete;
 
   /// Deleted move-assignment operator.
-  SatSolver& operator=(SatSolver&&) = delete;
+  QsoptexSatSolver& operator=(QsoptexSatSolver&&) = delete;
 
-  ~SatSolver();
+  ~QsoptexSatSolver();
 
   /// Adds a formula @p f to the solver.
   ///

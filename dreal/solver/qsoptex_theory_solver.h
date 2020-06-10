@@ -16,10 +16,10 @@
 namespace dreal {
 
 /// Theory solver for linear theory over the Reals.
-class LinearTheorySolver {
+class QsoptexTheorySolver {
  public:
-  LinearTheorySolver() = delete;
-  explicit LinearTheorySolver(const Config& config);
+  QsoptexTheorySolver() = delete;
+  explicit QsoptexTheorySolver(const Config& config);
 
   /// Checks consistency. Returns true if there is a satisfying
   /// assignment. Otherwise, return false.
