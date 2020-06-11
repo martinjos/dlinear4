@@ -146,6 +146,15 @@ void MainProgram::AddOptions() {
            "Use phase one simplex in linear problems.\n",
            "--phase-one-simplex");
 
+  auto* const lp_solver_option_validator = new ez::ezOptionValidator(
+      "t", "in", "soplex,qsoptex");
+  opt_.add("soplex" /* Default */, false /* Required? */,
+           1 /* Number of args expected. */,
+           0 /* Delimiter if expecting multiple args. */,
+           "LP (i.e. simplex) solver to use."
+           " One of these (default = soplex): qsoptex, soplex.\n",
+           "--lp-solver", lp_solver_option_validator);
+
   auto* const verbose_simplex_option_validator = new ez::ezOptionValidator(
       "s4", "in", "0,1,2,3,4,5");
   opt_.add("0" /* Default */, false /* Required? */,
@@ -365,6 +374,17 @@ void MainProgram::ExtractOptions() {
     config_.mutable_use_phase_one_simplex().set_from_command_line(true);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --phase-one-simplex = {}",
                     config_.use_phase_one_simplex());
+  }
+
+  // --lp-solver
+  if (opt_.isSet("--lp-solver")) {
+    string lp_solver;
+    opt_.get("--lp-solver")->getString(lp_solver);
+    Config::LPSolver val = lp_solver == "qsoptex" ? Config::QSOPTEX
+                                                  : Config::SOPLEX;
+    config_.mutable_lp_solver().set_from_command_line(val);
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --lp-solver = {} ({})",
+                    config_.lp_solver(), lp_solver);
   }
 
   // --verbose-simplex

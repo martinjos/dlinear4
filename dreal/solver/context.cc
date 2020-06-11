@@ -2,16 +2,27 @@
 
 #include <utility>
 
-#include "dreal/solver/context_impl.h"
+#include "dreal/solver/soplex_context_impl.h"
+#include "dreal/solver/qsoptex_context_impl.h"
 #include "dreal/util/exception.h"
 #include "dreal/util/logging.h"
 #include "dreal/version.h"
 
 using std::make_unique;
+using std::unique_ptr;
 using std::string;
 using std::vector;
 
 namespace dreal {
+
+unique_ptr<Context::Impl> Context::make_impl(Config config) {
+  if (config.lp_solver() == Config::QSOPTEX) {
+    return make_unique<Context::QsoptexImpl>(config);
+  } else {
+    DREAL_ASSERT(config.lp_solver() == Config::SOPLEX);
+    return make_unique<Context::SoplexImpl>(config);
+  }
+}
 
 Context::Context() : Context{Config{}} {}
 
@@ -20,7 +31,7 @@ Context::Context(Context&& context) noexcept
 
 Context::~Context() = default;
 
-Context::Context(Config config) : impl_{make_unique<Impl>(config)} {}
+Context::Context(Config config) : impl_{make_impl(config)} {}
 
 void Context::Assert(const Formula& f) { impl_->Assert(f); }
 

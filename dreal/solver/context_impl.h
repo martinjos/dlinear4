@@ -7,8 +7,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "dreal/solver/soplex_sat_solver.h"
-#include "dreal/solver/soplex_theory_solver.h"
 #include "dreal/util/scoped_vector.h"
 
 namespace dreal {
@@ -24,13 +22,14 @@ class Context::Impl {
   Impl& operator=(Impl&&) = delete;
   ~Impl() = default;
 
-  void Assert(const Formula& f);
+  virtual void Assert(const Formula& f) = 0;
+  virtual void Pop() = 0;
+  virtual void Push() = 0;
+
   optional<Box> CheckSat();
   void DeclareVariable(const Variable& v, bool is_model_variable);
   void SetDomain(const Variable& v, const Expression& lb, const Expression& ub);
   //void Minimize(const std::vector<Expression>& functions);
-  void Pop();
-  void Push();
   void SetInfo(const std::string& key, double val);
   void SetInfo(const std::string& key, const std::string& val);
   void SetInterval(const Variable& v, const mpq_class& lb, const mpq_class& ub);
@@ -43,7 +42,7 @@ class Context::Impl {
   Box& box() { return boxes_.last(); }
   const Box& get_model() { return model_; }
 
- private:
+ protected:
   // Add the variable @p v to the current box. This is used to
   // introduce a non-model variable to solver. For a model variable,
   // `DeclareVariable` should be used. But `DeclareVariable` should be
@@ -52,8 +51,7 @@ class Context::Impl {
   void AddToBox(const Variable& v);
 
   // Returns the current box in the stack.
-  optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box,
-                             SoplexSatSolver* sat_solver);
+  virtual optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box) = 0;
 
   // Marks variable @p v as a model variable
   void mark_model_variable(const Variable& v);
@@ -76,9 +74,7 @@ class Context::Impl {
   ScopedVector<Box> boxes_;
   // Stack of asserted formulas.
   ScopedVector<Formula> stack_;
-  SoplexSatSolver sat_solver_;
   std::unordered_set<Variable::Id> model_variables_;
-  SoplexTheorySolver theory_solver_;
 
   // Stores the result of the latest checksat.
   // Note that if the checksat result was UNSAT, this box holds an empty box.

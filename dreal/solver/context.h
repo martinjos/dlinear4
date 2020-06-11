@@ -130,6 +130,10 @@ class Context {
   // PIMPL idiom to hide internals and to reduce number of '#includes' in this
   // file.
   class Impl;
+  class SoplexImpl;
+  class QsoptexImpl;
+
+  static std::unique_ptr<Context::Impl> make_impl(Config config);
 
   std::unique_ptr<Impl> impl_;
 };

@@ -40,7 +40,7 @@ class SatSolverChecker {
   template <typename SatSolver>
   class Container : public ContainerBase {
    public:
-    Container(const Config& config) : sat_solver_{config} {}
+    explicit Container(const Config& config) : sat_solver_{config} {}
     virtual ~Container() {}
     void AddFormula(const Formula& f) {
       sat_solver_.AddFormula(f);

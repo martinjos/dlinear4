@@ -66,6 +66,17 @@ class Config {
   /// Returns a mutable OptionValue for 'use_phase_one_simplex'.
   OptionValue<bool>& mutable_use_phase_one_simplex();
 
+  enum LPSolver {
+    SOPLEX = 0,
+    QSOPTEX,
+  };
+
+  /// Returns which LP (simplex) solver to use.
+  LPSolver lp_solver() const;
+
+  /// Returns a mutable OptionValue for 'lp_solver'.
+  OptionValue<LPSolver>& mutable_lp_solver();
+
   /// Returns verbosity level for simplex.
   int verbose_simplex() const;
 
@@ -160,6 +171,7 @@ class Config {
   OptionValue<bool> use_worklist_fixpoint_{false};
   OptionValue<bool> use_local_optimization_{false};
   OptionValue<bool> use_phase_one_simplex_{false};
+  OptionValue<LPSolver> lp_solver_{LPSolver::SOPLEX};
   OptionValue<int> verbose_simplex_{0};
   OptionValue<int> number_of_jobs_{1};
   OptionValue<bool> stack_left_box_first_{false};
