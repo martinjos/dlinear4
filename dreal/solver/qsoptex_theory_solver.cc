@@ -136,9 +136,9 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   mpq_class actual_precision{precision_};
   if (config_.use_phase_one_simplex()) {
     status = qsopt_ex::QSdelta_solver(prob, actual_precision.get_mpq_t(), x, NULL, NULL,
-                                      DUAL_SIMPLEX, &lp_status);
+                                      PRIMAL_SIMPLEX, &lp_status);
   } else {
-    status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, DUAL_SIMPLEX,
+    status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, PRIMAL_SIMPLEX,
                                             &sat_status, actual_precision.get_mpq_t());
   }
 

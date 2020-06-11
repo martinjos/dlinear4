@@ -277,17 +277,21 @@ def dreal_cc_googletest(
 def smt2_test(
         name,
         **kwargs):
-    smt2_phased_test(name, phase=1, **kwargs)
-    smt2_phased_test(name, phase=2, **kwargs)
+    for lp_solver in ("soplex", "qsoptex"):
+        for phase in (1, 2):
+            smt2_phased_test(name, lp_solver=lp_solver, phase=phase, **kwargs)
 
 def smt2_phased_test(
         name,
         smt2 = None,
         options = [],
         tags = [],
+        lp_solver = "soplex",
         phase = None,
         **kwargs):
     """Create smt2 test."""
+    if lp_solver not in ("soplex", "qsoptex"):
+        fail("LP solver must be soplex or qsoptex", "lp_solver")
     if phase not in (1, 2): fail("Phase must be 1 or 2", "phase")
     if not smt2:
         smt2 = name + ".smt2"
@@ -296,12 +300,13 @@ def smt2_phased_test(
         smt2 + "*",
     ])
     native.py_test(
-        name = "{}_phase_{}".format(name, phase),
+        name = "{}_{}_phase_{}".format(name, lp_solver, phase),
         args = [
             "$(location //dreal:dreal)",
             "$(location %s)" % smt2,
             "$(location %s)" % expected,
             "$(locations //:qsopt-ex-lib)",
+            lp_solver,
             str(phase),
         ] + options,
         tags = tags + ["smt2"],

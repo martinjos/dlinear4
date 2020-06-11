@@ -22,14 +22,20 @@ expected_output_filename = sys.argv[3]
 # 4rd Argument: qsopt_ex lib directory
 qsoptex_lib_dir = sys.argv[4]
 
-# 5th Argument: simplex phase
-phase = int(sys.argv[5])
+# 5th Argument: LP solver
+lp_solver = sys.argv[5]
+assert lp_solver in ("soplex", "qsoptex")
+
+# 6th Argument: simplex phase
+phase = int(sys.argv[6])
 assert phase in (1, 2)
 
-options = sys.argv[6:]
+options = sys.argv[7:]
 
 if phase == 1:
     options = ["--phase-one-simplex"] + options
+
+options = ["--lp-solver", lp_solver] + options
 
 with open(expected_output_filename, "r") as myfile:
     expected_output = myfile.read().strip().splitlines()
