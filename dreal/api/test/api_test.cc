@@ -13,6 +13,11 @@ namespace {
 class ApiTest : public ::testing::Test {
   DrakeSymbolicGuard guard_;
  protected:
+  ApiTest() = delete;
+  explicit ApiTest(Config::LPSolver lp_solver) : guard_{lp_solver} {
+    config_.mutable_lp_solver() = lp_solver;
+  }
+
   const Variable x_{"x", Variable::Type::CONTINUOUS};
   const Variable y_{"y", Variable::Type::CONTINUOUS};
   const Variable z_{"z", Variable::Type::CONTINUOUS};

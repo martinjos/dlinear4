@@ -109,17 +109,39 @@ static void do_example_test(Context& ctx) {
   cerr << *result << endl;
 }
 
-GTEST_TEST(Test, ExamplePhase1) {
-  DrakeSymbolicGuard guard_;
-  Context ctx;
-  ctx.mutable_config().mutable_use_phase_one_simplex() = true;
+GTEST_TEST(Test, ExampleSoplexPhase1) {
+  DrakeSymbolicGuard guard_{Config::SOPLEX};
+  Config config;
+  config.mutable_lp_solver() = Config::SOPLEX;
+  config.mutable_use_phase_one_simplex() = true;
+  Context ctx{config};
   do_example_test(ctx);
 }
 
-GTEST_TEST(Test, ExamplePhase2) {
-  DrakeSymbolicGuard guard_;
-  Context ctx;
-  ctx.mutable_config().mutable_use_phase_one_simplex() = false;
+GTEST_TEST(Test, ExampleSoplexPhase2) {
+  DrakeSymbolicGuard guard_{Config::SOPLEX};
+  Config config;
+  config.mutable_lp_solver() = Config::SOPLEX;
+  config.mutable_use_phase_one_simplex() = false;
+  Context ctx{config};
+  do_example_test(ctx);
+}
+
+GTEST_TEST(Test, ExampleQsoptexPhase1) {
+  DrakeSymbolicGuard guard_{Config::QSOPTEX};
+  Config config;
+  config.mutable_lp_solver() = Config::QSOPTEX;
+  config.mutable_use_phase_one_simplex() = true;
+  Context ctx{config};
+  do_example_test(ctx);
+}
+
+GTEST_TEST(Test, ExampleQsoptexPhase2) {
+  DrakeSymbolicGuard guard_{Config::QSOPTEX};
+  Config config;
+  config.mutable_lp_solver() = Config::QSOPTEX;
+  config.mutable_use_phase_one_simplex() = false;
+  Context ctx{config};
   do_example_test(ctx);
 }
 

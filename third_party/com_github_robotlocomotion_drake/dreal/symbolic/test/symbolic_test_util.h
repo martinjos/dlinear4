@@ -27,8 +27,8 @@ enum LPSolver {
 };
 
 struct DrakeSymbolicGuard {
-  LPSolver solver_;
-  DrakeSymbolicGuard(LPSolver solver = QSOPTEX) : solver_{solver} {
+  int solver_;
+  DrakeSymbolicGuard(int solver = QSOPTEX) : solver_{solver} {
     if (solver_ == QSOPTEX) {
       dreal::qsopt_ex::QSXStart();
       dreal::util::InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);

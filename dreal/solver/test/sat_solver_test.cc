@@ -10,13 +10,23 @@
 #define DREAL_TEST_F_SATSOLVERS(Class, Method) \
     class DRealTestFSatSolvers_##Class##_##Method : public Class { \
      protected: \
+      DRealTestFSatSolvers_##Class##_##Method() = delete; \
+      DRealTestFSatSolvers_##Class##_##Method(Config::LPSolver lp_solver) : Class{lp_solver} {} \
       void DRealTestFSatSolversImpl(); \
     }; \
-    TEST_F(DRealTestFSatSolvers_##Class##_##Method, Method##_Soplex) { \
+    class DRealTestFSatSolvers_##Class##_##Method##_Soplex : public DRealTestFSatSolvers_##Class##_##Method { \
+     protected: \
+      DRealTestFSatSolvers_##Class##_##Method##_Soplex() : DRealTestFSatSolvers_##Class##_##Method{Config::SOPLEX} {} \
+    }; \
+    class DRealTestFSatSolvers_##Class##_##Method##_Qsoptex : public DRealTestFSatSolvers_##Class##_##Method { \
+     protected: \
+      DRealTestFSatSolvers_##Class##_##Method##_Qsoptex() : DRealTestFSatSolvers_##Class##_##Method{Config::QSOPTEX} {} \
+    }; \
+    TEST_F(DRealTestFSatSolvers_##Class##_##Method##_Soplex, Method##_Soplex) { \
       sat_.Init<SoplexSatSolver>(config_); \
       DRealTestFSatSolversImpl(); \
     } \
-    TEST_F(DRealTestFSatSolvers_##Class##_##Method, Method##_Qsoptex) { \
+    TEST_F(DRealTestFSatSolvers_##Class##_##Method##_Qsoptex, Method##_Qsoptex) { \
       sat_.Init<QsoptexSatSolver>(config_); \
       DRealTestFSatSolversImpl(); \
     } \
@@ -86,7 +96,8 @@ class SatSolverChecker {
 class SatSolverTest : public ::testing::Test {
   DrakeSymbolicGuard guard_;
  protected:
-  SatSolverTest() {
+  SatSolverTest() = delete;
+  explicit SatSolverTest(Config::LPSolver lp_solver) : guard_{lp_solver} {
     //config_.mutable_verbose_simplex() = 5;
   }
 
