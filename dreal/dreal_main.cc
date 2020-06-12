@@ -457,16 +457,22 @@ void MainProgram::ExtractOptions() {
 }
 
 void MainProgram::Init() {
-  //qsopt_ex::QSXStart();
-  //InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
-  InftyStart(soplex::infinity);
+  if (config_.lp_solver() == Config::QSOPTEX) {
+    qsopt_ex::QSXStart();
+    InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
+  } else {
+    DREAL_ASSERT(config_.lp_solver() == Config::SOPLEX);
+    InftyStart(soplex::infinity);
+  }
   Expression::InitConstants();
 }
 
 void MainProgram::DeInit() {
   Expression::DeInitConstants();
   InftyFinish();
-  //qsopt_ex::QSXFinish();
+  if (config_.lp_solver() == Config::QSOPTEX) {
+    qsopt_ex::QSXFinish();
+  }
 }
 
 int MainProgram::Run() {

@@ -19,11 +19,12 @@ dreal_cc_library(
     hdrs = [
         "config.h",
     ],
-    visibility = [
-        "//dreal:__pkg__",
-        "//dreal/contractor:__pkg__",
-        "//dreal/optimization:__pkg__",
-    ],
+    #visibility = [
+    #    "//dreal:__pkg__",
+    #    "//dreal/contractor:__pkg__",
+    #    "//dreal/optimization:__pkg__",
+    #],
+    visibility = ["//visibility:public"],
     deps = [
         #":brancher",
         "//dreal/util:box",

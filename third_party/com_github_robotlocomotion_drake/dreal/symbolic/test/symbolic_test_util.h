@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <vector>
+#include <cassert>
 
 #include <gtest/gtest.h>
 
@@ -18,17 +19,31 @@ namespace drake {
 namespace symbolic {
 namespace test {
 
+// Important: must be defined the same as dreal::Config::LPSolver in dreal/solver/config.h
+// (We can't include that file here, as it leads to namespace clashes.)
+enum LPSolver {
+  SOPLEX = 0,
+  QSOPTEX,
+};
+
 struct DrakeSymbolicGuard {
-  DrakeSymbolicGuard() {
-    //dreal::qsopt_ex::QSXStart();
-    //dreal::util::InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
-    dreal::util::InftyStart(soplex::infinity);
+  LPSolver solver_;
+  DrakeSymbolicGuard(LPSolver solver = QSOPTEX) : solver_{solver} {
+    if (solver_ == QSOPTEX) {
+      dreal::qsopt_ex::QSXStart();
+      dreal::util::InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
+    } else {
+      assert(solver_ == SOPLEX);
+      dreal::util::InftyStart(soplex::infinity);
+    }
     Expression::InitConstants();
   }
   ~DrakeSymbolicGuard() {
     Expression::DeInitConstants();
     dreal::util::InftyFinish();
-    //dreal::qsopt_ex::QSXFinish();
+    if (solver_ == QSOPTEX) {
+      dreal::qsopt_ex::QSXFinish();
+    }
   }
 };
 
