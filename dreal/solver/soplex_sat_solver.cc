@@ -39,6 +39,9 @@ SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
       sat_, static_cast<int>(config.sat_default_phase()));
   DREAL_LOG_DEBUG("SoplexSatSolver::Set Default Phase {}",
                   config.sat_default_phase());
+  spx_prob_.setRealParam(spx_prob_.FEASTOL, 0);
+  spx_prob_.setRealParam(spx_prob_.OPTTOL, 0);
+  spx_prob_.setBoolParam(spx_prob_.RATREC, false);
   spx_prob_.setIntParam(spx_prob_.READMODE, spx_prob_.READMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.SOLVEMODE, spx_prob_.SOLVEMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.CHECKMODE, spx_prob_.CHECKMODE_RATIONAL);
