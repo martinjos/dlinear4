@@ -45,10 +45,9 @@ SoplexSatSolver::SoplexSatSolver(const Config& config) : sat_{picosat_init()},
   spx_prob_.setIntParam(spx_prob_.READMODE, spx_prob_.READMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.SOLVEMODE, spx_prob_.SOLVEMODE_RATIONAL);
   spx_prob_.setIntParam(spx_prob_.CHECKMODE, spx_prob_.CHECKMODE_RATIONAL);
-  spx_prob_.setIntParam(spx_prob_.SYNCMODE, spx_prob_.SYNCMODE_MANUAL);
+  spx_prob_.setIntParam(spx_prob_.SYNCMODE, spx_prob_.SYNCMODE_AUTO);
   spx_prob_.setIntParam(spx_prob_.VERBOSITY, config_.verbose_simplex());
-  // Default is maximize. Must come after setting SYNCMODE to SYNCMODE_MANUAL
-  // so that _rationalLP is initialized.
+  // Default is maximize.
   spx_prob_.setIntParam(spx_prob_.OBJSENSE, spx_prob_.OBJSENSE_MINIMIZE);
 }
 
@@ -296,6 +295,8 @@ void SoplexSatSolver::SetSPXVarBound(const Variable& var, const char type,
 
 void SoplexSatSolver::ResetLinearProblem(const Box& box) {
   DREAL_LOG_TRACE("SoplexSatSolver::ResetLinearProblem(): Box =\n{}", box);
+  // Omitting to do this seems to cause problems in soplex
+  spx_prob_.clearBasis();
   // Clear constraint bounds
   const int spx_rows{spx_prob_.numRowsRational()};
   DREAL_ASSERT(static_cast<size_t>(spx_rows) == from_spx_row_.size());

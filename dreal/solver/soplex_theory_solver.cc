@@ -134,7 +134,6 @@ int SoplexTheorySolver::CheckSat(const Box& box,
                   config_.use_phase_one_simplex() ? "one" : "two");
 
   mpq_class actual_precision{precision_};
-  prob->syncLPReal();  // Copies (rounded) rational LP into real LP
   status = prob->optimize();
   actual_precision = 0;  // Because we always solve exactly, at present
 
