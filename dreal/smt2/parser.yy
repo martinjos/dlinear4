@@ -409,16 +409,18 @@ term:           TK_TRUE { $$ = new Term(Formula::True()); }
         |       INT { $$ = new Term{convert_int64_to_rational($1)}; }
         |       SYMBOL {
             try {
-                const optional<Expression> expr = driver.lookup_const(*$1);
-                if (expr.has_value()) {
-                    $$ = new Term(*expr);
+                const Smt2Driver::VariableOrConstant& voc = driver.lookup_variable(*$1);
+                if (voc.is_variable()) {
+                  const Variable& var = voc.variable();
+                  if (var.get_type() == Variable::Type::BOOLEAN) {
+                      $$ = new Term(Formula(var));
+                  } else {
+                      $$ = new Term(Expression(var));
+                  }
                 } else {
-                    const Variable& var = driver.lookup_variable(*$1);
-                    if (var.get_type() == Variable::Type::BOOLEAN) {
-                        $$ = new Term(Formula(var));
-                    } else {
-                        $$ = new Term(Expression(var));
-                    }
+                  const Expression& expr = voc.expression();
+                  DREAL_ASSERT(is_constant(expr));
+                  $$ = new Term(expr);
                 }
             } catch (std::runtime_error& e) {
                 std::cerr << @1 << " : " << e.what() << std::endl;

@@ -114,7 +114,7 @@ void Smt2Driver::GetModel() {
 
 Variable Smt2Driver::RegisterVariable(const string& name, const Sort sort) {
   const Variable v{ParseVariableSort(name, sort)};
-  scope_.insert(v.get_name(), v);
+  scope_.insert(v.get_name(), VariableOrConstant(v));
   return v;
 }
 
@@ -139,13 +139,13 @@ string Smt2Driver::MakeUniqueName(const string& name) {
 
 Variable Smt2Driver::DeclareLocalVariable(const string& name, const Sort sort) {
   const Variable v{ParseVariableSort(MakeUniqueName(name), sort)};
-  scope_.insert(name, v);  // v is not inserted under its own name.
+  scope_.insert(name, VariableOrConstant(v));  // v is not inserted under its own name.
   context_.DeclareVariable(
       v, false /* This local variable is not a model variable. */);
   return v;
 }
 
-const Variable& Smt2Driver::lookup_variable(const string& name) {
+const Smt2Driver::VariableOrConstant& Smt2Driver::lookup_variable(const string& name) {
   const auto it = scope_.find(name);
   if (it == scope_.cend()) {
     throw DREAL_RUNTIME_ERROR("{} is an undeclared variable.", name);
@@ -159,15 +159,7 @@ Variable Smt2Driver::ParseVariableSort(const string& name, const Sort s) {
 
 void Smt2Driver::DefineLocalConstant(const string& name, const Expression& value) {
   DREAL_ASSERT(is_constant(value));
-  const_scope_.insert(name, value);
-}
-
-optional<Expression> Smt2Driver::lookup_const(const string& name) {
-  const auto it = const_scope_.find(name);
-  if (it == const_scope_.cend()) {
-    return optional<Expression>();
-  }
-  return it->second;
+  scope_.insert(name, VariableOrConstant(value));
 }
 
 }  // namespace dreal

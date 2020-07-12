@@ -84,17 +84,27 @@ class Smt2Driver {
   /// response to an invocation of the check-sat.
   void GetModel();
 
-  /// Returns a variable associated with a name @p name.
+  class VariableOrConstant {
+   public:
+    explicit VariableOrConstant(const Variable& var) : var_{var}, is_var_{true} {}
+    explicit VariableOrConstant(const Expression& expr) : expr_{expr}, is_var_{false} {}
+    const Variable& variable() const { return var_; }
+    const Expression& expression() const { return expr_; }
+    bool is_variable() const { return is_var_; }
+   private:
+    Variable var_;
+    Expression expr_;
+    bool is_var_;
+  };
+
+  /// Returns a variable or constant expression associated with a name @p name.
   ///
-  /// @throws if no variable is associated with @p name.
-  const Variable& lookup_variable(const std::string& name);
+  /// @throws if no variable or constant expression is associated with @p name.
+  const VariableOrConstant& lookup_variable(const std::string& name);
 
-  /// Returns a constant expression associated with a name @p name.
-  optional<Expression> lookup_const(const std::string& name);
+  void PushScope() { scope_.push(); }
 
-  void PushScope() { scope_.push(); const_scope_.push(); }
-
-  void PopScope() { scope_.pop(); const_scope_.pop(); }
+  void PopScope() { scope_.pop(); }
 
   static Variable ParseVariableSort(const std::string& name, Sort s);
 
@@ -121,11 +131,8 @@ class Smt2Driver {
   /// enable debug output in the bison parser
   bool trace_parsing_{false};
 
-  /** Scoped map from a string to a corresponding Variable. */
-  ScopedUnorderedMap<std::string, Variable> scope_;
-
-  /** Scoped map from a string to a corresponding constant expression. */
-  ScopedUnorderedMap<std::string, Expression> const_scope_;
+  /** Scoped map from a string to a corresponding Variable or constant Expression. */
+  ScopedUnorderedMap<std::string, VariableOrConstant> scope_;
 
   /// Sequential value concatenated to names to make them unique.
   int64_t nextUniqueId_{};
