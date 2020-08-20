@@ -61,10 +61,12 @@ class QsoptexSatSolver {
   void AddLearnedClause(const LiteralSet& literals);
 
   /// Checks the satisfiability of the current configuration.
+  /// Also sets up the linear solver returned by GetLinearSolver().
   ///
   /// @returns a witness, satisfying model if the problem is satisfiable.
   /// @returns nullopt if UNSAT.
-  optional<Model> CheckSat(const Box& box);
+  optional<Model> CheckSat(const Box& box,
+                           const optional<Expression> obj_expr);
 
   // TODO(soonho): Push/Pop cnfizer and predicate_abstractor?
   void Pop();
@@ -121,9 +123,19 @@ class QsoptexSatSolver {
   // Add a variable to the linear solver
   void AddLinearVariable(const Variable& var);
 
+  // Clear the linear solver's objective function
+  void ClearLinearObjective();
+
+  // Set the linear solver's objective function
+  void SetLinearObjective(const Expression& obj_expr);
+
   // Set the variable's coefficient for the given constraint row in the linear
   // solver
   void SetQSXVarCoef(int qsx_row, const Variable& var, const mpq_class& value);
+
+  // Set the variable's coefficient for the objective function in the linear
+  // solver
+  void SetQSXVarObjCoef(const Variable& var, const mpq_class& value);
 
   // Set one of the variable's bounds ('L' - lower or 'U' - upper) in the
   // linear solver, in addition to bounds already asserted.

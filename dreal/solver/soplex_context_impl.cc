@@ -142,6 +142,10 @@ optional<Box> Context::SoplexImpl::CheckSatCore(const ScopedVector<Formula>& sta
   }
 }
 
+void Context::SoplexImpl::MinimizeCore(const Expression& /*obj_expr*/) {
+  throw DREAL_RUNTIME_ERROR("Not implemented.");
+}
+
 void Context::SoplexImpl::Pop() {
   DREAL_LOG_DEBUG("Context::SoplexImpl::Pop()");
   stack_.pop();

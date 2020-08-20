@@ -20,8 +20,12 @@ class Context::QsoptexImpl : public Context::Impl {
   // Returns the current box in the stack.
   optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box);
 
+  void MinimizeCore(const Expression& obj_expr);
+
   QsoptexSatSolver sat_solver_;
   QsoptexTheorySolver theory_solver_;
+  Expression obj_expr_;
+  bool have_obj_;
 };
 
 }  // namespace dreal

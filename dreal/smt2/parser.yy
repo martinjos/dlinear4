@@ -149,8 +149,8 @@ command:
         |       command_define_fun
         |       command_exit
         |       command_get_model
-/*      |       command_maximize  */
-/*      |       command_minimize  */
+        |       command_maximize
+        |       command_minimize
         |       command_pop
         |       command_push
         |       command_set_info
@@ -218,7 +218,6 @@ command_get_model:
                 }
                 ;
 
-/*
 command_maximize: '(' TK_MAXIMIZE term ')' {
                       driver.mutable_context().Maximize($3->expression());
                       delete $3;
@@ -230,7 +229,6 @@ command_minimize: '(' TK_MINIMIZE term ')' {
                       delete $3;
                 }
                 ;
-*/
 
 command_set_info:
                 '(' TK_SET_INFO KEYWORD SYMBOL ')' {

@@ -21,7 +21,7 @@ using std::vector;
 Context::QsoptexImpl::QsoptexImpl() : Context::QsoptexImpl{Config{}} {}
 
 Context::QsoptexImpl::QsoptexImpl(Config config)
-    : Context::Impl{config}, sat_solver_{config_}, theory_solver_{config_} {}
+    : Context::Impl{config}, sat_solver_{config_}, theory_solver_{config_}, have_obj_{false} {}
 
 void Context::QsoptexImpl::Assert(const Formula& f) {
   if (is_true(f)) {
@@ -85,7 +85,10 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
 
     // The box is passed in to the SAT solver solely to provide the LP solver
     // with initial bounds on the numerical variables.
-    const auto optional_model = sat_solver_.CheckSat(box);
+    const auto optional_model =
+      sat_solver_.CheckSat(box,
+                           have_obj_ ? optional<Expression>(obj_expr_) :
+                                       optional<Expression>());
     if (optional_model) {
       const vector<pair<Variable, bool>>& boolean_model{optional_model->first};
       for (const pair<Variable, bool>& p : boolean_model) {
@@ -101,7 +104,8 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
         int theory_result{
           theory_solver_.CheckSat(box, theory_model,
                                   sat_solver_.GetLinearSolver(),
-                                  sat_solver_.GetLinearVarMap())};
+                                  sat_solver_.GetLinearVarMap(),
+                                  have_obj_)};
         if (theory_result == QS_EXACT_DELTA_SAT) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(
@@ -138,6 +142,12 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
       return {};
     }
   }
+}
+
+void Context::QsoptexImpl::MinimizeCore(const Expression& obj_expr) {
+  DREAL_LOG_DEBUG("ContextImpl::Minimize(): Objective function is of kind {}", obj_expr.get_kind());
+  obj_expr_ = obj_expr;
+  have_obj_ = true;
 }
 
 void Context::QsoptexImpl::Pop() {

@@ -58,7 +58,8 @@ class TheorySolverStat : public Stat {
 int QsoptexTheorySolver::CheckSat(const Box& box,
                                  const std::vector<Literal>& assertions,
                                  const mpq_QSprob prob,
-                                 const std::map<int, Variable>& var_map) {
+                                 const std::map<int, Variable>& var_map,
+                                 const bool /*have_obj*/) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),

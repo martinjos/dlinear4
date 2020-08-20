@@ -29,7 +29,7 @@ class Context::Impl {
   optional<Box> CheckSat();
   void DeclareVariable(const Variable& v, bool is_model_variable);
   void SetDomain(const Variable& v, const Expression& lb, const Expression& ub);
-  //void Minimize(const std::vector<Expression>& functions);
+  void Minimize(const std::vector<Expression>& functions);
   void SetInfo(const std::string& key, double val);
   void SetInfo(const std::string& key, const std::string& val);
   void SetInterval(const Variable& v, const mpq_class& lb, const mpq_class& ub);
@@ -52,6 +52,8 @@ class Context::Impl {
 
   // Returns the current box in the stack.
   virtual optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box) = 0;
+
+  virtual void MinimizeCore(const Expression& obj_expr) = 0;
 
   // Marks variable @p v as a model variable
   void mark_model_variable(const Variable& v);

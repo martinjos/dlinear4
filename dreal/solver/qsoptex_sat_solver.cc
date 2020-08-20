@@ -179,11 +179,21 @@ set<int> QsoptexSatSolver::GetMainActiveLiterals() const {
     return lits;
 }
 
-optional<QsoptexSatSolver::Model> QsoptexSatSolver::CheckSat(const Box& box) {
+optional<QsoptexSatSolver::Model>
+QsoptexSatSolver::CheckSat(const Box& box,
+                           const optional<Expression> obj_expr) {
   static SatSolverStat stat{DREAL_LOG_INFO_ENABLED};
   DREAL_LOG_DEBUG("QsoptexSatSolver::CheckSat(#vars = {}, #clauses = {})",
                   picosat_variables(sat_),
                   picosat_added_original_clauses(sat_));
+
+  if (obj_expr.has_value()) {
+    DREAL_LOG_TRACE("QsoptexSatSolver::CheckSat: Objective = {}", *obj_expr);
+    SetLinearObjective(*obj_expr);
+  } else {
+    ClearLinearObjective();
+  }
+
   stat.num_check_sat_++;
   // Call SAT solver.
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_,
@@ -272,6 +282,22 @@ void QsoptexSatSolver::SetQSXVarCoef(int qsx_row, const Variable& var,
   mpq_init(c_value);
   mpq_set(c_value, value.get_mpq_t());
   mpq_QSchange_coef(qsx_prob_, qsx_row, it->second, c_value);
+  mpq_clear(c_value);
+}
+
+void QsoptexSatSolver::SetQSXVarObjCoef(const Variable& var,
+                                        const mpq_class& value) {
+  const auto it = to_qsx_col_.find(var.get_id());
+  if (it == to_qsx_col_.end()) {
+    throw DREAL_RUNTIME_ERROR("Variable undefined: {}", var);
+  }
+  if (value <= mpq_ninfty() || value >= mpq_infty()) {
+    throw DREAL_RUNTIME_ERROR("LP coefficient too large: {}", value);
+  }
+  mpq_t c_value;
+  mpq_init(c_value);
+  mpq_set(c_value, value.get_mpq_t());
+  mpq_QSchange_objcoef(qsx_prob_, it->second, c_value);
   mpq_clear(c_value);
 }
 
@@ -618,6 +644,50 @@ void QsoptexSatSolver::AddLinearVariable(const Variable& var) {
   to_qsx_col_.emplace(make_pair(var.get_id(), qsx_col));
   from_qsx_col_[qsx_col] = var;
   DREAL_LOG_DEBUG("QsoptexSatSolver::AddLinearVariable({} ↦ {})", var, qsx_col);
+}
+
+void QsoptexSatSolver::ClearLinearObjective() {
+  const int qsx_colcount{mpq_QSget_colcount(qsx_prob_)};
+  mpq_t c_value;
+  mpq_init(c_value);  // Initialized to zero
+  for (int i = 0; i < qsx_colcount; ++i) {
+    mpq_QSchange_objcoef(qsx_prob_, i, c_value);
+  }
+  mpq_clear(c_value);
+}
+
+void QsoptexSatSolver::SetLinearObjective(const Expression& expr) {
+  ClearLinearObjective();
+  if (is_constant(expr)) {
+    if (0 != get_constant_value(expr)) {
+      throw DREAL_RUNTIME_ERROR("Expression {} not supported in objective", expr);
+    }
+  } else if (is_variable(expr)) {
+    SetQSXVarObjCoef(get_variable(expr), 1);
+  } else if (is_multiplication(expr)) {
+    std::map<Expression,Expression> map = get_base_to_exponent_map_in_multiplication(expr);
+    if (map.size() != 1
+     || !is_variable(map.begin()->first)
+     || !is_constant(map.begin()->second)
+     || get_constant_value(map.begin()->second) != 1) {
+      throw DREAL_RUNTIME_ERROR("Expression {} not supported in objective", expr);
+    }
+    SetQSXVarObjCoef(get_variable(map.begin()->first),
+                     get_constant_in_multiplication(expr));
+  } else if (is_addition(expr)) {
+    const std::map<Expression,mpq_class>& map = get_expr_to_coeff_map_in_addition(expr);
+    if (0 != get_constant_in_addition(expr)) {
+      throw DREAL_RUNTIME_ERROR("Expression {} not supported in objective", expr);
+    }
+    for (const pair<Expression,mpq_class>& pair : map) {
+      if (!is_variable(pair.first)) {
+        throw DREAL_RUNTIME_ERROR("Expression {} not supported in objective", expr);
+      }
+      SetQSXVarObjCoef(get_variable(pair.first), pair.second);
+    }
+  } else {
+      throw DREAL_RUNTIME_ERROR("Expression {} not supported in objective", expr);
+  }
 }
 
 const std::map<int, Variable>& QsoptexSatSolver::GetLinearVarMap() const {

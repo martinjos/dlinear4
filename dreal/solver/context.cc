@@ -50,7 +50,6 @@ void Context::DeclareVariable(const Variable& v, const Expression& lb,
 
 void Context::Exit() { DREAL_LOG_DEBUG("Context::Exit()"); }
 
-#if 0
 void Context::Minimize(const Expression& f) { impl_->Minimize({f}); }
 
 void Context::Minimize(const vector<Expression>& functions) {
@@ -58,7 +57,6 @@ void Context::Minimize(const vector<Expression>& functions) {
 }
 
 void Context::Maximize(const Expression& f) { impl_->Minimize({-f}); }
-#endif
 
 void Context::Pop(int n) {
   DREAL_LOG_DEBUG("Context::Pop({})", n);

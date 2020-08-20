@@ -25,7 +25,8 @@ class QsoptexTheorySolver {
   /// assignment. Otherwise, return false.
   int CheckSat(const Box& box, const std::vector<Literal>& assertions,
                const qsopt_ex::mpq_QSprob prob,
-               const std::map<int, Variable>& var_map);
+               const std::map<int, Variable>& var_map,
+               const bool have_obj);
 
   /// Gets a satisfying Model.
   const Box& GetModel() const;

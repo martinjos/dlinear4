@@ -116,86 +116,15 @@ void Context::Impl::SetDomain(const Variable& v, const Expression& lb,
   SetInterval(v, lb_fp, ub_fp);
 }
 
-#if 0
 void Context::Impl::Minimize(const vector<Expression>& functions) {
-  // Given objective functions f₁(x), ... fₙ(x) and the current
-  // constraints ϕᵢ which involves x. this method encodes them into a
-  // universally quantified formula ψ:
-  //
-  //    ψ = ∀y. (⋀ᵢ ϕᵢ(y)) → (f₁(x) ≤ f₁(y) ∨ ... ∨ fₙ(x) ≤ fₙ(y))
-  //      = ∀y. ¬(⋀ᵢ ϕᵢ(y)) ∨ (f₁(x) ≤ f₁(y) ∨ ... ∨ fₙ(x) ≤ fₙ(y))
-  //      = ∀y. (∨ᵢ ¬ϕᵢ(y)) ∨ (f₁(x) ≤ f₁(y) ∨ ... ∨ fₙ(x) ≤ fₙ(y)).
-  //
-  // Here we introduce existential variables zᵢ for fᵢ(x) to have
-  //
-  //    ψ =  ∃z₁...zₙ. (z₁ = f₁(x) ∧ ... ∧ zₙ = fₙ(x)) ∧
-  //              [∀y. (∨ᵢ ¬ϕᵢ(y)) ∨ (z₁ ≤ f₁(y) ∨ ... ∨ zₙ ≤ fₙ(y))].
-  //
-  // Note that when we have more than one objective function, this
-  // encoding scheme denotes Pareto optimality.
-  //
-  // To construct ϕᵢ(y), we need to traverse both `box()` and
-  // `stack_` because some of the asserted formulas are translated
-  // and applied into `box()`.
-  set<Formula> set_of_negated_phi;  // Collects ¬ϕᵢ(y).
-  ExpressionSubstitution subst;  // Maps xᵢ ↦ yᵢ to build f(y₁, ..., yₙ).
-  Variables quantified_variables;  // {y₁, ... yₙ}
-  Variables x_vars;
-  for (const Expression& f : functions) {
-    x_vars += f.GetVariables();
+  if (functions.size() != 1) {
+    DREAL_RUNTIME_ERROR("Must have exactly one objective function");
   }
 
-  // Collects side-constraints related to the cost functions.
-  unordered_set<Formula> constraints;
-  bool keep_going = true;
-  while (keep_going) {
-    keep_going = false;
-    for (const Formula& constraint : stack_) {
-      if (constraints.find(constraint) == constraints.end() &&
-          HaveIntersection(x_vars, constraint.GetFreeVariables())) {
-        x_vars += constraint.GetFreeVariables();
-        constraints.insert(constraint);
-        keep_going = true;
-      }
-    }
-  }
+  const Expression& obj_expr{functions[0].Expand()};
 
-  for (const Variable& x_i : x_vars) {
-    // We add postfix '_' to name y_i
-    const Variable y_i{x_i.get_name() + "_", x_i.get_type()};
-    quantified_variables.insert(y_i);
-    subst.emplace(x_i, y_i);
-    // If `box()[x_i]` has a finite bound, let's add that information in
-    // set_of_negated_phi as a constraint on y_i.
-    const Box::Interval& bound_on_x_i{box()[x_i]};
-    const mpq_class& lb_x_i{bound_on_x_i.lb()};
-    const mpq_class& ub_x_i{bound_on_x_i.ub()};
-    if (isfinite(lb_x_i)) {
-      set_of_negated_phi.insert(!(lb_x_i <= y_i));
-    }
-    if (isfinite(ub_x_i)) {
-      set_of_negated_phi.insert(!(y_i <= ub_x_i));
-    }
-  }
-
-  for (const Formula& constraint : constraints) {
-    set_of_negated_phi.insert(!constraint.Substitute(subst));
-  }
-
-  Formula quantified{make_disjunction(set_of_negated_phi)};  // ∨ᵢ ¬ϕᵢ(y)
-  Formula new_z_block;  // This will have (z₁ = f₁(x) ∧ ... ∧ zₙ = fₙ(x)).
-  static int counter{0};
-  for (const Expression& f_i : functions) {
-    const Variable z_i{fmt::format("Z{}", counter++),
-                       Variable::Type::CONTINUOUS};
-    AddToBox(z_i);
-    new_z_block = new_z_block && (z_i == f_i);
-    quantified = quantified || (z_i <= f_i.Substitute(subst));
-  }
-  const Formula psi{new_z_block && forall(quantified_variables, quantified)};
-  return Assert(psi);
+  MinimizeCore(obj_expr);
 }
-#endif
 
 void Context::Impl::SetInfo(const string& key, const double val) {
   DREAL_LOG_DEBUG("ContextImpl::SetInfo({} ↦ {})", key, val);
