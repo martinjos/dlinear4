@@ -66,7 +66,7 @@ class QsoptexSatSolver {
   /// @returns a witness, satisfying model if the problem is satisfiable.
   /// @returns nullopt if UNSAT.
   optional<Model> CheckSat(const Box& box,
-                           const optional<Expression> obj_expr);
+                           const optional<Expression> obj_expr = optional<Expression>());
 
   // TODO(soonho): Push/Pop cnfizer and predicate_abstractor?
   void Pop();

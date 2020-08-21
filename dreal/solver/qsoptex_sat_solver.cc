@@ -190,7 +190,13 @@ QsoptexSatSolver::CheckSat(const Box& box,
   if (obj_expr.has_value()) {
     DREAL_LOG_TRACE("QsoptexSatSolver::CheckSat: Objective = {}", *obj_expr);
     SetLinearObjective(*obj_expr);
-  } else {
+    if (!config_.use_phase_one_simplex()) {
+      // Artificial variables would interfere with objective function (and in
+      // any case, the solver needs both phases).
+      throw DREAL_RUNTIME_ERROR("Optimization requires --phase-one-simplex");
+    }
+  } else if (config_.use_phase_one_simplex()) {
+    // Implies no artificial variables, so we can safely do this.
     ClearLinearObjective();
   }
 

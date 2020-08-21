@@ -100,7 +100,8 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
         // SAT from SATSolver.
         DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckSatCore() - Sat Check = SAT");
 
-        // The selected assertions have already been enabled in the LP solver
+        // The selected assertions (and objective function, where applicable)
+        // have already been enabled in the LP solver
         int theory_result{
           theory_solver_.CheckSat(box, theory_model,
                                   sat_solver_.GetLinearSolver(),
