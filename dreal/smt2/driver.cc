@@ -59,14 +59,26 @@ void Smt2Driver::error(const location& l, const string& m) {
 void Smt2Driver::error(const string& m) { cerr << m << endl; }
 
 void Smt2Driver::CheckSat() {
-  const optional<Box> model{context_.CheckSat()};
-  if (model) {
-    cout << "delta-sat with delta = " << context_.config().precision() << endl;
-    if (context_.config().produce_models()) {
-      cout << *model << endl;
+  if (context_.have_objective()) {
+    const optional<Box> model{context_.CheckOpt()};
+    if (model) {
+      cout << "delta-sat with delta = " << context_.config().precision() << endl;
+      if (context_.config().produce_models()) {
+        cout << *model << endl;
+      }
+    } else {
+      cout << "unsat" << endl;
     }
   } else {
-    cout << "unsat" << endl;
+    const optional<Box> model{context_.CheckSat()};
+    if (model) {
+      cout << "delta-sat with delta = " << context_.config().precision() << endl;
+      if (context_.config().produce_models()) {
+        cout << *model << endl;
+      }
+    } else {
+      cout << "unsat" << endl;
+    }
   }
 }
 

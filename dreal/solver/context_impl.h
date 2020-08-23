@@ -27,6 +27,7 @@ class Context::Impl {
   virtual void Push() = 0;
 
   optional<Box> CheckSat();
+  optional<Box> CheckOpt();
   void DeclareVariable(const Variable& v, bool is_model_variable);
   void SetDomain(const Variable& v, const Expression& lb, const Expression& ub);
   void Minimize(const std::vector<Expression>& functions);
@@ -41,6 +42,7 @@ class Context::Impl {
   const ScopedVector<Formula>& assertions() const;
   Box& box() { return boxes_.last(); }
   const Box& get_model() { return model_; }
+  bool have_objective() const;
 
  protected:
   // Add the variable @p v to the current box. This is used to
@@ -52,6 +54,7 @@ class Context::Impl {
 
   // Returns the current box in the stack.
   virtual optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box) = 0;
+  virtual optional<Box> CheckOptCore(const ScopedVector<Formula>& stack, Box box) = 0;
 
   virtual void MinimizeCore(const Expression& obj_expr) = 0;
 
@@ -81,6 +84,9 @@ class Context::Impl {
   // Stores the result of the latest checksat.
   // Note that if the checksat result was UNSAT, this box holds an empty box.
   Box model_;
+
+  // Keeps track of whether or not there is an objective function.
+  bool have_objective_;
 };
 
 }  // namespace dreal

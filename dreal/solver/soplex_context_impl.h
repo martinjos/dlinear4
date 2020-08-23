@@ -19,6 +19,7 @@ class Context::SoplexImpl : public Context::Impl {
  protected:
   // Returns the current box in the stack.
   optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box);
+  optional<Box> CheckOptCore(const ScopedVector<Formula>& stack, Box box);
 
   void MinimizeCore(const Expression& obj_expr);
 

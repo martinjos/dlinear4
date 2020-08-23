@@ -49,6 +49,10 @@ class Context {
   /// Checks the satisfiability of the asserted formulas.
   optional<Box> CheckSat();
 
+  /// Checks the satisfiability of the asserted formulas, and (where
+  /// possible) optimizes an objective function over them.
+  optional<Box> CheckOpt();
+
   /// Declare a variable @p v. By default @p v is considered as a
   /// model variable. If @p is_model_variable is false, it is declared as
   /// a non-model variable and will not appear in the model.
@@ -124,6 +128,11 @@ class Context {
   /// Returns a representation of a model computed by the solver in
   /// response to an invocation of the check-sat.
   const Box& get_model() const;
+
+  /// Returns whether or not there is an objective function (which may be
+  /// zero). If true, then CheckOpt() must be used, and not CheckSat(). If
+  /// false, then CheckSat() must be used, and not CheckOpt().
+  bool have_objective() const;
 
  private:
   // This header is exposed to external users as a part of API. We use

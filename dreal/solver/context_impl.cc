@@ -71,7 +71,7 @@ bool ParseBooleanOption(const string& key, const string& val) {
 Context::Impl::Impl() : Impl{Config{}} {}
 
 Context::Impl::Impl(Config config)
-    : config_{config} {
+    : config_{config}, have_objective_{false} {
   boxes_.push_back(Box{});
 }
 
@@ -81,6 +81,20 @@ optional<Box> Context::Impl::CheckSat() {
     // In case of delta-sat, do post-processing.
     //Tighten(&(*result), config_.precision());
     DREAL_LOG_DEBUG("ContextImpl::CheckSat() - Found Model\n{}", *result);
+    model_ = ExtractModel(*result);
+    return model_;
+  } else {
+    model_.set_empty();
+    return result;
+  }
+}
+
+optional<Box> Context::Impl::CheckOpt() {
+  auto result = CheckOptCore(stack_, box());
+  if (result) {
+    // In case of delta-sat, do post-processing.
+    //Tighten(&(*result), config_.precision());
+    DREAL_LOG_DEBUG("ContextImpl::CheckOpt() - Found Model\n{}", *result);
     model_ = ExtractModel(*result);
     return model_;
   } else {
@@ -209,6 +223,10 @@ void Context::Impl::mark_model_variable(const Variable& v) {
 
 const ScopedVector<Formula>& Context::Impl::assertions() const {
   return stack_;
+}
+
+bool Context::Impl::have_objective() const {
+  return have_objective_;
 }
 
 }  // namespace dreal

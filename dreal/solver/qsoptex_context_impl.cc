@@ -21,7 +21,7 @@ using std::vector;
 Context::QsoptexImpl::QsoptexImpl() : Context::QsoptexImpl{Config{}} {}
 
 Context::QsoptexImpl::QsoptexImpl(Config config)
-    : Context::Impl{config}, sat_solver_{config_}, theory_solver_{config_}, have_obj_{false} {}
+    : Context::Impl{config}, sat_solver_{config_}, theory_solver_{config_} {}
 
 void Context::QsoptexImpl::Assert(const Formula& f) {
   if (is_true(f)) {
@@ -85,10 +85,8 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
 
     // The box is passed in to the SAT solver solely to provide the LP solver
     // with initial bounds on the numerical variables.
-    const auto optional_model =
-      sat_solver_.CheckSat(box,
-                           have_obj_ ? optional<Expression>(obj_expr_) :
-                                       optional<Expression>());
+    DREAL_ASSERT(!have_objective_);
+    const auto optional_model = sat_solver_.CheckSat(box);
     if (optional_model) {
       const vector<pair<Variable, bool>>& boolean_model{optional_model->first};
       for (const pair<Variable, bool>& p : boolean_model) {
@@ -105,8 +103,7 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
         int theory_result{
           theory_solver_.CheckSat(box, theory_model,
                                   sat_solver_.GetLinearSolver(),
-                                  sat_solver_.GetLinearVarMap(),
-                                  have_obj_)};
+                                  sat_solver_.GetLinearVarMap())};
         if (theory_result == QS_EXACT_DELTA_SAT) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(
@@ -122,6 +119,7 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
             DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckSatCore() - Theory Check = UNKNOWN");
             have_unsolved = true;  // Will prevent return of UNSAT
           }
+          // Force SAT solver to find new regions
           const LiteralSet& explanation{theory_solver_.GetExplanation()};
           DREAL_LOG_DEBUG(
               "Context::QsoptexImpl::CheckSatCore() - size of explanation = {} - stack "
@@ -145,10 +143,107 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
   }
 }
 
+optional<Box> Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
+                                                 Box box) {
+  DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore()");
+  DREAL_LOG_TRACE("Context::QsoptexImpl::CheckOpt: Box =\n{}", box);
+  if (box.empty()) {
+    return {};
+  }
+  // If false ∈ stack, it's UNSAT.
+  for (const auto& f : stack.get_vector()) {
+    if (is_false(f)) {
+      return {};
+    }
+  }
+  // If stack = ∅ or stack = {true}, it's trivially SAT.
+  if (stack.empty() || (stack.size() == 1 && is_true(stack.first()))) {
+    DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Found Model\n{}", box);
+    return box;
+  }
+  bool have_unsolved = false;
+  //bool have_opt_cand = false;  // optimality candidate
+  //mpq_class cur_up, cur_lo;  // Upper and lower bounds of current optimality candidate
+  while (true) {
+    // Note that 'DREAL_CHECK_INTERRUPT' is only defined in setup.py,
+    // when we build dReal python package.
+#ifdef DREAL_CHECK_INTERRUPT
+    if (g_interrupted) {
+      DREAL_LOG_DEBUG("KeyboardInterrupt(SIGINT) Detected.");
+      throw std::runtime_error("KeyboardInterrupt(SIGINT) Detected.");
+    }
+#endif
+
+    // The box is passed in to the SAT solver solely to provide the LP solver
+    // with initial bounds on the numerical variables.
+    DREAL_ASSERT(have_objective_);
+    const auto optional_model =
+      sat_solver_.CheckSat(box, optional<Expression>(obj_expr_));
+    if (optional_model) {
+      const vector<pair<Variable, bool>>& boolean_model{optional_model->first};
+      for (const pair<Variable, bool>& p : boolean_model) {
+        // Here, we modify Boolean variables only (not used by the LP solver).
+        box[p.first] = p.second ? 1 : 0;  // true -> 1 and false -> 0
+      }
+      const vector<pair<Variable, bool>>& theory_model{optional_model->second};
+      if (!theory_model.empty()) {
+        // SAT from SATSolver.
+        DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Sat Check = SAT");
+
+        // The selected assertions (and objective function, where applicable)
+        // have already been enabled in the LP solver
+        int theory_result{
+          theory_solver_.CheckOpt(box, theory_model,
+                                  sat_solver_.GetLinearSolver(),
+                                  sat_solver_.GetLinearVarMap())};
+        if (QS_LP_UNBOUNDED == theory_result) {
+          DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Theory Check = UNBOUNDED");
+          // Result is correct - can return immediately
+          // However (FIXME), I somehow need to indicate this in a Box-based
+          // model (which should be impossible, so I may need a completely
+          // new architecture).
+        } else {
+          if (QS_LP_OPTIMAL == theory_result || QS_LP_DELTA_OPTIMAL == theory_result) {
+            DREAL_LOG_DEBUG(
+                "Context::QsoptexImpl::CheckOptCore() - Theory Check = delta-OPTIMAL");
+            // Must continue - to ensure that this is the best across all feasible regions
+          } else if (QS_LP_INFEASIBLE == theory_result) {
+            DREAL_LOG_DEBUG(
+                "Context::QsoptexImpl::CheckOptCore() - Theory Check = INFEASIBLE");
+            // Must continue - to ensure that all regions are infeasible
+          } else {
+            DREAL_ASSERT(QS_LP_UNSOLVED == theory_result);
+            DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Theory Check = UNKNOWN");
+            have_unsolved = true;  // Will prevent return of INFEASIBLE or delta-OPTIMAL
+          }
+          // Force SAT solver to find new regions
+          const LiteralSet& explanation{theory_solver_.GetExplanation()};
+          DREAL_LOG_DEBUG(
+              "Context::QsoptexImpl::CheckOptCore() - size of explanation = {} - stack "
+              "size = {}",
+              explanation.size(), stack.get_vector().size());
+          sat_solver_.AddLearnedClause(explanation);
+        }
+      } else {
+        return box;
+      }
+    } else {
+      if (have_unsolved) {
+        // Can't assert UNSAT, because some branches were unsolved.
+        DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Sat Check = UNKNOWN");
+        throw DREAL_RUNTIME_ERROR("LP solver failed to solve some instances");
+      }
+      // UNSAT from SATSolver. Escape the loop.
+      DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Sat Check = UNSAT");
+      return {};
+    }
+  }
+}
+
 void Context::QsoptexImpl::MinimizeCore(const Expression& obj_expr) {
   DREAL_LOG_DEBUG("ContextImpl::Minimize(): Objective function is of kind {}", obj_expr.get_kind());
   obj_expr_ = obj_expr;
-  have_obj_ = true;
+  have_objective_ = true;
 }
 
 void Context::QsoptexImpl::Pop() {

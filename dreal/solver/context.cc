@@ -37,6 +37,8 @@ void Context::Assert(const Formula& f) { impl_->Assert(f); }
 
 optional<Box> Context::CheckSat() { return impl_->CheckSat(); }
 
+optional<Box> Context::CheckOpt() { return impl_->CheckOpt(); }
+
 void Context::DeclareVariable(const Variable& v, const bool is_model_variable) {
   impl_->DeclareVariable(v, is_model_variable);
 }
@@ -116,5 +118,7 @@ const Box& Context::get_model() const { return impl_->get_model(); }
 const ScopedVector<Formula>& Context::assertions() const {
   return impl_->assertions();
 }
+
+bool Context::have_objective() const { return impl_->have_objective(); }
 
 }  // namespace dreal

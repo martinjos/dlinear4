@@ -55,22 +55,10 @@ class TheorySolverStat : public Stat {
 
 }  // namespace
 
-int QsoptexTheorySolver::CheckSat(const Box& box,
-                                 const std::vector<Literal>& assertions,
-                                 const mpq_QSprob prob,
-                                 const std::map<int, Variable>& var_map,
-                                 const bool have_obj) {
-  if (have_obj) {
-    return CheckSatWithObj(box, assertions, prob, var_map);
-  } else {
-    return CheckSatNoObj(box, assertions, prob, var_map);
-  }
-}
-
-int QsoptexTheorySolver::CheckSatWithObj(const Box& box,
-                                         const std::vector<Literal>& assertions,
-                                         const mpq_QSprob prob,
-                                         const std::map<int, Variable>& var_map) {
+int QsoptexTheorySolver::CheckOpt(const Box& box,
+                                  const std::vector<Literal>& assertions,
+                                  const mpq_QSprob prob,
+                                  const std::map<int, Variable>& var_map) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
@@ -200,10 +188,10 @@ int QsoptexTheorySolver::CheckSatWithObj(const Box& box,
   return lp_status;
 }
 
-int QsoptexTheorySolver::CheckSatNoObj(const Box& box,
-                                       const std::vector<Literal>& assertions,
-                                       const mpq_QSprob prob,
-                                       const std::map<int, Variable>& var_map) {
+int QsoptexTheorySolver::CheckSat(const Box& box,
+                                  const std::vector<Literal>& assertions,
+                                  const mpq_QSprob prob,
+                                  const std::map<int, Variable>& var_map) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
