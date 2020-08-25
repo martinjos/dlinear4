@@ -27,7 +27,7 @@ class Context::Impl {
   virtual void Push() = 0;
 
   optional<Box> CheckSat();
-  int CheckOpt(mpq_class& obj_lo, mpq_class& obj_up, Box& model);
+  int CheckOpt(mpq_class* obj_lo, mpq_class* obj_up, Box* model);
   void DeclareVariable(const Variable& v, bool is_model_variable);
   void SetDomain(const Variable& v, const Expression& lb, const Expression& ub);
   void Minimize(const std::vector<Expression>& functions);
@@ -56,7 +56,7 @@ class Context::Impl {
 
   // Returns the current box in the stack.
   virtual optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box) = 0;
-  virtual int CheckOptCore(const ScopedVector<Formula>& stack, mpq_class& obj_lo, mpq_class& obj_up, Box& model) = 0;
+  virtual int CheckOptCore(const ScopedVector<Formula>& stack, mpq_class* obj_lo, mpq_class* obj_up, Box* model) = 0;
 
   virtual void MinimizeCore(const Expression& obj_expr) = 0;
 

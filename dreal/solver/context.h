@@ -59,7 +59,7 @@ class Context {
 
   /// Checks the satisfiability of the asserted formulas, and (where
   /// possible) optimizes an objective function over them.
-  int CheckOpt(mpq_class& obj_lo, mpq_class& obj_up, Box& model);
+  int CheckOpt(mpq_class* obj_lo, mpq_class* obj_up, Box* model);
 
   /// Declare a variable @p v. By default @p v is considered as a
   /// model variable. If @p is_model_variable is false, it is declared as

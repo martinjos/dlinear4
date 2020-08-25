@@ -89,16 +89,16 @@ optional<Box> Context::Impl::CheckSat() {
   }
 }
 
-int Context::Impl::CheckOpt(mpq_class& obj_lo, mpq_class& obj_up, Box& model) {
+int Context::Impl::CheckOpt(mpq_class* obj_lo, mpq_class* obj_up, Box* model) {
   int result = CheckOptCore(stack_, obj_lo, obj_up, model);
   if (LP_DELTA_OPTIMAL == result) {
-    DREAL_LOG_DEBUG("ContextImpl::CheckOpt() - Found Model\n{}", model);
-    model = ExtractModel(model);
-    model_ = model;  // For get_model()
+    DREAL_LOG_DEBUG("ContextImpl::CheckOpt() - Found Model\n{}", *model);
+    *model = ExtractModel(*model);
+    model_ = *model;  // For get_model()
     return result;
   } else {
-    model.set_empty();
-    model_ = model;  // For get_model()
+    model->set_empty();
+    model_ = *model;  // For get_model()
     return result;
   }
 }

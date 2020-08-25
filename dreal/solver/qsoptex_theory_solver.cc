@@ -57,8 +57,8 @@ class TheorySolverStat : public Stat {
 }  // namespace
 
 int QsoptexTheorySolver::CheckOpt(const Box& box,
-                                  mpq_class& obj_lo,
-                                  mpq_class& obj_up,
+                                  mpq_class* obj_lo,
+                                  mpq_class* obj_up,
                                   const std::vector<Literal>& assertions,
                                   const mpq_QSprob prob,
                                   const std::map<int, Variable>& var_map) {
@@ -149,16 +149,16 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: calling QSopt_ex (full LP solver)");
 
   status = qsopt_ex::QSdelta_full_solver(prob, precision_.get_mpq_t(), x, y,
-                                         obj_lo.get_mpq_t(), obj_up.get_mpq_t(), NULL,
+                                         obj_lo->get_mpq_t(), obj_up->get_mpq_t(), NULL,
                                          PRIMAL_SIMPLEX, &qs_lp_status);
 
   if (status) {
     throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
   } else {
-    // If QS_LP_DELTA_OPTIMAL, obj_up and obj_lo are valid bounds on the optimal objective.
-    // Otherwise, obj_up = obj_lo = 0 and the result is exact.
+    // If QS_LP_DELTA_OPTIMAL, *obj_up and *obj_lo are valid bounds on the optimal objective.
+    // Otherwise, *obj_up = *obj_lo = 0 and the result is exact.
     DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
-                    obj_up - obj_lo);
+                    *obj_up - *obj_lo);
   }
 
   if (QS_LP_UNSOLVED == qs_lp_status) {

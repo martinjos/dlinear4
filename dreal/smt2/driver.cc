@@ -64,7 +64,7 @@ void Smt2Driver::CheckSat() {
   if (context_.have_objective()) {
     mpq_class obj_lo, obj_up;
     Box model;
-    int status = context_.CheckOpt(obj_lo, obj_up, model);
+    int status = context_.CheckOpt(&obj_lo, &obj_up, &model);
     if (LP_DELTA_OPTIMAL == status) {
       cout << "delta-optimal with delta = " << (obj_up - obj_lo) << ", range = [" << obj_lo << ", " << obj_up << "]" << endl;
       if (context_.config().produce_models()) {

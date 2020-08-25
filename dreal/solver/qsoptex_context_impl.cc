@@ -144,11 +144,11 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
 }
 
 int Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
-                                       mpq_class& obj_lo, mpq_class& obj_up,
-                                       Box& box) {
+                                       mpq_class* obj_lo, mpq_class* obj_up,
+                                       Box* box) {
   DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore()");
-  DREAL_LOG_TRACE("Context::QsoptexImpl::CheckOpt: Box =\n{}", box);
-  if (box.empty()) {
+  DREAL_LOG_TRACE("Context::QsoptexImpl::CheckOpt: Box =\n{}", *box);
+  if (box->empty()) {
     return LP_INFEASIBLE;
   }
   // If false ∈ stack, it's UNSAT (i.e. infeasible).
@@ -160,8 +160,8 @@ int Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
   // If stack = ∅ or stack = {true}, it's trivially SAT - but we still need to
   // optimize!
   //if (stack.empty() || (stack.size() == 1 && is_true(stack.first()))) {
-  //  DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Found Model\n{}", box);
-  //  return box;
+  //  DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Found Model\n{}", *box);
+  //  return *box;
   //}
   bool have_unsolved = false;
   bool have_opt_cand = false;  // optimality candidate
@@ -180,12 +180,12 @@ int Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
     // with initial bounds on the numerical variables.
     DREAL_ASSERT(have_objective_);
     const auto optional_model =
-      sat_solver_.CheckSat(box, optional<Expression>(obj_expr_));
+      sat_solver_.CheckSat(*box, optional<Expression>(obj_expr_));
     if (optional_model) {
       const vector<pair<Variable, bool>>& boolean_model{optional_model->first};
       for (const pair<Variable, bool>& p : boolean_model) {
         // Here, we modify Boolean variables only (not used by the LP solver).
-        box[p.first] = p.second ? 1 : 0;  // true -> 1 and false -> 0
+        (*box)[p.first] = p.second ? 1 : 0;  // true -> 1 and false -> 0
       }
       const vector<pair<Variable, bool>>& theory_model{optional_model->second};
       if (!theory_model.empty()) {
@@ -195,7 +195,7 @@ int Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
         // The selected assertions (and objective function, where applicable)
         // have already been enabled in the LP solver.
         int theory_result{
-          theory_solver_.CheckOpt(box, new_obj_lo, new_obj_up, theory_model,
+          theory_solver_.CheckOpt(*box, &new_obj_lo, &new_obj_up, theory_model,
                                   sat_solver_.GetLinearSolver(),
                                   sat_solver_.GetLinearVarMap())};
         if (LP_UNBOUNDED == theory_result) {
@@ -207,16 +207,16 @@ int Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
             DREAL_LOG_DEBUG(
                 "Context::QsoptexImpl::CheckOptCore() - Theory Check = delta-OPTIMAL");
             // Within Context::Impl, the problem is always a minimization.
-            if (!have_opt_cand || new_obj_lo < obj_lo) {
+            if (!have_opt_cand || new_obj_lo < *obj_lo) {
               // This LP could yield the global optimum, which could therefore
               // be as low as new_obj_lo.
-              obj_lo = new_obj_lo;
+              *obj_lo = new_obj_lo;
             }
-            if (!have_opt_cand || new_obj_up < obj_up) {
+            if (!have_opt_cand || new_obj_up < *obj_up) {
               // The global optimum can't be higher than new_obj_up -
               // otherwise, it would certainly be beaten by the current LP's
               // optimum.
-              obj_up = new_obj_up;
+              *obj_up = new_obj_up;
               // Regardless of the model that we choose, it could be incorrect
               // (it may be that the global optimum can only be obtained in
               // another segment of the constraint space).
@@ -225,7 +225,7 @@ int Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
               // directly related to the primal solution.  Also, this ensures
               // that the model's objective value is always within the returned
               // range.
-              box = theory_solver_.GetModel();
+              *box = theory_solver_.GetModel();
             }
             have_opt_cand = true;
             // Must continue - to ensure that this is the best across all feasible regions.

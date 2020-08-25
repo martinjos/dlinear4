@@ -143,8 +143,8 @@ optional<Box> Context::SoplexImpl::CheckSatCore(const ScopedVector<Formula>& sta
 }
 
 int Context::SoplexImpl::CheckOptCore(const ScopedVector<Formula>& /*stack*/,
-                                      mpq_class& /*obj_lo*/,
-                                      mpq_class& /*obj_up*/, Box& /*model*/) {
+                                      mpq_class* /*obj_lo*/,
+                                      mpq_class* /*obj_up*/, Box* /*model*/) {
   throw DREAL_RUNTIME_ERROR("Not implemented.");
 }
 
