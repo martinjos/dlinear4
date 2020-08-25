@@ -188,69 +188,68 @@ int Context::QsoptexImpl::CheckOptCore(const ScopedVector<Formula>& stack,
         (*box)[p.first] = p.second ? 1 : 0;  // true -> 1 and false -> 0
       }
       const vector<pair<Variable, bool>>& theory_model{optional_model->second};
-      if (!theory_model.empty()) {
-        // SAT from SATSolver.
-        DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Sat Check = SAT");
+      // It doesn't matter if theory_model_ is empty, because CheckOpt() can
+      // handle the no-constraints and no-bounds case.  All necessary
+      // information is passed through via sat_solver_.GetLinearSolver() and
+      // sat_solver.GetLinearVarMap().
 
-        // The selected assertions (and objective function, where applicable)
-        // have already been enabled in the LP solver.
-        int theory_result{
-          theory_solver_.CheckOpt(*box, &new_obj_lo, &new_obj_up, theory_model,
-                                  sat_solver_.GetLinearSolver(),
-                                  sat_solver_.GetLinearVarMap())};
-        if (LP_UNBOUNDED == theory_result) {
-          DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Theory Check = UNBOUNDED");
-          // Result is correct - can return immediately.
-          return LP_UNBOUNDED;
-        } else {
-          if (LP_DELTA_OPTIMAL == theory_result) {
-            DREAL_LOG_DEBUG(
-                "Context::QsoptexImpl::CheckOptCore() - Theory Check = delta-OPTIMAL");
-            // Within Context::Impl, the problem is always a minimization.
-            if (!have_opt_cand || new_obj_lo < *obj_lo) {
-              // This LP could yield the global optimum, which could therefore
-              // be as low as new_obj_lo.
-              *obj_lo = new_obj_lo;
-            }
-            if (!have_opt_cand || new_obj_up < *obj_up) {
-              // The global optimum can't be higher than new_obj_up -
-              // otherwise, it would certainly be beaten by the current LP's
-              // optimum.
-              *obj_up = new_obj_up;
-              // Regardless of the model that we choose, it could be incorrect
-              // (it may be that the global optimum can only be obtained in
-              // another segment of the constraint space).
-              // However, it makes sense to prefer the model corresponding to
-              // the most recently adopted upper bound, as this bound is
-              // directly related to the primal solution.  Also, this ensures
-              // that the model's objective value is always within the returned
-              // range.
-              *box = theory_solver_.GetModel();
-            }
-            have_opt_cand = true;
-            // Must continue - to ensure that this is the best across all feasible regions.
-          } else if (LP_INFEASIBLE == theory_result) {
-            DREAL_LOG_DEBUG(
-                "Context::QsoptexImpl::CheckOptCore() - Theory Check = INFEASIBLE");
-            // Must continue - to ensure that all regions are infeasible.
-          } else {
-            DREAL_ASSERT(LP_UNSOLVED == theory_result);
-            DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Theory Check = UNKNOWN");
-            have_unsolved = true;  // Will prevent return of INFEASIBLE or delta-OPTIMAL.
-            // Problem may still be found to be unbounded.
-          }
-          // Force SAT solver to find new regions.
-          const LiteralSet& explanation{theory_solver_.GetExplanation()};
-          DREAL_LOG_DEBUG(
-              "Context::QsoptexImpl::CheckOptCore() - size of explanation = {} - stack "
-              "size = {}",
-              explanation.size(), stack.get_vector().size());
-          sat_solver_.AddLearnedClause(explanation);
-        }
+      // SAT from SATSolver.
+      DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Sat Check = SAT");
+
+      // The selected assertions (and objective function, where applicable)
+      // have already been enabled in the LP solver.
+      int theory_result{
+        theory_solver_.CheckOpt(*box, &new_obj_lo, &new_obj_up, theory_model,
+                                sat_solver_.GetLinearSolver(),
+                                sat_solver_.GetLinearVarMap())};
+      if (LP_UNBOUNDED == theory_result) {
+        DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Theory Check = UNBOUNDED");
+        // Result is correct - can return immediately.
+        return LP_UNBOUNDED;
       } else {
-        // No theory model - so no constraints, or even variable bounds; only
-        // Boolean variables.
-        throw DREAL_RUNTIME_ERROR("Problem not supported");
+        if (LP_DELTA_OPTIMAL == theory_result) {
+          DREAL_LOG_DEBUG(
+              "Context::QsoptexImpl::CheckOptCore() - Theory Check = delta-OPTIMAL");
+          // Within Context::Impl, the problem is always a minimization.
+          if (!have_opt_cand || new_obj_lo < *obj_lo) {
+            // This LP could yield the global optimum, which could therefore
+            // be as low as new_obj_lo.
+            *obj_lo = new_obj_lo;
+          }
+          if (!have_opt_cand || new_obj_up < *obj_up) {
+            // The global optimum can't be higher than new_obj_up -
+            // otherwise, it would certainly be beaten by the current LP's
+            // optimum.
+            *obj_up = new_obj_up;
+            // Regardless of the model that we choose, it could be incorrect
+            // (it may be that the global optimum can only be obtained in
+            // another segment of the constraint space).
+            // However, it makes sense to prefer the model corresponding to
+            // the most recently adopted upper bound, as this bound is
+            // directly related to the primal solution.  Also, this ensures
+            // that the model's objective value is always within the returned
+            // range.
+            *box = theory_solver_.GetModel();
+          }
+          have_opt_cand = true;
+          // Must continue - to ensure that this is the best across all feasible regions.
+        } else if (LP_INFEASIBLE == theory_result) {
+          DREAL_LOG_DEBUG(
+              "Context::QsoptexImpl::CheckOptCore() - Theory Check = INFEASIBLE");
+          // Must continue - to ensure that all regions are infeasible.
+        } else {
+          DREAL_ASSERT(LP_UNSOLVED == theory_result);
+          DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckOptCore() - Theory Check = UNKNOWN");
+          have_unsolved = true;  // Will prevent return of INFEASIBLE or delta-OPTIMAL.
+          // Problem may still be found to be unbounded.
+        }
+        // Force SAT solver to find new regions.
+        const LiteralSet& explanation{theory_solver_.GetExplanation()};
+        DREAL_LOG_DEBUG(
+            "Context::QsoptexImpl::CheckOptCore() - size of explanation = {} - stack "
+            "size = {}",
+            explanation.size(), stack.get_vector().size());
+        sat_solver_.AddLearnedClause(explanation);
       }
     } else {
       // UNSAT from SATSolver. Must escape the loop, one way or another.
