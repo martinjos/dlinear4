@@ -67,7 +67,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
                                    true /* start_timer */);
 
-  DREAL_LOG_TRACE("QsoptexTheorySolver::CheckSat: Box = \n{}", box);
+  DREAL_LOG_TRACE("QsoptexTheorySolver::CheckOpt: Box = \n{}", box);
 
   int status = -1;
   int lp_status = LP_NO_RESULT;
@@ -88,7 +88,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   for (const pair<int, Variable>& kv : var_map) {
     if (!model_.has_variable(kv.second)) {
       // Variable should already be present
-      DREAL_LOG_WARN("QsoptexTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
+      DREAL_LOG_WARN("QsoptexTheorySolver::CheckOpt: Adding var {} to model from SAT", kv.second);
       model_.Add(kv.second);
     }
   }
@@ -140,13 +140,13 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   }
   mpq_clear(temp);
   if (lp_status == LP_INFEASIBLE || rowcount == 0) {
-    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: no need to call LP solver");
+    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckOpt: no need to call LP solver");
     return lp_status;
   }
 
   // Now we call the solver
   int qs_lp_status = -1;
-  DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: calling QSopt_ex (full LP solver)");
+  DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckOpt: calling QSopt_ex (full LP solver)");
 
   status = qsopt_ex::QSdelta_full_solver(prob, precision_.get_mpq_t(), x, y,
                                          obj_lo->get_mpq_t(), obj_up->get_mpq_t(), NULL,
@@ -157,12 +157,12 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   } else {
     // If QS_LP_DELTA_OPTIMAL, *obj_up and *obj_lo are valid bounds on the optimal objective.
     // Otherwise, *obj_up = *obj_lo = 0 and the result is exact.
-    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
+    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckOpt: QSopt_ex has returned with precision = {}",
                     *obj_up - *obj_lo);
   }
 
   if (QS_LP_UNSOLVED == qs_lp_status) {
-    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex failed to return a result");
+    DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckOpt: QSopt_ex failed to return a result");
   }
 
   lp_status = LP_NO_RESULT;
@@ -193,8 +193,10 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   case QS_LP_UNBOUNDED:
     lp_status = LP_UNBOUNDED;
     break;
+  case QS_LP_ITER_LIMIT:
+    throw DREAL_RUNTIME_ERROR("Iteration limit reached");
   default:
-    DREAL_UNREACHABLE();
+    throw DREAL_RUNTIME_ERROR("QSopt_ex returned LP status {}", qs_lp_status);
   }
 
   return lp_status;
