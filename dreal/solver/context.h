@@ -16,6 +16,14 @@
 
 namespace dreal {
 
+enum {
+  LP_NO_RESULT = 0,
+  LP_UNSOLVED,
+  LP_INFEASIBLE,
+  LP_UNBOUNDED,
+  LP_DELTA_OPTIMAL,
+};
+
 /// Context class that holds a set of constraints and provide
 /// Assert/Push/Pop/CheckSat functionalities.
 ///
@@ -51,7 +59,7 @@ class Context {
 
   /// Checks the satisfiability of the asserted formulas, and (where
   /// possible) optimizes an objective function over them.
-  optional<Box> CheckOpt();
+  int CheckOpt(mpq_class& obj_lo, mpq_class& obj_up, Box& model);
 
   /// Declare a variable @p v. By default @p v is considered as a
   /// model variable. If @p is_model_variable is false, it is declared as
@@ -133,6 +141,11 @@ class Context {
   /// zero). If true, then CheckOpt() must be used, and not CheckSat(). If
   /// false, then CheckSat() must be used, and not CheckOpt().
   bool have_objective() const;
+
+  /// Returns whether or not the objective function (if present) is a
+  /// maximization. If true, the original objective function has been negated
+  /// to form a minimization problem.
+  bool is_max() const;
 
  private:
   // This header is exposed to external users as a part of API. We use

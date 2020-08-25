@@ -71,7 +71,7 @@ bool ParseBooleanOption(const string& key, const string& val) {
 Context::Impl::Impl() : Impl{Config{}} {}
 
 Context::Impl::Impl(Config config)
-    : config_{config}, have_objective_{false} {
+    : config_{config}, have_objective_{false}, is_max_{false} {
   boxes_.push_back(Box{});
 }
 
@@ -89,16 +89,16 @@ optional<Box> Context::Impl::CheckSat() {
   }
 }
 
-optional<Box> Context::Impl::CheckOpt() {
-  auto result = CheckOptCore(stack_, box());
-  if (result) {
-    // In case of delta-sat, do post-processing.
-    //Tighten(&(*result), config_.precision());
-    DREAL_LOG_DEBUG("ContextImpl::CheckOpt() - Found Model\n{}", *result);
-    model_ = ExtractModel(*result);
-    return model_;
+int Context::Impl::CheckOpt(mpq_class& obj_lo, mpq_class& obj_up, Box& model) {
+  int result = CheckOptCore(stack_, obj_lo, obj_up, model);
+  if (LP_DELTA_OPTIMAL == result) {
+    DREAL_LOG_DEBUG("ContextImpl::CheckOpt() - Found Model\n{}", model);
+    model = ExtractModel(model);
+    model_ = model;  // For get_model()
+    return result;
   } else {
-    model_.set_empty();
+    model.set_empty();
+    model_ = model;  // For get_model()
     return result;
   }
 }
@@ -137,6 +137,19 @@ void Context::Impl::Minimize(const vector<Expression>& functions) {
 
   const Expression& obj_expr{functions[0].Expand()};
 
+  is_max_ = false;
+  MinimizeCore(obj_expr);
+}
+
+void Context::Impl::Maximize(const vector<Expression>& functions) {
+  if (functions.size() != 1) {
+    DREAL_RUNTIME_ERROR("Must have exactly one objective function");
+  }
+
+  // Negate objective function
+  const Expression& obj_expr{(-functions[0]).Expand()};
+
+  is_max_ = true;
   MinimizeCore(obj_expr);
 }
 
@@ -227,6 +240,10 @@ const ScopedVector<Formula>& Context::Impl::assertions() const {
 
 bool Context::Impl::have_objective() const {
   return have_objective_;
+}
+
+bool Context::Impl::is_max() const {
+  return is_max_;
 }
 
 }  // namespace dreal

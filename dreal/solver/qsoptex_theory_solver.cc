@@ -9,6 +9,7 @@
 #include "dreal/util/stat.h"
 #include "dreal/util/timer.h"
 #include "dreal/util/infty.h"
+#include "dreal/solver/context.h"
 
 namespace dreal {
 
@@ -56,6 +57,8 @@ class TheorySolverStat : public Stat {
 }  // namespace
 
 int QsoptexTheorySolver::CheckOpt(const Box& box,
+                                  mpq_class& obj_lo,
+                                  mpq_class& obj_up,
                                   const std::vector<Literal>& assertions,
                                   const mpq_QSprob prob,
                                   const std::map<int, Variable>& var_map) {
@@ -67,7 +70,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   DREAL_LOG_TRACE("QsoptexTheorySolver::CheckSat: Box = \n{}", box);
 
   int status = -1;
-  int lp_status = -1;
+  int lp_status = LP_NO_RESULT;
 
   precision_ = config_.precision();
 
@@ -80,7 +83,6 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   MpqArray y{rowcount};
   MpqArray obj{colcount};
   mpq_QSget_obj(prob, obj);
-  mpq_class obj_lo, obj_up;
 
   model_ = box;
   for (const pair<int, Variable>& kv : var_map) {
@@ -94,7 +96,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
-  lp_status = QS_LP_OPTIMAL;
+  lp_status = LP_DELTA_OPTIMAL;
   mpq_t temp;
   mpq_init(temp);
   for (const pair<int, Variable>& kv : var_map) {
@@ -106,7 +108,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
     DREAL_ASSERT(!res);
     mpq_class ub{temp};
     if (lb > ub) {
-      lp_status = QS_LP_INFEASIBLE;
+      lp_status = LP_INFEASIBLE;
       // Prevent the exact same LP from coming up again
       explanation_.clear();
       explanation_.insert(assertions.begin(), assertions.end());
@@ -118,12 +120,12 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
       if (obj_coef > 0) {
         val = ub;
         if (ub >= mpq_infty()) {
-          lp_status = QS_LP_UNBOUNDED;
+          lp_status = LP_UNBOUNDED;
         }
       } else if (obj_coef < 0) {
         val = lb;
         if (lb <= mpq_ninfty()) {
-          lp_status = QS_LP_UNBOUNDED;
+          lp_status = LP_UNBOUNDED;
         }
       } else if (mpq_ninfty() < lb) {
         val = lb;
@@ -137,18 +139,18 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
     }
   }
   mpq_clear(temp);
-  if (lp_status == QS_LP_INFEASIBLE || rowcount == 0) {
+  if (lp_status == LP_INFEASIBLE || rowcount == 0) {
     DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: no need to call LP solver");
     return lp_status;
   }
 
   // Now we call the solver
-  lp_status = -1;
+  int qs_lp_status = -1;
   DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: calling QSopt_ex (full LP solver)");
 
   status = qsopt_ex::QSdelta_full_solver(prob, precision_.get_mpq_t(), x, y,
                                          obj_lo.get_mpq_t(), obj_up.get_mpq_t(), NULL,
-                                         PRIMAL_SIMPLEX, &lp_status);
+                                         PRIMAL_SIMPLEX, &qs_lp_status);
 
   if (status) {
     throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
@@ -159,11 +161,13 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
                     obj_up - obj_lo);
   }
 
-  if (lp_status == QS_LP_UNSOLVED) {
+  if (QS_LP_UNSOLVED == qs_lp_status) {
     DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex failed to return a result");
   }
 
-  switch (lp_status) {
+  lp_status = LP_NO_RESULT;
+
+  switch (qs_lp_status) {
   case QS_LP_OPTIMAL:
   case QS_LP_DELTA_OPTIMAL:
     // Copy delta-optimal point from x into model_
@@ -172,14 +176,22 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
                    mpq_class(x[kv.first]) <= model_[kv.second].ub());
       model_[kv.second] = x[kv.first];
     }
+    lp_status = LP_DELTA_OPTIMAL;
     break;
   case QS_LP_INFEASIBLE:
+    // Prevent the exact same LP from coming up again
+    explanation_.clear();
+    explanation_.insert(assertions.begin(), assertions.end());
+    lp_status = LP_INFEASIBLE;
+    break;
   case QS_LP_UNSOLVED:
     // Prevent the exact same LP from coming up again
     explanation_.clear();
     explanation_.insert(assertions.begin(), assertions.end());
+    lp_status = LP_UNSOLVED;
     break;
   case QS_LP_UNBOUNDED:
+    lp_status = LP_UNBOUNDED;
     break;
   default:
     DREAL_UNREACHABLE();

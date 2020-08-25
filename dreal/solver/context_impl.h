@@ -27,10 +27,11 @@ class Context::Impl {
   virtual void Push() = 0;
 
   optional<Box> CheckSat();
-  optional<Box> CheckOpt();
+  int CheckOpt(mpq_class& obj_lo, mpq_class& obj_up, Box& model);
   void DeclareVariable(const Variable& v, bool is_model_variable);
   void SetDomain(const Variable& v, const Expression& lb, const Expression& ub);
   void Minimize(const std::vector<Expression>& functions);
+  void Maximize(const std::vector<Expression>& functions);
   void SetInfo(const std::string& key, double val);
   void SetInfo(const std::string& key, const std::string& val);
   void SetInterval(const Variable& v, const mpq_class& lb, const mpq_class& ub);
@@ -43,6 +44,7 @@ class Context::Impl {
   Box& box() { return boxes_.last(); }
   const Box& get_model() { return model_; }
   bool have_objective() const;
+  bool is_max() const;
 
  protected:
   // Add the variable @p v to the current box. This is used to
@@ -54,7 +56,7 @@ class Context::Impl {
 
   // Returns the current box in the stack.
   virtual optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box) = 0;
-  virtual optional<Box> CheckOptCore(const ScopedVector<Formula>& stack, Box box) = 0;
+  virtual int CheckOptCore(const ScopedVector<Formula>& stack, mpq_class& obj_lo, mpq_class& obj_up, Box& model) = 0;
 
   virtual void MinimizeCore(const Expression& obj_expr) = 0;
 
@@ -85,8 +87,10 @@ class Context::Impl {
   // Note that if the checksat result was UNSAT, this box holds an empty box.
   Box model_;
 
-  // Keeps track of whether or not there is an objective function.
+  // Keeps track of whether or not there is an objective function ...
   bool have_objective_;
+  // ... and whether it's being maximized.
+  bool is_max_;
 };
 
 }  // namespace dreal

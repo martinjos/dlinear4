@@ -28,6 +28,8 @@ class QsoptexTheorySolver {
                const std::map<int, Variable>& var_map);
 
   int CheckOpt(const Box& box,
+               mpq_class& obj_lo,
+               mpq_class& obj_up,
                const std::vector<Literal>& assertions,
                const qsopt_ex::mpq_QSprob prob,
                const std::map<int, Variable>& var_map);

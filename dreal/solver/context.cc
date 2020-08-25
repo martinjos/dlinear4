@@ -37,7 +37,9 @@ void Context::Assert(const Formula& f) { impl_->Assert(f); }
 
 optional<Box> Context::CheckSat() { return impl_->CheckSat(); }
 
-optional<Box> Context::CheckOpt() { return impl_->CheckOpt(); }
+int Context::CheckOpt(mpq_class& obj_lo, mpq_class& obj_up, Box& model) {
+  return impl_->CheckOpt(obj_lo, obj_up, model);
+}
 
 void Context::DeclareVariable(const Variable& v, const bool is_model_variable) {
   impl_->DeclareVariable(v, is_model_variable);
@@ -58,7 +60,7 @@ void Context::Minimize(const vector<Expression>& functions) {
   impl_->Minimize(functions);
 }
 
-void Context::Maximize(const Expression& f) { impl_->Minimize({-f}); }
+void Context::Maximize(const Expression& f) { impl_->Maximize({f}); }
 
 void Context::Pop(int n) {
   DREAL_LOG_DEBUG("Context::Pop({})", n);
@@ -120,5 +122,7 @@ const ScopedVector<Formula>& Context::assertions() const {
 }
 
 bool Context::have_objective() const { return impl_->have_objective(); }
+
+bool Context::is_max() const { return impl_->is_max(); }
 
 }  // namespace dreal

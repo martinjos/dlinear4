@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "dreal/smt2/scanner.h"
 
@@ -20,6 +21,7 @@ using std::istringstream;
 using std::ostream;
 using std::ostringstream;
 using std::string;
+using std::vector;
 
 Smt2Driver::Smt2Driver(Context context) : context_{std::move(context)} {}
 
@@ -60,14 +62,20 @@ void Smt2Driver::error(const string& m) { cerr << m << endl; }
 
 void Smt2Driver::CheckSat() {
   if (context_.have_objective()) {
-    const optional<Box> model{context_.CheckOpt()};
-    if (model) {
-      cout << "delta-sat with delta = " << context_.config().precision() << endl;
+    mpq_class obj_lo, obj_up;
+    Box model;
+    int status = context_.CheckOpt(obj_lo, obj_up, model);
+    if (LP_DELTA_OPTIMAL == status) {
+      cout << "delta-optimal with delta = " << (obj_up - obj_lo) << ", range = [" << obj_lo << ", " << obj_up << "]" << endl;
       if (context_.config().produce_models()) {
-        cout << *model << endl;
+        cout << model << endl;
       }
+    } else if (LP_UNBOUNDED == status) {
+      cout << "unbounded" << endl;
+    } else if (LP_INFEASIBLE == status) {
+      cout << "infeasible" << endl;
     } else {
-      cout << "unsat" << endl;
+      DREAL_UNREACHABLE();
     }
   } else {
     const optional<Box> model{context_.CheckSat()};
