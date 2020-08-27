@@ -1,5 +1,8 @@
 #include "dreal/solver/qsoptex_sat_solver.h"
-#include "dreal/solver/soplex_sat_solver.h"
+
+#if HAVE_SOPLEX
+# include "dreal/solver/soplex_sat_solver.h"
+#endif
 
 #include <gtest/gtest.h>
 
@@ -7,7 +10,8 @@
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/symbolic/symbolic_test_util.h"
 
-#define DREAL_TEST_F_SATSOLVERS(Class, Method) \
+#if HAVE_SOPLEX
+# define DREAL_TEST_F_SATSOLVERS(Class, Method) \
     class DRealTestFSatSolvers_##Class##_##Method : public Class { \
      protected: \
       DRealTestFSatSolvers_##Class##_##Method() = delete; \
@@ -31,6 +35,24 @@
       DRealTestFSatSolversImpl(); \
     } \
     void DRealTestFSatSolvers_##Class##_##Method::DRealTestFSatSolversImpl()
+#else
+# define DREAL_TEST_F_SATSOLVERS(Class, Method) \
+    class DRealTestFSatSolvers_##Class##_##Method : public Class { \
+     protected: \
+      DRealTestFSatSolvers_##Class##_##Method() = delete; \
+      DRealTestFSatSolvers_##Class##_##Method(Config::LPSolver lp_solver) : Class{lp_solver} {} \
+      void DRealTestFSatSolversImpl(); \
+    }; \
+    class DRealTestFSatSolvers_##Class##_##Method##_Qsoptex : public DRealTestFSatSolvers_##Class##_##Method { \
+     protected: \
+      DRealTestFSatSolvers_##Class##_##Method##_Qsoptex() : DRealTestFSatSolvers_##Class##_##Method{Config::QSOPTEX} {} \
+    }; \
+    TEST_F(DRealTestFSatSolvers_##Class##_##Method##_Qsoptex, Method##_Qsoptex) { \
+      sat_.Init<QsoptexSatSolver>(config_); \
+      DRealTestFSatSolversImpl(); \
+    } \
+    void DRealTestFSatSolvers_##Class##_##Method::DRealTestFSatSolversImpl()
+#endif
 
 namespace dreal {
 namespace {

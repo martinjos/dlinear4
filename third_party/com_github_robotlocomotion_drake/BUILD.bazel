@@ -50,12 +50,19 @@ cc_library(
     srcs = [
         "dreal/symbolic/test/symbolic_test_util.h",
     ],
+    # Note: defines will apply to any dependents of this target
+    defines = select({
+        "//:soplex-enabled": ["HAVE_SOPLEX=1"],
+        "//conditions:default": ["HAVE_SOPLEX=0"],
+    }),
     visibility = ["//visibility:public"],
     deps = [
         "//dreal/util:infty",
         "//dreal:qsopt-ex",
-        "//dreal:soplex",
-    ],
+    ] + select({
+        "//:soplex-enabled": ["//dreal:soplex"],
+        "//conditions:default": [],
+    }),
 )
 
 cc_test(

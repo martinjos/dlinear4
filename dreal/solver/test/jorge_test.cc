@@ -109,6 +109,7 @@ static void do_example_test(Context& ctx) {
   cerr << *result << endl;
 }
 
+#if HAVE_SOPLEX
 GTEST_TEST(Test, ExampleSoplexPhase1) {
   DrakeSymbolicGuard guard_{Config::SOPLEX};
   Config config;
@@ -126,6 +127,7 @@ GTEST_TEST(Test, ExampleSoplexPhase2) {
   Context ctx{config};
   do_example_test(ctx);
 }
+#endif
 
 GTEST_TEST(Test, ExampleQsoptexPhase1) {
   DrakeSymbolicGuard guard_{Config::QSOPTEX};

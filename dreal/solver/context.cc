@@ -2,11 +2,14 @@
 
 #include <utility>
 
-#include "dreal/solver/soplex_context_impl.h"
 #include "dreal/solver/qsoptex_context_impl.h"
 #include "dreal/util/exception.h"
 #include "dreal/util/logging.h"
 #include "dreal/version.h"
+
+#if HAVE_SOPLEX
+# include "dreal/solver/soplex_context_impl.h"
+#endif
 
 using std::make_unique;
 using std::unique_ptr;
@@ -20,7 +23,11 @@ unique_ptr<Context::Impl> Context::make_impl(Config config) {
     return make_unique<Context::QsoptexImpl>(config);
   } else {
     DREAL_ASSERT(config.lp_solver() == Config::SOPLEX);
+#if HAVE_SOPLEX
     return make_unique<Context::SoplexImpl>(config);
+#else
+    throw DREAL_RUNTIME_ERROR("SoPlex not enabled at compile time");
+#endif
   }
 }
 

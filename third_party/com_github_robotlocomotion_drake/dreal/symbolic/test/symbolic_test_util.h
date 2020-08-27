@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
 #include <cassert>
 
 #include <gtest/gtest.h>
@@ -9,7 +10,10 @@
 #include "dreal/symbolic/symbolic_variable.h"
 #include "dreal/util/infty.h"  // For InftyStart()/InftyFinish()
 #include "dreal/qsopt_ex.h"  // For QSXStart()/QSXFinish()
-#include "dreal/soplex.h"  // For soplex::infinity
+
+#if HAVE_SOPLEX
+# include "dreal/soplex.h"  // For soplex::infinity
+#endif
 
 #define EXPECT_MPQ_EQ_DOUBLE(mpq, d) EXPECT_DOUBLE_EQ((mpq).get_d(), d)
 #define EXPECT_MPQ_NEAR(mpq, d, tol) EXPECT_NEAR((mpq).get_d(), d, tol)
@@ -34,7 +38,11 @@ struct DrakeSymbolicGuard {
       dreal::util::InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
     } else {
       assert(solver_ == SOPLEX);
+#if HAVE_SOPLEX
       dreal::util::InftyStart(soplex::infinity);
+#else
+      throw std::runtime_error("SoPlex not enabled at compile time");
+#endif
     }
     Expression::InitConstants();
   }

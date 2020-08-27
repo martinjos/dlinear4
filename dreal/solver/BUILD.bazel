@@ -69,30 +69,34 @@ dreal_cc_library(
 dreal_cc_library(
     name = "solver",
     srcs = [
-        "context.cc",
-        "context_impl.cc",
-        "context_impl.h",
-        "soplex_context_impl.cc",
-        "soplex_context_impl.h",
-        "qsoptex_context_impl.cc",
-        "qsoptex_context_impl.h",
-        #"expression_evaluator.cc",
-        #"forall_formula_evaluator.cc",
-        #"forall_formula_evaluator.h",
-        #"formula_evaluator.cc",
-        #"formula_evaluator_cell.cc",
-        #"formula_evaluator_cell.h",
-        #"icp.cc",
-        #"icp_parallel.cc",
-        #"icp_seq.cc",
-        #"relational_formula_evaluator.cc",
-        #"relational_formula_evaluator.h",
-        #"theory_solver.cc",
-        "qsoptex_theory_solver.cc",
-        "qsoptex_sat_solver.cc",
-        "soplex_sat_solver.cc",
-        "soplex_theory_solver.cc",
-    ],
+            "context.cc",
+            "context_impl.cc",
+            "context_impl.h",
+            "qsoptex_context_impl.cc",
+            "qsoptex_context_impl.h",
+            #"expression_evaluator.cc",
+            #"forall_formula_evaluator.cc",
+            #"forall_formula_evaluator.h",
+            #"formula_evaluator.cc",
+            #"formula_evaluator_cell.cc",
+            #"formula_evaluator_cell.h",
+            #"icp.cc",
+            #"icp_parallel.cc",
+            #"icp_seq.cc",
+            #"relational_formula_evaluator.cc",
+            #"relational_formula_evaluator.h",
+            #"theory_solver.cc",
+            "qsoptex_theory_solver.cc",
+            "qsoptex_sat_solver.cc",
+    ] + select({
+        "//:soplex-enabled": [
+            "soplex_context_impl.cc",
+            "soplex_context_impl.h",
+            "soplex_sat_solver.cc",
+            "soplex_theory_solver.cc",
+        ],
+        "//conditions:default": [],
+    }),
     hdrs = [
         "context.h",
         #"expression_evaluator.h",
@@ -103,9 +107,17 @@ dreal_cc_library(
         #"theory_solver.h",
         "qsoptex_theory_solver.h",
         "qsoptex_sat_solver.h",
-        "soplex_theory_solver.h",
-        "soplex_sat_solver.h",
-    ],
+    ] + select({
+        "//:soplex-enabled": [
+            "soplex_theory_solver.h",
+            "soplex_sat_solver.h",
+        ],
+        "//conditions:default": [],
+    }),
+    local_defines = select({
+        "//:soplex-enabled": ["HAVE_SOPLEX=1"],
+        "//conditions:default": ["HAVE_SOPLEX=0"],
+    }),
     visibility = [
         "//:__pkg__",
         "//dreal/api:__pkg__",
@@ -140,7 +152,6 @@ dreal_cc_library(
         "//third_party/com_github_progschj_threadpool:thread_pool",
         "@fmt",
         "//dreal:qsopt-ex",
-        "//dreal:soplex",
         "//dreal/util:optional",
         "//dreal/util:predicate_abstractor",
         "//dreal/util:scoped_unordered_map",
@@ -149,7 +160,10 @@ dreal_cc_library(
         "//dreal/util:literal",
         "//dreal/util:infty",
         "@picosat",
-    ],
+    ] + select({
+        "//:soplex-enabled": ["//dreal:soplex"],
+        "//conditions:default": [],
+    }),
 )
 
 #dreal_cc_library(
@@ -228,6 +242,10 @@ dreal_cc_googletest(
 dreal_cc_googletest(
     name = "jorge_test",
     tags = ["unit"],
+    local_defines = select({
+        "//:soplex-enabled": ["HAVE_SOPLEX=1"],
+        "//conditions:default": ["HAVE_SOPLEX=0"],
+    }),
     deps = [
         ":solver",
         "//dreal/symbolic:symbolic_test_util",
@@ -237,6 +255,10 @@ dreal_cc_googletest(
 dreal_cc_googletest(
     name = "sat_solver_test",
     tags = ["unit"],
+    local_defines = select({
+        "//:soplex-enabled": ["HAVE_SOPLEX=1"],
+        "//conditions:default": ["HAVE_SOPLEX=0"],
+    }),
     deps = [
         ":solver",
         "//dreal/util:logging",

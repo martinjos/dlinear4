@@ -9,6 +9,8 @@ import os
 import subprocess
 import difflib
 
+#print("test.py: argv = {!r}".format(sys.argv))
+
 # 1st Argument: dreal path
 #               need to check if it exists
 dreal = sys.argv[1]
@@ -30,7 +32,13 @@ assert lp_solver in ("soplex", "qsoptex")
 phase = int(sys.argv[6])
 assert phase in (1, 2)
 
-options = sys.argv[7:]
+# 7th Argument: SoPlex enabled?
+soplex_enabled = sys.argv[7]
+if soplex_enabled != "True" and lp_solver == "soplex":
+    print("SoPlex not enabled - skipping test")
+    sys.exit(0)
+
+options = sys.argv[8:]
 
 if phase == 1:
     options = ["--phase-one-simplex"] + options

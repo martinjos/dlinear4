@@ -171,7 +171,7 @@ class Config {
   OptionValue<bool> use_worklist_fixpoint_{false};
   OptionValue<bool> use_local_optimization_{false};
   OptionValue<bool> use_phase_one_simplex_{false};
-  OptionValue<LPSolver> lp_solver_{LPSolver::SOPLEX};
+  OptionValue<LPSolver> lp_solver_{LPSolver::QSOPTEX};
   OptionValue<int> verbose_simplex_{0};
   OptionValue<int> number_of_jobs_{1};
   OptionValue<bool> stack_left_box_first_{false};

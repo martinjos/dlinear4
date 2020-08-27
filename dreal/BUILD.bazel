@@ -86,6 +86,10 @@ dreal_cc_binary(
         "dreal_main.h",
     ],
     copts = ["-frounding-math", "-Wno-unknown-pragmas"],
+    local_defines = select({
+        "//:soplex-enabled": ["HAVE_SOPLEX=1"],
+        "//conditions:default": ["HAVE_SOPLEX=0"],
+    }),
     visibility = [
         #"//dreal/test/dr:__subpackages__",
         "//dreal/test/smt2:__subpackages__",
@@ -99,10 +103,12 @@ dreal_cc_binary(
         "//dreal/util:rounding_mode_guard",
         "//dreal/util:infty",
         "//dreal:qsopt-ex",
-        "//dreal:soplex",
         "@ezoptionparser",
         "@fmt",
-    ],
+    ] + select({
+        "//:soplex-enabled": ["//dreal:soplex"],
+        "//conditions:default": [],
+    }),
 )
 
 # ----------------------

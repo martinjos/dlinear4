@@ -17,7 +17,10 @@
 #include "dreal/util/rounding_mode_guard.h"
 #include "dreal/util/infty.h"
 #include "dreal/qsopt_ex.h"
-#include "dreal/soplex.h"
+
+#if HAVE_SOPLEX
+# include "dreal/soplex.h"
+#endif
 
 namespace dreal {
 
@@ -42,10 +45,13 @@ string get_version_string() {
   if (!repo_stat.empty()) {
     repo_stat = " (repository: " + repo_stat + ")";
   }
-  return fmt::format("v{} ({} Build){} (soplex: {}) (qsopt-ex: {})",
-                     Context::version(), build_type, repo_stat,
-                     soplex::getGitHash(),
-                     qsopt_ex::QSopt_ex_repository_status());
+  string vstr = fmt::format("v{} ({} Build){} (qsopt-ex: {})",
+                            Context::version(), build_type, repo_stat,
+                            qsopt_ex::QSopt_ex_repository_status());
+#if HAVE_SOPLEX
+  vstr += fmt::format(" (soplex: {})", soplex::getGitHash());
+#endif
+  return vstr;
 }
 }  // namespace
 
@@ -148,11 +154,11 @@ void MainProgram::AddOptions() {
 
   auto* const lp_solver_option_validator = new ez::ezOptionValidator(
       "t", "in", "soplex,qsoptex");
-  opt_.add("soplex" /* Default */, false /* Required? */,
+  opt_.add("qsoptex" /* Default */, false /* Required? */,
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */,
            "LP (i.e. simplex) solver to use."
-           " One of these (default = soplex): qsoptex, soplex.\n",
+           " One of these (default = qsoptex): qsoptex, soplex.\n",
            "--lp-solver", lp_solver_option_validator);
 
   auto* const verbose_simplex_option_validator = new ez::ezOptionValidator(
@@ -462,7 +468,11 @@ void MainProgram::Init() {
     InftyStart(qsopt_ex::mpq_INFTY, qsopt_ex::mpq_NINFTY);
   } else {
     DREAL_ASSERT(config_.lp_solver() == Config::SOPLEX);
+#if HAVE_SOPLEX
     InftyStart(soplex::infinity);
+#else
+    throw DREAL_RUNTIME_ERROR("SoPlex not enabled at compile time");
+#endif
   }
   Expression::InitConstants();
 }

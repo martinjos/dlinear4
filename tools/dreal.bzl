@@ -286,7 +286,7 @@ def smt2_phased_test(
         smt2 = None,
         options = [],
         tags = [],
-        lp_solver = "soplex",
+        lp_solver = "qsoptex",
         phase = None,
         **kwargs):
     """Create smt2 test."""
@@ -308,6 +308,7 @@ def smt2_phased_test(
             "$(locations //:qsopt-ex-lib)",
             lp_solver,
             str(phase),
+            "$(SOPLEX_ENABLED)",
         ] + options,
         tags = tags + ["smt2"],
         srcs = ["test.py"],
@@ -317,6 +318,7 @@ def smt2_phased_test(
         ] + data_files,
         main = "test.py",
         srcs_version = "PY2AND3",
+        toolchains = ["//:soplex-enabled-var"],
         **kwargs
     )
 

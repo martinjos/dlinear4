@@ -1,5 +1,7 @@
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("//tools:dreal.bzl", "DREAL_PREFIX", "DREAL_VERSION", "dreal_cc_library")
+load("//tools:make-variables.bzl", "var_providing_rule")
 load("//third_party/com_github_grailbio_bazel-compilation-database:aspects.bzl", "compilation_database")
 
 package(
@@ -17,6 +19,28 @@ compilation_database(
     targets = [
         ":dreal",
         ":dreal_shared_library",
+    ],
+)
+
+bool_flag(
+    name = "enable-soplex",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "soplex-enabled",
+    flag_values = {":enable-soplex": "True"}
+)
+
+var_providing_rule(
+    name = "soplex-enabled-var",
+    var_name = "SOPLEX_ENABLED",
+    var_value = select({
+        "//:soplex-enabled": "True",
+        "//conditions:default": "False",
+    }),
+    visibility = [
+        "//dreal:__subpackages__",
     ],
 )
 
