@@ -26,7 +26,7 @@ build --workspace_status_command=scripts/workspace_status.sh
 
 # Default test options.
 test --test_output=errors
-test --test_env=LD_LIBRARY_PATH=/home/martin/orc/Git/dreal4/qsopt-ex/lib  # FIXME: make this path relative
+test --test_env=LD_LIBRARY_PATH
 
 ### Cpplint. ###
 # By default, cpplint tests are run as part of `bazel test` alongside all of

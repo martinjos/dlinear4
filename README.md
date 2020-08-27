@@ -9,12 +9,12 @@ How to Build
 Install Prerequisites (Ubuntu 20.04)
 ------------------------------------
 
-Install the Ubuntu-provided prerequisites: [bison](https://www.gnu.org/software/bison), [flex](https://www.gnu.org/software/flex), [GMP](https://gmplib.org/), [python2.7](https://www.python.org/downloads/release/python-2714/), and a C++ compiler of your choice ([g++](https://www.gnu.org/software/gcc) is recommended).
+Install the Ubuntu-provided prerequisites: [autoconf](https://www.gnu.org/software/autoconf), [automake](https://www.gnu.org/software/automake), [libtool](https://www.gnu.org/software/libtool), [bison](https://www.gnu.org/software/bison), [flex](https://www.gnu.org/software/flex), [GMP](https://gmplib.org/), [python2.7](https://www.python.org/downloads/release/python-2714/), and a C++ compiler of your choice ([g++](https://www.gnu.org/software/gcc) is recommended).
 If you are using Ubuntu 20.04, you can install these using the following commands:
 
 ```bash
 sudo apt update
-sudo apt install bison libfl-dev libgmp-dev
+sudo apt install autoconf automake libtool bison libfl-dev libgmp-dev
 sudo apt install python2-minimal  # If you already have Python 2, you can skip this
 sudo apt install g++              # If you already have a C++ compiler, you can skip this
 ```
@@ -28,6 +28,7 @@ Install the qsopt-ex fork
 -------------------------
 
 Get the sources.
+These should be cloned beneath a common parent directory.
 
 ```bash
 git clone https://github.com/martinjos/dlinear4.git
@@ -40,7 +41,7 @@ Build and install `qsopt-ex` using the above repository, setting the install pre
 cd qsopt-ex
 ./bootstrap
 mkdir build && cd build
-../configure --prefix=../../dlinear4/qsopt-ex
+../configure --prefix=$(pwd)/../../dlinear4/qsopt-ex
 make -j4      # -j4 is optional (number of parallel build processes)
 make install  # sudo NOT required
 cd ../..

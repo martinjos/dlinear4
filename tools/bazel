@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":"$(dirname "$0")"/../qsopt-ex/lib
+#echo "Running bazel-real with LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+bazel-real "$@"
