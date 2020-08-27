@@ -69,7 +69,7 @@ void MainProgram::PrintUsage() {
 
 void MainProgram::AddOptions() {
   opt_.overview =
-      fmt::format("dReal {} : delta-complete SMT solver", get_version_string());
+      fmt::format("dLinear {} : delta-complete SMT solver", get_version_string());
   opt_.syntax = "dreal [OPTIONS] <input file> (.smt2)";
 
   opt_.add("" /* Default */, false /* Required? */,
@@ -80,7 +80,7 @@ void MainProgram::AddOptions() {
   opt_.add("" /* Default */, false /* Required? */,
            0 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */,
-           "Print version number of dReal.", "-v", "--version");
+           "Print version number of dLinear.", "-v", "--version");
 
   auto* const positive_double_option_validator =
       new ez::ezOptionValidator("d" /* double */, "gt", "0");
@@ -490,10 +490,10 @@ int MainProgram::Run() {
     return 0;
   }
   if (opt_.isSet("--version")) {
-    cout << "dReal " << get_version_string() << endl;
+    cout << "dLinear " << get_version_string() << endl;
     return 0;
   } else {
-    cerr << "dReal " << get_version_string() << endl;
+    cerr << "dLinear " << get_version_string() << endl;
   }
   if (!is_options_all_valid_) {
     return 1;
