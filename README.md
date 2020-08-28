@@ -6,16 +6,16 @@ dLinear: A Delta-Complete SMT Solver for Linear Real Arithmetic
 How to Build
 ============
 
-Install Prerequisites (Ubuntu 20.04)
-------------------------------------
+Install Prerequisites (Ubuntu 20.04, 18.04, 16.04)
+--------------------------------------------------
 
-Install the Ubuntu-provided prerequisites: [autoconf](https://www.gnu.org/software/autoconf), [automake](https://www.gnu.org/software/automake), [libtool](https://www.gnu.org/software/libtool), [bison](https://www.gnu.org/software/bison), [flex](https://www.gnu.org/software/flex), [GMP](https://gmplib.org/), [python2.7](https://www.python.org/downloads/release/python-2714/), and a C++ compiler of your choice ([g++](https://www.gnu.org/software/gcc) is recommended).
+Install the Ubuntu-provided prerequisites: [make](https://www.gnu.org/software/make), [autoconf](https://www.gnu.org/software/autoconf), [automake](https://www.gnu.org/software/automake), [libtool](https://www.gnu.org/software/libtool), [bison](https://www.gnu.org/software/bison), [flex](https://www.gnu.org/software/flex), [GMP](https://gmplib.org/), [Python 3](https://www.python.org/), and a C++ compiler (either [g++](https://www.gnu.org/software/gcc) or [Clang](https://clang.llvm.org/)).
 If you are using Ubuntu 20.04, you can install these using the following commands:
 
 ```bash
 sudo apt update
-sudo apt install autoconf automake libtool bison libfl-dev libgmp-dev
-sudo apt install python2-minimal  # If you already have Python 2, you can skip this
+sudo apt install make autoconf automake libtool bison libfl-dev libgmp-dev
+sudo apt install python3-minimal  # If you already have Python 3, you can skip this
 sudo apt install g++              # If you already have a C++ compiler, you can skip this
 ```
 
