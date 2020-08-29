@@ -2,6 +2,6 @@
 
 here="$(dirname "$0")"
 
-export LD_LIBRARY_PATH="$here"/qsopt-ex/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="$here"/install/qsopt-ex/lib:$LD_LIBRARY_PATH
 
 "$@"

@@ -8,6 +8,6 @@ if [ "$1" = "--gdb" ]; then
     shift
 fi
 
-export LD_LIBRARY_PATH="$here"/qsopt-ex/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="$here"/install/qsopt-ex/lib:$LD_LIBRARY_PATH
 
 $maybe_gdb "$here"/bazel-bin/dreal/dreal "$@"
