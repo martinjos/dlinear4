@@ -10,18 +10,18 @@ Install Prerequisites (Ubuntu 20.04, 18.04, 16.04)
 --------------------------------------------------
 
 Install the Ubuntu-provided prerequisites: [make](https://www.gnu.org/software/make), [autoconf](https://www.gnu.org/software/autoconf), [automake](https://www.gnu.org/software/automake), [libtool](https://www.gnu.org/software/libtool), [bison](https://www.gnu.org/software/bison), [flex](https://www.gnu.org/software/flex), [GMP](https://gmplib.org/), [Python 3](https://www.python.org/), and a C++ compiler (either [g++](https://www.gnu.org/software/gcc) or [Clang](https://clang.llvm.org/)).
-If you are using Ubuntu 20.04, you can install these using the following commands:
+If you are using Ubuntu 20.04, 18.04, or 16.04, you can install these (including `g++`) by running the following commands (or `sudo setup/ubuntu/<version>/install_prereqs.sh`):
 
 ```bash
-sudo apt update
-sudo apt install make autoconf automake libtool bison libfl-dev libgmp-dev
-sudo apt install python3-minimal  # If you already have Python 3, you can skip this
-sudo apt install g++              # If you already have a C++ compiler, you can skip this
+sudo apt-get update
+sudo apt-get install bison flex libgmp-dev python3-minimal make autoconf automake libtool
+sudo apt-get install g++  # Or: sudo apt-get install clang
 ```
 
 Install [bazel](https://bazel.build) (a build system by Google, also used by [dReal4](https://github.com/dreal/dreal4)).
+Versions 3.1.0 and 3.4.1 have been tested, but later versions should also work.
 Instructions are provided on the website.
-Version 3.1.0 has been tested, but later versions should also work.
+Alternatively, you can install version 3.4.1 by running `sudo setup/ubuntu/install_bazel.sh` - however, this will not set up the apt repository, so you will not get updates.
 
 
 Install the qsopt-ex fork
