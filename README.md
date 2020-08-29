@@ -9,6 +9,13 @@ How to Build
 Install Prerequisites (Ubuntu 20.04, 18.04, 16.04)
 --------------------------------------------------
 
+Get the source.
+
+```bash
+git clone https://github.com/martinjos/dlinear4.git
+cd dlinear4
+```
+
 Install the Ubuntu-provided prerequisites: [make](https://www.gnu.org/software/make), [autoconf](https://www.gnu.org/software/autoconf), [automake](https://www.gnu.org/software/automake), [libtool](https://www.gnu.org/software/libtool), [bison](https://www.gnu.org/software/bison), [flex](https://www.gnu.org/software/flex), [GMP](https://gmplib.org/), [Python 3](https://www.python.org/), and a C++ compiler (either [g++](https://www.gnu.org/software/gcc) or [Clang](https://clang.llvm.org/)).
 If you are using Ubuntu 20.04, 18.04, or 16.04, you can install these (including `g++`) by running the following commands (or `sudo setup/ubuntu/<version>/install_prereqs.sh`):
 
@@ -23,36 +30,16 @@ Versions 3.1.0 and 3.4.1 have been tested, but later versions should also work.
 Instructions are provided on the website.
 Alternatively, you can install version 3.4.1 by running `sudo setup/ubuntu/install_bazel.sh` - however, this will not set up the apt repository, so you will not get updates.
 
-
-Install the qsopt-ex fork
--------------------------
-
-Get the sources.
-These should be cloned beneath a common parent directory.
-
-```bash
-git clone https://github.com/martinjos/dlinear4.git
-git clone https://github.com/martinjos/qsopt-ex.git  # A fork of Debian/Ubuntu version 2.5.10.3-2
-```
-
-Build and install `qsopt-ex` using the above repository, setting the install prefix to `dlinear4/qsopt-ex`, as follows:
-
-```bash
-cd qsopt-ex
-./bootstrap
-mkdir build && cd build
-../configure --prefix=$(pwd)/../../dlinear4/qsopt-ex
-make -j4      # -j4 is optional (number of parallel build processes)
-make install  # sudo NOT required
-cd ../..
-```
+Build and install the `qsopt-ex` fork by running `setup/setup_qsopt-ex.sh`.
+Note that sudo is NOT required for this step.
+The library is built under `submodules/qsopt-ex` and installed into `install/qsopt-ex`.
+Note that a normal release of `qsopt-ex` will not work - it must be [this fork](https://github.com/martinjos/qsopt-ex).
 
 
 Build and Test
 --------------
 
 ```bash
-cd dlinear4
 bazel build //...
 bazel test //...        # Run all tests
 ./dlinear.sh <smt2_file>  # Run .smt2 file

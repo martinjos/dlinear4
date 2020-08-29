@@ -1,0 +1,3 @@
+[submodule "submodules/qsopt-ex"]
+	path = submodules/qsopt-ex
+	url = https://github.com/martinjos/qsopt-ex.git

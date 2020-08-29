@@ -46,10 +46,10 @@ var_providing_rule(
 
 cc_library(
     name = "qsopt-ex",
-    srcs = ["qsopt-ex/lib/libqsopt_ex.so"],
-    hdrs = glob(["qsopt-ex/include/qsopt_ex/*.h"]),
-    includes = ["qsopt-ex/include"],
-    copts = ["-Iqsopt-ex/include"],
+    srcs = ["install/qsopt-ex/lib/libqsopt_ex.so"],
+    hdrs = glob(["install/qsopt-ex/include/qsopt_ex/*.h"]),
+    includes = ["install/qsopt-ex/include"],
+    copts = ["-Iinstall/qsopt-ex/include"],
     visibility = [
         "//dreal:__subpackages__",
     ],
@@ -75,7 +75,7 @@ cc_library(
 
 filegroup(
     name = "qsopt-ex-lib",
-    srcs = ["qsopt-ex/lib"],
+    srcs = ["install/qsopt-ex/lib"],
     visibility = ["//visibility:public"],
 )
 
