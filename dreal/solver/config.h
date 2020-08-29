@@ -60,11 +60,11 @@ class Config {
   /// Returns a mutable OptionValue for 'use_local_optimization'.
   OptionValue<bool>& mutable_use_local_optimization();
 
-  /// Returns whether it uses phase one simplex in linear problems.
-  bool use_phase_one_simplex() const;
+  /// Returns which phase of simplex to use for linear satisfiability problems.
+  int simplex_sat_phase() const;
 
-  /// Returns a mutable OptionValue for 'use_phase_one_simplex'.
-  OptionValue<bool>& mutable_use_phase_one_simplex();
+  /// Returns a mutable OptionValue for 'simplex_sat_phase'.
+  OptionValue<int>& mutable_simplex_sat_phase();
 
   enum LPSolver {
     SOPLEX = 0,
@@ -170,8 +170,8 @@ class Config {
   OptionValue<bool> use_polytope_in_forall_{false};
   OptionValue<bool> use_worklist_fixpoint_{false};
   OptionValue<bool> use_local_optimization_{false};
-  OptionValue<bool> use_phase_one_simplex_{false};
   OptionValue<LPSolver> lp_solver_{LPSolver::QSOPTEX};
+  OptionValue<int> simplex_sat_phase_{1};
   OptionValue<int> verbose_simplex_{0};
   OptionValue<int> number_of_jobs_{1};
   OptionValue<bool> stack_left_box_first_{false};

@@ -20,22 +20,22 @@
     }; \
     TEST_F(DRealTestFPhases_##Class##_##Method##_Soplex, Method##_Soplex_Phase1) { \
       config_.mutable_lp_solver() = Config::SOPLEX; \
-      config_.mutable_use_phase_one_simplex() = true; \
+      config_.mutable_simplex_sat_phase() = 1; \
       DRealTestFPhasesImpl(); \
     } \
     TEST_F(DRealTestFPhases_##Class##_##Method##_Soplex, Method##_Soplex_Phase2) { \
       config_.mutable_lp_solver() = Config::SOPLEX; \
-      config_.mutable_use_phase_one_simplex() = false; \
+      config_.mutable_simplex_sat_phase() = 2; \
       DRealTestFPhasesImpl(); \
     } \
     TEST_F(DRealTestFPhases_##Class##_##Method##_Qsoptex, Method##_Qsoptex_Phase1) { \
       config_.mutable_lp_solver() = Config::QSOPTEX; \
-      config_.mutable_use_phase_one_simplex() = true; \
+      config_.mutable_simplex_sat_phase() = 1; \
       DRealTestFPhasesImpl(); \
     } \
     TEST_F(DRealTestFPhases_##Class##_##Method##_Qsoptex, Method##_Qsoptex_Phase2) { \
       config_.mutable_lp_solver() = Config::QSOPTEX; \
-      config_.mutable_use_phase_one_simplex() = false; \
+      config_.mutable_simplex_sat_phase() = 2; \
       DRealTestFPhasesImpl(); \
     } \
     void DRealTestFPhases_##Class##_##Method::DRealTestFPhasesImpl()
@@ -53,12 +53,12 @@
     }; \
     TEST_F(DRealTestFPhases_##Class##_##Method##_Qsoptex, Method##_Qsoptex_Phase1) { \
       config_.mutable_lp_solver() = Config::QSOPTEX; \
-      config_.mutable_use_phase_one_simplex() = true; \
+      config_.mutable_simplex_sat_phase() = 1; \
       DRealTestFPhasesImpl(); \
     } \
     TEST_F(DRealTestFPhases_##Class##_##Method##_Qsoptex, Method##_Qsoptex_Phase2) { \
       config_.mutable_lp_solver() = Config::QSOPTEX; \
-      config_.mutable_use_phase_one_simplex() = false; \
+      config_.mutable_simplex_sat_phase() = 2; \
       DRealTestFPhasesImpl(); \
     } \
     void DRealTestFPhases_##Class##_##Method::DRealTestFPhasesImpl()

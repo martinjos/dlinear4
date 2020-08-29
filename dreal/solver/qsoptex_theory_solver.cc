@@ -278,10 +278,10 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   lp_status = -1;
   int sat_status = -1;
   DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: calling QSopt_ex (phase {})",
-                  config_.use_phase_one_simplex() ? "one" : "two");
+                  1 == config_.simplex_sat_phase() ? "one" : "two");
 
   mpq_class actual_precision{precision_};
-  if (config_.use_phase_one_simplex()) {
+  if (1 == config_.simplex_sat_phase()) {
     status = qsopt_ex::QSdelta_solver(prob, actual_precision.get_mpq_t(), x, NULL, NULL,
                                       PRIMAL_SIMPLEX, &lp_status);
   } else {
@@ -296,7 +296,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
                     actual_precision);
   }
 
-  if (config_.use_phase_one_simplex()) {
+  if (1 == config_.simplex_sat_phase()) {
     switch (lp_status) {
     case QS_LP_FEASIBLE:
     case QS_LP_DELTA_FEASIBLE:

@@ -305,7 +305,7 @@ void SoplexSatSolver::ResetLinearProblem(const Box& box) {
   }
   // Clear variable bounds
   const int spx_cols{spx_prob_.numColsRational()};
-  DREAL_ASSERT(!config_.use_phase_one_simplex() ||
+  DREAL_ASSERT(2 == config_.simplex_sat_phase() ||
                static_cast<size_t>(spx_cols) == from_spx_col_.size());
   for (const pair<int, Variable> kv : from_spx_col_) {
     DREAL_ASSERT(0 <= kv.first && kv.first < spx_cols);
@@ -500,7 +500,7 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
     }
     // Inactive
     spx_prob_.addRowRational(LPRowRational(-soplex::infinity, coeffs, soplex::infinity));
-    if (!config_.use_phase_one_simplex()) {
+    if (2 == config_.simplex_sat_phase()) {
       CreateArtificials(spx_row);
     }
     // Update indexes
@@ -512,7 +512,7 @@ void SoplexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) {
 }
 
 void SoplexSatSolver::CreateArtificials(const int spx_row) {
-  DREAL_ASSERT(!config_.use_phase_one_simplex());
+  DREAL_ASSERT(2 == config_.simplex_sat_phase());
   const int spx_cols{spx_prob_.numColsRational()};
   spx_lower_.reDim(spx_cols + 2, true);  // Set lower bounds to zero
   spx_upper_.reDim(spx_cols + 2, false);

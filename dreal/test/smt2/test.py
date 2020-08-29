@@ -29,8 +29,8 @@ lp_solver = sys.argv[5]
 assert lp_solver in ("soplex", "qsoptex")
 
 # 6th Argument: simplex phase
-phase = int(sys.argv[6])
-assert phase in (1, 2)
+phase = sys.argv[6]
+assert phase in ("1", "2")
 
 # 7th Argument: SoPlex enabled?
 soplex_enabled = sys.argv[7]
@@ -40,8 +40,7 @@ if soplex_enabled != "True" and lp_solver == "soplex":
 
 options = sys.argv[8:]
 
-if phase == 1:
-    options = ["--phase-one-simplex"] + options
+options = ["--simplex-sat-phase", phase] + options
 
 options = ["--lp-solver", lp_solver] + options
 

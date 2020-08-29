@@ -114,7 +114,7 @@ GTEST_TEST(Test, ExampleSoplexPhase1) {
   DrakeSymbolicGuard guard_{Config::SOPLEX};
   Config config;
   config.mutable_lp_solver() = Config::SOPLEX;
-  config.mutable_use_phase_one_simplex() = true;
+  config.mutable_simplex_sat_phase() = 1;
   Context ctx{config};
   do_example_test(ctx);
 }
@@ -123,7 +123,7 @@ GTEST_TEST(Test, ExampleSoplexPhase2) {
   DrakeSymbolicGuard guard_{Config::SOPLEX};
   Config config;
   config.mutable_lp_solver() = Config::SOPLEX;
-  config.mutable_use_phase_one_simplex() = false;
+  config.mutable_simplex_sat_phase() = 2;
   Context ctx{config};
   do_example_test(ctx);
 }
@@ -133,7 +133,7 @@ GTEST_TEST(Test, ExampleQsoptexPhase1) {
   DrakeSymbolicGuard guard_{Config::QSOPTEX};
   Config config;
   config.mutable_lp_solver() = Config::QSOPTEX;
-  config.mutable_use_phase_one_simplex() = true;
+  config.mutable_simplex_sat_phase() = 1;
   Context ctx{config};
   do_example_test(ctx);
 }
@@ -142,7 +142,7 @@ GTEST_TEST(Test, ExampleQsoptexPhase2) {
   DrakeSymbolicGuard guard_{Config::QSOPTEX};
   Config config;
   config.mutable_lp_solver() = Config::QSOPTEX;
-  config.mutable_use_phase_one_simplex() = false;
+  config.mutable_simplex_sat_phase() = 2;
   Context ctx{config};
   do_example_test(ctx);
 }

@@ -190,12 +190,12 @@ QsoptexSatSolver::CheckSat(const Box& box,
   if (obj_expr.has_value()) {
     DREAL_LOG_TRACE("QsoptexSatSolver::CheckSat: Objective = {}", *obj_expr);
     SetLinearObjective(*obj_expr);
-    if (!config_.use_phase_one_simplex()) {
+    if (2 == config_.simplex_sat_phase()) {
       // Artificial variables would interfere with objective function (and in
       // any case, the solver needs both phases).
-      throw DREAL_RUNTIME_ERROR("Optimization requires --phase-one-simplex");
+      throw DREAL_RUNTIME_ERROR("Optimization requires --simplex-sat-phase 1 (the default)");
     }
-  } else if (config_.use_phase_one_simplex()) {
+  } else if (1 == config_.simplex_sat_phase()) {
     // Implies no artificial variables, so we can safely do this.
     ClearLinearObjective();
   }
@@ -345,7 +345,7 @@ void QsoptexSatSolver::ResetLinearProblem(const Box& box) {
   }
   // Clear variable bounds
   const int qsx_cols{mpq_QSget_colcount(qsx_prob_)};
-  DREAL_ASSERT(!config_.use_phase_one_simplex() ||
+  DREAL_ASSERT(2 == config_.simplex_sat_phase() ||
                static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
   for (const pair<int, Variable> kv : from_qsx_col_) {
     if (box.has_variable(kv.second)) {
@@ -533,7 +533,7 @@ void QsoptexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) 
     if (qsx_rhs_.back() <= mpq_ninfty() || qsx_rhs_.back() >= mpq_infty()) {
       throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", qsx_rhs_.back());
     }
-    if (!config_.use_phase_one_simplex()) {
+    if (2 == config_.simplex_sat_phase()) {
       CreateArtificials(qsx_row);
     }
     // Update indexes
@@ -545,7 +545,7 @@ void QsoptexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) 
 }
 
 void QsoptexSatSolver::CreateArtificials(const int qsx_row) {
-  DREAL_ASSERT(!config_.use_phase_one_simplex());
+  DREAL_ASSERT(2 == config_.simplex_sat_phase());
   const int qsx_col_1{mpq_QSget_colcount(qsx_prob_)};
   const int qsx_col_2{qsx_col_1 + 1};
   int status;

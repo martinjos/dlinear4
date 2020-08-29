@@ -131,13 +131,13 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   // Now we call the solver
   int sat_status = -1;
   DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: calling SoPlex (phase {})",
-                  config_.use_phase_one_simplex() ? "one" : "two");
+                  1 == config_.simplex_sat_phase() ? "one" : "two");
 
   mpq_class actual_precision{precision_};
   status = prob->optimize();
   actual_precision = 0;  // Because we always solve exactly, at present
 
-  if ((!config_.use_phase_one_simplex() && status != SPxSolver::Status::OPTIMAL) ||
+  if ((2 == config_.simplex_sat_phase() && status != SPxSolver::Status::OPTIMAL) ||
       (status != SPxSolver::Status::OPTIMAL &&
        status != SPxSolver::Status::UNBOUNDED &&
        status != SPxSolver::Status::INFEASIBLE)) {
@@ -156,7 +156,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   }
   DREAL_ASSERT(status != SPxSolver::Status::OPTIMAL || haveSoln);
 
-  if (config_.use_phase_one_simplex()) {
+  if (1 == config_.simplex_sat_phase()) {
     switch (status) {
     case SPxSolver::Status::OPTIMAL:
     case SPxSolver::Status::UNBOUNDED:

@@ -146,11 +146,14 @@ void MainProgram::AddOptions() {
            "Use local optimization algorithm for exist-forall problems.\n",
            "--local-optimization");
 
-  opt_.add("false" /* Default */, false /* Required? */,
-           0 /* Number of args expected. */,
+  auto* const simplex_sat_phase_option_validator = new ez::ezOptionValidator(
+      "s4", "in", "1,2");
+  opt_.add("1" /* Default */, false /* Required? */,
+           1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */,
-           "Use phase one simplex in linear problems.\n",
-           "--phase-one-simplex");
+           "Simplex phase to use for linear satisfiability problems."
+           " One of these (default = 1): 1, 2.\n",
+           "--simplex-sat-phase", simplex_sat_phase_option_validator);
 
   auto* const lp_solver_option_validator = new ez::ezOptionValidator(
       "t", "in", "soplex,qsoptex");
@@ -375,11 +378,13 @@ void MainProgram::ExtractOptions() {
                     config_.use_local_optimization());
   }
 
-  // --phase-one-simplex
-  if (opt_.isSet("--phase-one-simplex")) {
-    config_.mutable_use_phase_one_simplex().set_from_command_line(true);
-    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --phase-one-simplex = {}",
-                    config_.use_phase_one_simplex());
+  // --simplex-sat-phase
+  if (opt_.isSet("--simplex-sat-phase")) {
+    int simplex_sat_phase{1};
+    opt_.get("--simplex-sat-phase")->getInt(simplex_sat_phase);
+    config_.mutable_simplex_sat_phase().set_from_command_line(simplex_sat_phase);
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --simplex-sat-phase = {}",
+                    config_.simplex_sat_phase());
   }
 
   // --lp-solver

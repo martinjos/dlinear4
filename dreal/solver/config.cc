@@ -47,11 +47,11 @@ OptionValue<bool>& Config::mutable_use_local_optimization() {
   return use_local_optimization_;
 }
 
-bool Config::use_phase_one_simplex() const {
-  return use_phase_one_simplex_.get();
+int Config::simplex_sat_phase() const {
+  return simplex_sat_phase_.get();
 }
-OptionValue<bool>& Config::mutable_use_phase_one_simplex() {
-  return use_phase_one_simplex_;
+OptionValue<int>& Config::mutable_simplex_sat_phase() {
+  return simplex_sat_phase_;
 }
 
 Config::LPSolver Config::lp_solver() const {
@@ -138,7 +138,7 @@ ostream& operator<<(ostream& os, const Config& config) {
              "use_polytope_in_forall = {}, "
              "use_worklist_fixpoint = {}, "
              "use_local_optimization = {}, "
-             "use_phase_one_simplex = {}, "
+             "simplex_sat_phase = {}, "
              "lp_solver = {}, "
              "verbose_simplex = {}, "
              "number_of_jobs = {}, "
@@ -151,7 +151,7 @@ ostream& operator<<(ostream& os, const Config& config) {
              ")",
              config.precision(), config.produce_models(), config.use_polytope(),
              config.use_polytope_in_forall(), config.use_worklist_fixpoint(),
-             config.use_local_optimization(), config.use_phase_one_simplex(),
+             config.use_local_optimization(), config.simplex_sat_phase(),
              config.lp_solver(), config.verbose_simplex(), config.number_of_jobs(),
              config.nlopt_ftol_rel(), config.nlopt_ftol_abs(),
              config.nlopt_maxeval(), config.nlopt_maxtime(),
