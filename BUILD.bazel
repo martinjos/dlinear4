@@ -192,7 +192,7 @@ pkg_deb(
     ],
     description = "SMT solver for nonlinear theories",
     homepage = "http://dreal.github.io",
-    maintainer = "Soonho Kong <soonho.kong@gmail.com>",
+    maintainer = "",
     package = "dreal",
     tags = ["manual"],
     version = DREAL_VERSION,

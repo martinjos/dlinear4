@@ -154,8 +154,8 @@ setuptools.setup(
     long_description=long_description,  # Optional
     long_description_content_type='text/markdown',  # Optional (see note above)
     url='https://github.com/dreal/dreal4',  # Optional
-    author='Soonho Kong',  # Optional
-    author_email='soonho.kong@gmail.com',  # Optional
+    #author='',  # Optional
+    #author_email='',  # Optional
     classifiers=[  # Optional
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',

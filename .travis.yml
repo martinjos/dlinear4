@@ -1,10 +1,10 @@
 sudo: required
-dist: bionic
+dist: focal
 language: cpp
 
 # CODECOV_TOKEN
 # Created by running `travis encrypt -r dreal/dreal4 CODECOV_TOKEN="SECURE_TOKEN_VALUE"`
-secure: "K4HzcNOd9Kzp5OhHc/bBldhaYLado14f/FT0kCUXYJBfyRt94tDMVhs1fHMwSg1PFqCFrR/DWXpDK4LDUg+fHPUuSBmx7pkrbS8Ou6y+CkeavRefX6TiOsdOseO7I9EOS5Lu5lwFX5Dik7vktLBRsFmubQ4E2kDTIGwCQ8xQzXlsv5nWUNoMTrtoG75p362EpKmLq/2IbdGQ3btQ5vjM3uT+L9CQfWJ6/IrWNzilY4KBciuZSD1PCkQ4AoxjeRH+MnRqu7IpvPEcMHcKzfN7HamIIihaWM8Xf+A2wHVypMN/jr9ONMoHSZzosMzBK38NOTyxaxAqpO0/RO0CrpjGqDjRCpT6cejndeEP4Zr1J2mnjnrsiFVZXJfQRVzvhcWa/1V0b4lK5wjPFeF/l2fwYqkwu+IMGmzVupXJ8s9L7XSZtocLeZ3dYWpUqHDI84zhb3Sts1FSfp7G8a6GshL8Mj8V795YnfVE9Y7WTlpedZ9/6aeUlgaKwbAuq1Bav2PJd435QO4thWi4ODVF9vbNjPm4ocNFQZ6YiEqbvoc2hT6E92Y309DLVGzyTLCmDm3Vkk6VVjhrvttOGXVmHFIcDvgJwvLZQ4nkw46kd8PafaEDoG4KP730qCF9CbE/SllmimTACb9cGkkCZj5O4pQEivlqc5jaoradRxht/0E0KQw="
+#secure: ""
 
 cache:
   directories:
@@ -173,29 +173,29 @@ matrix:
           - clang-8
       env:
         - COMPILER="clang-8" BUILD_TYPE="-c dbg"
-        - COV="ON" COV_OPTION="--config=kcov"
+#        - COV="ON" COV_OPTION="--config=kcov"
         - TEST_TAG_FILTERS="unit"
-    - os: osx
-      osx_image: xcode9.4  # macOS-10.13
-      compiler: clang
-      env:
-        - COMPILER=clang
-        - BUILD_TYPE="-c opt"
-        - TEST_TAG_FILTERS="unit"
-    - os: osx
-      osx_image: xcode10.2  # macOS-10.14
-      compiler: clang
-      env:
-        - COMPILER=clang
-        - BUILD_TYPE="-c opt"
-        - TEST_TAG_FILTERS="unit"        
-    - os: osx
-      osx_image: xcode10.2  # macOS-10.14
-      compiler: clang
-      env:
-        - COMPILER=clang
-        - BUILD_TYPE="-c opt" CONFIG="--config asan"
-        - TEST_TAG_FILTERS="unit,-no_asan"
+#    - os: osx
+#      osx_image: xcode9.4  # macOS-10.13
+#      compiler: clang
+#      env:
+#        - COMPILER=clang
+#        - BUILD_TYPE="-c opt"
+#        - TEST_TAG_FILTERS="unit"
+#    - os: osx
+#      osx_image: xcode10.2  # macOS-10.14
+#      compiler: clang
+#      env:
+#        - COMPILER=clang
+#        - BUILD_TYPE="-c opt"
+#        - TEST_TAG_FILTERS="unit"
+#    - os: osx
+#      osx_image: xcode10.2  # macOS-10.14
+#      compiler: clang
+#      env:
+#        - COMPILER=clang
+#        - BUILD_TYPE="-c opt" CONFIG="--config asan"
+#        - TEST_TAG_FILTERS="unit,-no_asan"
 
 before_install:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew unlink python@2; fi
@@ -204,12 +204,14 @@ install:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
       sudo ./setup/ubuntu/update_expired_keys.sh;
       sudo ./setup/ubuntu/`lsb_release -r -s`/install_prereqs.sh;
+      sudo ./setup/ubuntu/install_bazel.sh;
+      ./setup/setup_qsopt-ex.sh;
     fi
-  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
-      /usr/bin/yes | pip2 uninstall numpy;
-      brew upgrade python;
-      ./setup/mac/install_prereqs.sh;
-    fi
+#  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+#      /usr/bin/yes | pip2 uninstall numpy;
+#      brew upgrade python;
+#      ./setup/mac/install_prereqs.sh;
+#    fi
   - if [ "${COV}" == "ON" ]; then
       sudo apt install -y binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev;
       git clone https://github.com/SimonKagstrom/kcov --depth 1;
@@ -238,14 +240,14 @@ script:
       --test_tag_filters=${TEST_TAG_FILTERS} \
       --verbose_failures
 
-after_success:
-  - if [ "${TRAVIS_REPO_SLUG}" == "dreal/dreal4" ] && [ "${COV}" == "ON" ]; then
-      bash <(curl -s https://codecov.io/bash) -s bazel-kcov -t ${CODECOV_TOKEN};
-    fi
+#after_success:
+#  - if [ "${TRAVIS_REPO_SLUG}" == "dreal/dreal4" ] && [ "${COV}" == "ON" ]; then
+#      bash <(curl -s https://codecov.io/bash) -s bazel-kcov -t ${CODECOV_TOKEN};
+#    fi
 
-notifications:
-  recipients:
-    - soonho.kong@gmail.com
-  email:
-    on_success: change
-    on_failure: always
+#notifications:
+#  recipients:
+#    -
+#  email:
+#    on_success: change
+#    on_failure: always
