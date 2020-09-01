@@ -7,15 +7,21 @@ on:
     branches: [ master ]
 
 jobs:
-  macos_catalina:
-    name: macos catalina
-    runs-on: macos-10.15
+  ubuntu_focal:
+    name: ubuntu 20.04
+    runs-on: ubuntu-20.04
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: setup
-        run: ./setup/mac/install_prereqs.sh
-        shell: zsh -efuo pipefail {0}
+      - name: setup (Ubuntu packages)
+        run: sudo ./setup/ubuntu/20.04/install_prereqs.sh
+        shell: bash
+      - name: setup (Bazel)
+        run: sudo ./setup/ubuntu/install_bazel.sh
+        shell: bash
+      - name: setup (QSopt_ex)
+        run: ./setup/setup_qsopt-ex.sh
+        shell: bash
       - name: build and test
         run: bazel test //... -c dbg
   ubuntu_bionic:
@@ -24,8 +30,14 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: setup
+      - name: setup (Ubuntu packages)
         run: sudo ./setup/ubuntu/18.04/install_prereqs.sh
+        shell: bash
+      - name: setup (Bazel)
+        run: sudo ./setup/ubuntu/install_bazel.sh
+        shell: bash
+      - name: setup (QSopt_ex)
+        run: ./setup/setup_qsopt-ex.sh
         shell: bash
       - name: build and test
         run: bazel test //... -c dbg
@@ -35,8 +47,14 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: setup
+      - name: setup (Ubuntu packages)
         run: sudo ./setup/ubuntu/16.04/install_prereqs.sh
+        shell: bash
+      - name: setup (Bazel)
+        run: sudo ./setup/ubuntu/install_bazel.sh
+        shell: bash
+      - name: setup (QSopt_ex)
+        run: ./setup/setup_qsopt-ex.sh
         shell: bash
       - name: build and test
         run: bazel test //... -c dbg
