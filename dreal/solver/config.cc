@@ -68,6 +68,13 @@ OptionValue<int>& Config::mutable_verbose_simplex() {
   return verbose_simplex_;
 }
 
+bool Config::continuous_output() const {
+  return continuous_output_.get();
+}
+OptionValue<bool>& Config::mutable_continuous_output() {
+  return continuous_output_;
+}
+
 int Config::number_of_jobs() const { return number_of_jobs_.get(); }
 OptionValue<int>& Config::mutable_number_of_jobs() { return number_of_jobs_; }
 
@@ -141,6 +148,7 @@ ostream& operator<<(ostream& os, const Config& config) {
              "simplex_sat_phase = {}, "
              "lp_solver = {}, "
              "verbose_simplex = {}, "
+             "continuous_output = {}, "
              "number_of_jobs = {}, "
              "nlopt_ftol_rel = {}, "
              "nlopt_ftol_abs = {}, "
@@ -152,7 +160,8 @@ ostream& operator<<(ostream& os, const Config& config) {
              config.precision(), config.produce_models(), config.use_polytope(),
              config.use_polytope_in_forall(), config.use_worklist_fixpoint(),
              config.use_local_optimization(), config.simplex_sat_phase(),
-             config.lp_solver(), config.verbose_simplex(), config.number_of_jobs(),
+             config.lp_solver(), config.verbose_simplex(),
+             config.continuous_output(), config.number_of_jobs(),
              config.nlopt_ftol_rel(), config.nlopt_ftol_abs(),
              config.nlopt_maxeval(), config.nlopt_maxtime(),
              config.sat_default_phase(), config.random_seed());

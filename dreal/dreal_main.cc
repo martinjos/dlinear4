@@ -173,6 +173,12 @@ void MainProgram::AddOptions() {
            "One of these (default = 0): 0, 1, 2, 3, 4, 5.\n",
            "--verbose-simplex", verbose_simplex_option_validator);
 
+  opt_.add("false" /* Default */, false /* Required? */,
+           0 /* Number of args expected. */,
+           0 /* Delimiter if expecting multiple args. */,
+           "Report partial results continuously, as and when available.\n",
+           "--continuous-output");
+
   opt_.add("1" /* Default */, false /* Required? */,
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */, "Number of jobs.\n",
@@ -405,6 +411,13 @@ void MainProgram::ExtractOptions() {
     config_.mutable_verbose_simplex().set_from_command_line(verbose_simplex);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --verbose-simplex = {}",
                     config_.verbose_simplex());
+  }
+
+  // --continuous-output
+  if (opt_.isSet("--continuous-output")) {
+    config_.mutable_continuous_output().set_from_command_line(true);
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --continuous-output = {}",
+                    config_.continuous_output());
   }
 
   // --nlopt-ftol-rel

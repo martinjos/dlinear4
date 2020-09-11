@@ -83,6 +83,13 @@ class Config {
   /// Returns a mutable OptionValue for 'verbose_simplex'.
   OptionValue<int>& mutable_verbose_simplex();
 
+  /// Returns whether it outputs partial results continuously, as and when
+  /// available.
+  bool continuous_output() const;
+
+  /// Returns a mutable OptionValue for 'continuous_output'.
+  OptionValue<bool>& mutable_continuous_output();
+
   /// Returns the number of parallel jobs.
   int number_of_jobs() const;
 
@@ -170,6 +177,7 @@ class Config {
   OptionValue<bool> use_polytope_in_forall_{false};
   OptionValue<bool> use_worklist_fixpoint_{false};
   OptionValue<bool> use_local_optimization_{false};
+  OptionValue<bool> continuous_output_{false};
   OptionValue<LPSolver> lp_solver_{LPSolver::QSOPTEX};
   OptionValue<int> simplex_sat_phase_{1};
   OptionValue<int> verbose_simplex_{0};
