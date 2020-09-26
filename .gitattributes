@@ -1,0 +1,3 @@
+*.smt2 linguist-detectable=false
+*.ipynb linguist-documentation
+*.ll linguist-language=Lex
