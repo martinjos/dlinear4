@@ -8,6 +8,7 @@
 #include "dreal/util/logging.h"
 #include "dreal/util/stat.h"
 #include "dreal/util/timer.h"
+#include "dreal/solver/context.h"
 
 namespace dreal {
 
@@ -73,7 +74,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   DREAL_LOG_TRACE("SoplexTheorySolver::CheckSat: Box = \n{}", box);
 
   SPxSolver::Status status = SPxSolver::Status::UNKNOWN;
-  int lp_status = -1;
+  int sat_status = SAT_NO_RESULT;
 
   precision_ = config_.precision();
 
@@ -93,14 +94,14 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
-  lp_status = QS_EXACT_DELTA_SAT;
+  sat_status = SAT_DELTA_SATISFIABLE;
   for (const pair<int, Variable>& kv : var_map) {
     const Rational& lb{lower[kv.first]};
     const Rational& ub{upper[kv.first]};
     if (lb > ub) {
       DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: variable {} has invalid bounds [{}, {}]",
                       kv.second, lb, ub);
-      lp_status = QS_EXACT_UNSAT;
+      sat_status = SAT_UNSATISFIABLE;
       // Prevent the exact same LP from coming up again
       explanation_.clear();
       explanation_.insert(assertions.begin(), assertions.end());
@@ -120,16 +121,16 @@ int SoplexTheorySolver::CheckSat(const Box& box,
       model_[kv.second] = val.getMpqRef();
     }
   }
-  if (lp_status == QS_EXACT_UNSAT || rowcount == 0) {
+  if (sat_status == SAT_UNSATISFIABLE || rowcount == 0) {
     DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: no need to call LP solver");
-    return lp_status;
+    return sat_status;
   }
 
   prob->changeLowerRational(lower);
   prob->changeUpperRational(upper);
 
   // Now we call the solver
-  int sat_status = -1;
+  sat_status = SAT_UNSOLVED;
   DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: calling SoPlex (phase {})",
                   1 == config_.simplex_sat_phase() ? "one" : "two");
 
@@ -160,13 +161,13 @@ int SoplexTheorySolver::CheckSat(const Box& box,
     switch (status) {
     case SPxSolver::Status::OPTIMAL:
     case SPxSolver::Status::UNBOUNDED:
-      sat_status = QS_EXACT_DELTA_SAT;
+      sat_status = SAT_DELTA_SATISFIABLE;
       break;
     case SPxSolver::Status::INFEASIBLE:
-      sat_status = QS_EXACT_UNSAT;
+      sat_status = SAT_UNSATISFIABLE;
       break;
     //case QS_LP_UNSOLVED:
-    //  sat_status = QS_EXACT_UNKNOWN;
+    //  sat_status = SAT_UNSOLVED;
     //  break;
     default:
       DREAL_UNREACHABLE();
@@ -185,18 +186,18 @@ int SoplexTheorySolver::CheckSat(const Box& box,
       }
     }
     if (ok) {
-      sat_status = QS_EXACT_DELTA_SAT;
+      sat_status = SAT_DELTA_SATISFIABLE;
     } else {
-      sat_status = QS_EXACT_UNSAT;
+      sat_status = SAT_UNSATISFIABLE;
     }
   }
 
-  if (sat_status == QS_EXACT_UNKNOWN) {
+  if (sat_status == SAT_UNSOLVED) {
     DREAL_LOG_DEBUG("SoplexTheorySolver::CheckSat: SoPlex failed to return a result");
   }
 
   switch (sat_status) {
-  case QS_EXACT_DELTA_SAT:
+  case SAT_DELTA_SATISFIABLE:
     if (haveSoln) {
     // Copy delta-feasible point from x into model_
       for (const pair<int, Variable>& kv : var_map) {
@@ -208,8 +209,8 @@ int SoplexTheorySolver::CheckSat(const Box& box,
       throw DREAL_RUNTIME_ERROR("delta-sat but no solution available");
     }
     break;
-  case QS_EXACT_UNSAT:
-  case QS_EXACT_UNKNOWN:
+  case SAT_UNSATISFIABLE:
+  case SAT_UNSOLVED:
     // Prevent the exact same LP from coming up again
     explanation_.clear();
     explanation_.insert(assertions.begin(), assertions.end());

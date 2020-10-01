@@ -190,13 +190,7 @@ QsoptexSatSolver::CheckSat(const Box& box,
   if (obj_expr.has_value()) {
     DREAL_LOG_TRACE("QsoptexSatSolver::CheckSat: Objective = {}", *obj_expr);
     SetLinearObjective(*obj_expr);
-    if (2 == config_.simplex_sat_phase()) {
-      // Artificial variables would interfere with objective function (and in
-      // any case, the solver needs both phases).
-      throw DREAL_RUNTIME_ERROR("Optimization requires --simplex-sat-phase 1 (the default)");
-    }
-  } else if (1 == config_.simplex_sat_phase()) {
-    // Implies no artificial variables, so we can safely do this.
+  } else {
     ClearLinearObjective();
   }
 
@@ -345,8 +339,7 @@ void QsoptexSatSolver::ResetLinearProblem(const Box& box) {
   }
   // Clear variable bounds
   const int qsx_cols{mpq_QSget_colcount(qsx_prob_)};
-  DREAL_ASSERT(2 == config_.simplex_sat_phase() ||
-               static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
+  DREAL_ASSERT(static_cast<size_t>(qsx_cols) == from_qsx_col_.size());
   for (const pair<int, Variable> kv : from_qsx_col_) {
     if (box.has_variable(kv.second)) {
       DREAL_ASSERT(mpq_ninfty() <= box[kv.second].lb());
@@ -533,35 +526,12 @@ void QsoptexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) 
     if (qsx_rhs_.back() <= mpq_ninfty() || qsx_rhs_.back() >= mpq_infty()) {
       throw DREAL_RUNTIME_ERROR("LP RHS value too large: {}", qsx_rhs_.back());
     }
-    if (2 == config_.simplex_sat_phase()) {
-      CreateArtificials(qsx_row);
-    }
     // Update indexes
     to_qsx_row_.emplace(make_pair(make_pair(formulaVar.get_id(), truth), qsx_row));
     DREAL_ASSERT(static_cast<size_t>(qsx_row) == from_qsx_row_.size());
     from_qsx_row_.push_back(make_pair(formulaVar, truth));
     DREAL_LOG_DEBUG("QsoptexSatSolver::AddLinearLiteral({}{} ↦ {})",
                     truth ? "" : "¬", it->second, qsx_row);
-}
-
-void QsoptexSatSolver::CreateArtificials(const int qsx_row) {
-  DREAL_ASSERT(2 == config_.simplex_sat_phase());
-  const int qsx_col_1{mpq_QSget_colcount(qsx_prob_)};
-  const int qsx_col_2{qsx_col_1 + 1};
-  int status;
-  status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
-  DREAL_ASSERT(!status);
-  status = mpq_QSnew_col(qsx_prob_, mpq_oneLpNum, mpq_zeroLpNum, mpq_INFTY, NULL);
-  DREAL_ASSERT(!status);
-  DREAL_LOG_DEBUG("QsoptexSatSolver::CreateArtificials({} -> ({}, {}))",
-                  qsx_row, qsx_col_1, qsx_col_2);
-  mpq_t c_value;
-  mpq_init(c_value);
-  mpq_set_si(c_value, 1, 1);
-  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col_1, c_value);
-  mpq_set_si(c_value, -1, 1);
-  mpq_QSchange_coef(qsx_prob_, qsx_row, qsx_col_2, c_value);
-  mpq_clear(c_value);
 }
 
 void QsoptexSatSolver::UpdateLookup(int lit, int learned) {

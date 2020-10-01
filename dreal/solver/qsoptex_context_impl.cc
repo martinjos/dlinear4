@@ -104,18 +104,18 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
           theory_solver_.CheckSat(box, theory_model,
                                   sat_solver_.GetLinearSolver(),
                                   sat_solver_.GetLinearVarMap())};
-        if (theory_result == QS_EXACT_DELTA_SAT) {
+        if (theory_result == SAT_DELTA_SATISFIABLE) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(
               "Context::QsoptexImpl::CheckSatCore() - Theory Check = delta-SAT");
           Box model{theory_solver_.GetModel()};
           return model;
         } else {
-          if (theory_result == QS_EXACT_UNSAT) {
+          if (theory_result == SAT_UNSATISFIABLE) {
             // UNSAT from TheorySolver.
             DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckSatCore() - Theory Check = UNSAT");
           } else {
-            DREAL_ASSERT(theory_result == QS_EXACT_UNKNOWN);
+            DREAL_ASSERT(theory_result == SAT_UNSOLVED);
             DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckSatCore() - Theory Check = UNKNOWN");
             have_unsolved = true;  // Will prevent return of UNSAT
           }

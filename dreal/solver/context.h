@@ -17,6 +17,14 @@
 namespace dreal {
 
 enum {
+  SAT_NO_RESULT = 0,
+  SAT_UNSOLVED,
+  SAT_UNSATISFIABLE,
+  SAT_SATISFIABLE,
+  SAT_DELTA_SATISFIABLE,
+};
+
+enum {
   LP_NO_RESULT = 0,
   LP_UNSOLVED,
   LP_INFEASIBLE,

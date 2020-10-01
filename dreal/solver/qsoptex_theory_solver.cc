@@ -214,7 +214,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   DREAL_LOG_TRACE("QsoptexTheorySolver::CheckSat: Box = \n{}", box);
 
   int status = -1;
-  int lp_status = -1;
+  int sat_status = SAT_NO_RESULT;
 
   precision_ = config_.precision();
 
@@ -237,7 +237,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   // The solver can't handle problems with inverted bounds, so we need to
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
-  lp_status = QS_EXACT_DELTA_SAT;
+  sat_status = SAT_DELTA_SATISFIABLE;
   mpq_t temp;
   mpq_init(temp);
   for (const pair<int, Variable>& kv : var_map) {
@@ -249,7 +249,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
     DREAL_ASSERT(!res);
     mpq_class ub{temp};
     if (lb > ub) {
-      lp_status = QS_EXACT_UNSAT;
+      sat_status = SAT_UNSATISFIABLE;
       // Prevent the exact same LP from coming up again
       explanation_.clear();
       explanation_.insert(assertions.begin(), assertions.end());
@@ -269,14 +269,14 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
     }
   }
   mpq_clear(temp);
-  if (lp_status == QS_EXACT_UNSAT || rowcount == 0) {
+  if (sat_status == SAT_UNSATISFIABLE || rowcount == 0) {
     DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: no need to call LP solver");
-    return lp_status;
+    return sat_status;
   }
 
   // Now we call the solver
-  lp_status = -1;
-  int sat_status = -1;
+  int lp_status = -1;
+  sat_status = SAT_NO_RESULT;
   DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: calling QSopt_ex (phase {})",
                   1 == config_.simplex_sat_phase() ? "one" : "two");
 
@@ -286,7 +286,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
                                       PRIMAL_SIMPLEX, &lp_status);
   } else {
     status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, PRIMAL_SIMPLEX,
-                                            &sat_status, actual_precision.get_mpq_t());
+                                            &lp_status, actual_precision.get_mpq_t());
   }
 
   if (status) {
@@ -296,40 +296,38 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
                     actual_precision);
   }
 
-  if (1 == config_.simplex_sat_phase()) {
-    switch (lp_status) {
-    case QS_LP_FEASIBLE:
-    case QS_LP_DELTA_FEASIBLE:
-      sat_status = QS_EXACT_DELTA_SAT;
-      break;
-    case QS_LP_INFEASIBLE:
-      sat_status = QS_EXACT_UNSAT;
-      break;
-    case QS_LP_UNSOLVED:
-      sat_status = QS_EXACT_UNKNOWN;
-      break;
-    default:
-      DREAL_UNREACHABLE();
-    }
+  switch (lp_status) {
+  case QS_LP_FEASIBLE:
+  case QS_LP_DELTA_FEASIBLE:
+    sat_status = SAT_DELTA_SATISFIABLE;
+    break;
+  case QS_LP_INFEASIBLE:
+    sat_status = SAT_UNSATISFIABLE;
+    break;
+  case QS_LP_UNSOLVED:
+    sat_status = SAT_UNSOLVED;
+    break;
+  default:
+    DREAL_UNREACHABLE();
   }
 
-  if (sat_status == QS_EXACT_UNKNOWN) {
+  if (sat_status == SAT_UNSOLVED) {
     DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex failed to return a result");
   }
 
   switch (sat_status) {
-  case QS_EXACT_SAT:
-  case QS_EXACT_DELTA_SAT:
+  case SAT_SATISFIABLE:
+  case SAT_DELTA_SATISFIABLE:
     // Copy delta-feasible point from x into model_
     for (const pair<int, Variable>& kv : var_map) {
       DREAL_ASSERT(model_[kv.second].lb() <= mpq_class(x[kv.first]) &&
                    mpq_class(x[kv.first]) <= model_[kv.second].ub());
       model_[kv.second] = x[kv.first];
     }
-    sat_status = QS_EXACT_DELTA_SAT;
+    sat_status = SAT_DELTA_SATISFIABLE;
     break;
-  case QS_EXACT_UNSAT:
-  case QS_EXACT_UNKNOWN:
+  case SAT_UNSATISFIABLE:
+  case SAT_UNSOLVED:
     // Prevent the exact same LP from coming up again
     explanation_.clear();
     explanation_.insert(assertions.begin(), assertions.end());
