@@ -14,6 +14,7 @@
 namespace dreal {
 
 using std::cout;
+using std::endl;
 using std::set;
 using std::vector;
 using std::pair;
@@ -202,6 +203,15 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   return lp_status;
 }
 
+extern "C" {
+static void CheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* /*prob*/,
+                                    mpq_t* const /*x*/,
+                                    const mpq_t infeas,
+                                    const mpq_t /*delta*/) {
+  cout << "PARTIAL: delta-sat with delta = " << infeas << endl;
+}
+}
+
 int QsoptexTheorySolver::CheckSat(const Box& box,
                                   const std::vector<Literal>& assertions,
                                   const mpq_QSprob prob,
@@ -283,10 +293,12 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   mpq_class actual_precision{precision_};
   if (1 == config_.simplex_sat_phase()) {
     status = qsopt_ex::QSdelta_solver(prob, actual_precision.get_mpq_t(), x, NULL, NULL,
-                                      PRIMAL_SIMPLEX, &lp_status);
+                                      PRIMAL_SIMPLEX, &lp_status,
+                                      config_.continuous_output() ? CheckSatPartialSolution : NULL);
   } else {
     status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, PRIMAL_SIMPLEX,
-                                            &lp_status, actual_precision.get_mpq_t());
+                                            &lp_status, actual_precision.get_mpq_t(),
+                                            config_.continuous_output() ? CheckSatPartialSolution : NULL);
   }
 
   if (status) {
