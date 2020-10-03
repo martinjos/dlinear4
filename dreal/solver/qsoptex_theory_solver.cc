@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <iostream>
+#include <limits>
 
 #include "dreal/util/assert.h"
 #include "dreal/util/exception.h"
@@ -18,6 +19,7 @@ using std::endl;
 using std::set;
 using std::vector;
 using std::pair;
+using std::numeric_limits;
 
 using qsopt_ex::mpq_QSprob;
 using qsopt_ex::MpqArray;
@@ -208,7 +210,9 @@ static void CheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* /*prob*/,
                                     mpq_t* const /*x*/,
                                     const mpq_t infeas,
                                     const mpq_t /*delta*/) {
-  cout << "PARTIAL: delta-sat with delta = " << infeas << endl;
+  // mpq_get_d() rounds towards 0.  This code guarantees infeas_gt > infeas.
+  double infeas_gt = nextafter(mpq_get_d(infeas), numeric_limits<double>::infinity());
+  cout << "PARTIAL: delta-sat with delta = " << infeas_gt << " ( > " << infeas << ")" << endl;
 }
 }
 
