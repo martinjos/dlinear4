@@ -19,6 +19,7 @@ using std::endl;
 using std::set;
 using std::vector;
 using std::pair;
+using std::nextafter;
 using std::numeric_limits;
 
 using qsopt_ex::mpq_QSprob;
@@ -219,7 +220,8 @@ static void CheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* /*prob*/,
 int QsoptexTheorySolver::CheckSat(const Box& box,
                                   const std::vector<Literal>& assertions,
                                   const mpq_QSprob prob,
-                                  const std::map<int, Variable>& var_map) {
+                                  const std::map<int, Variable>& var_map,
+                                  mpq_class* actual_precision) {
   static TheorySolverStat stat{DREAL_LOG_INFO_ENABLED};
   stat.increase_num_check_sat();
   TimerGuard check_sat_timer_guard(&stat.timer_check_sat_, stat.enabled(),
@@ -294,14 +296,14 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: calling QSopt_ex (phase {})",
                   1 == config_.simplex_sat_phase() ? "one" : "two");
 
-  mpq_class actual_precision{precision_};
+  *actual_precision = precision_;
   if (1 == config_.simplex_sat_phase()) {
-    status = qsopt_ex::QSdelta_solver(prob, actual_precision.get_mpq_t(), x, NULL, NULL,
+    status = qsopt_ex::QSdelta_solver(prob, actual_precision->get_mpq_t(), x, NULL, NULL,
                                       PRIMAL_SIMPLEX, &lp_status,
                                       config_.continuous_output() ? CheckSatPartialSolution : NULL);
   } else {
     status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, PRIMAL_SIMPLEX,
-                                            &lp_status, actual_precision.get_mpq_t(),
+                                            &lp_status, actual_precision->get_mpq_t(),
                                             config_.continuous_output() ? CheckSatPartialSolution : NULL);
   }
 
@@ -309,7 +311,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
     throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
   } else {
     DREAL_LOG_DEBUG("QsoptexTheorySolver::CheckSat: QSopt_ex has returned with precision = {}",
-                    actual_precision);
+                    *actual_precision);
   }
 
   switch (lp_status) {

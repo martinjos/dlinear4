@@ -55,7 +55,8 @@ void Context::SoplexImpl::Assert(const Formula& f) {
 }  // namespace dreal
 
 optional<Box> Context::SoplexImpl::CheckSatCore(const ScopedVector<Formula>& stack,
-                                          Box box) {
+                                                Box box,
+                                                mpq_class* /*actual_precision*/) {
   DREAL_LOG_DEBUG("Context::SoplexImpl::CheckSatCore()");
   DREAL_LOG_TRACE("Context::SoplexImpl::CheckSat: Box =\n{}", box);
   if (box.empty()) {

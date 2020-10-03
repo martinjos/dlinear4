@@ -18,7 +18,7 @@ class Context::QsoptexImpl : public Context::Impl {
 
  protected:
   // Returns the current box in the stack.
-  optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box);
+  optional<Box> CheckSatCore(const ScopedVector<Formula>& stack, Box box, mpq_class* actual_precision);
   int CheckOptCore(const ScopedVector<Formula>& stack, mpq_class* obj_lo, mpq_class* obj_up, Box* box);
 
   void MinimizeCore(const Expression& obj_expr);

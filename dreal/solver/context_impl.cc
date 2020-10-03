@@ -75,8 +75,8 @@ Context::Impl::Impl(Config config)
   boxes_.push_back(Box{});
 }
 
-optional<Box> Context::Impl::CheckSat() {
-  auto result = CheckSatCore(stack_, box());
+optional<Box> Context::Impl::CheckSat(mpq_class* actual_precision) {
+  auto result = CheckSatCore(stack_, box(), actual_precision);
   if (result) {
     // In case of delta-sat, do post-processing.
     //Tighten(&(*result), config_.precision());

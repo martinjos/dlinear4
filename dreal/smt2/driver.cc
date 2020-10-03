@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <limits>
 
 #include "dreal/smt2/scanner.h"
 
@@ -22,6 +23,8 @@ using std::ostream;
 using std::ostringstream;
 using std::string;
 using std::vector;
+using std::nextafter;
+using std::numeric_limits;
 
 Smt2Driver::Smt2Driver(Context context) : context_{std::move(context)} {}
 
@@ -79,9 +82,13 @@ void Smt2Driver::CheckSat() {
       DREAL_UNREACHABLE();
     }
   } else {
-    const optional<Box> model{context_.CheckSat()};
+    mpq_class actual_precision = context_.config().precision();
+    const optional<Box> model{context_.CheckSat(&actual_precision)};
+    double actual_precision_upper = nextafter(actual_precision.get_d(),
+                                              numeric_limits<double>::infinity());
     if (model) {
-      cout << "delta-sat with delta = " << context_.config().precision() << endl;
+      cout << "delta-sat with delta = " << actual_precision_upper
+           << " ( > " << actual_precision << ")" << endl;
       if (context_.config().produce_models()) {
         cout << *model << endl;
       }

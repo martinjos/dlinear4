@@ -55,7 +55,8 @@ void Context::QsoptexImpl::Assert(const Formula& f) {
 }  // namespace dreal
 
 optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& stack,
-                                          Box box) {
+                                                 Box box,
+                                                 mpq_class* actual_precision) {
   DREAL_LOG_DEBUG("Context::QsoptexImpl::CheckSatCore()");
   DREAL_LOG_TRACE("Context::QsoptexImpl::CheckSat: Box =\n{}", box);
   if (box.empty()) {
@@ -103,7 +104,8 @@ optional<Box> Context::QsoptexImpl::CheckSatCore(const ScopedVector<Formula>& st
         int theory_result{
           theory_solver_.CheckSat(box, theory_model,
                                   sat_solver_.GetLinearSolver(),
-                                  sat_solver_.GetLinearVarMap())};
+                                  sat_solver_.GetLinearVarMap(),
+                                  actual_precision)};
         if (theory_result == SAT_DELTA_SATISFIABLE) {
           // SAT from TheorySolver.
           DREAL_LOG_DEBUG(

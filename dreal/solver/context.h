@@ -63,7 +63,7 @@ class Context {
   void Assert(const Formula& f);
 
   /// Checks the satisfiability of the asserted formulas.
-  optional<Box> CheckSat();
+  optional<Box> CheckSat(mpq_class* actual_precision);
 
   /// Checks the satisfiability of the asserted formulas, and (where
   /// possible) optimizes an objective function over them.
