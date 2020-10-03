@@ -85,6 +85,9 @@ void MainProgram::AddOptions() {
   auto* const positive_double_option_validator =
       new ez::ezOptionValidator("d" /* double */, "gt", "0");
 
+  auto* const nonnegative_double_option_validator =
+      new ez::ezOptionValidator("d" /* double */, "ge", "0");
+
   auto* const positive_int_option_validator =
       new ez::ezOptionValidator("s4" /* 4byte integer */, "gt", "0");
 
@@ -93,7 +96,14 @@ void MainProgram::AddOptions() {
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */,
            fmt::format("Precision (default = {})\n", kDefaultPrecision).c_str(),
-           "--precision", positive_double_option_validator);
+           "--precision", nonnegative_double_option_validator);
+
+  opt_.add("false" /* Default */, false /* Required? */,
+           0 /* Number of args expected. */,
+           0 /* Delimiter if expecting multiple args. */,
+           "Cause the algorithm to run to completion, by setting the precision to 0."
+           " This may not solve the problem exactly in all cases;"
+           " try --precision 0 for an explanation.", "--exhaustive");
 
   opt_.add("false" /* Default */, false /* Required? */,
            0 /* Number of args expected. */,
@@ -292,6 +302,35 @@ bool MainProgram::ValidateOptions() {
   if (opt_.isSet("--version")) {
     return true;
   }
+  if (opt_.isSet("--precision")) {
+#pragma STDC FENV_ACCESS ON
+    // Get --precision just as in ExtractOptions()
+    string precision_str;
+    opt_.get("--precision")->getString(precision_str);
+    RoundingModeGuard guard(FE_DOWNWARD);
+    double precision = stod(precision_str);
+    if (precision == 0) {
+      cerr << "\n"
+           << "ERROR: --precision can't be set to zero (maybe try --exhaustive?).\n"
+           << "\n"
+           << "In order to support problems that may contain strict inequalities, dLinear4\n"
+           << "reduces the precision value (or delta) by a small amount, and any strict\n"
+           << "inequalities are de-strictified before being sent to the simplex solver.  For\n"
+           << "this reason, the precision must be strictly positive.\n"
+           << "\n"
+           << "If you are sure that your problem contains no strict inequalities (not just in\n"
+           << "the asserted formulas themselves, but in any conjunctive clause derived from\n"
+           << "them), or if you simply wish to run the algorithm to completion, use\n"
+           << "--exhaustive instead, and the precision value will be set to zero (but strict\n"
+           << "inequalities will still be de-strictified).\n"
+           << "\n"
+           << "Hint: try --exhaustive in conjunction with --continuous-output to find all\n"
+           << "delta-sat thresholds.\n"
+           << "\n";
+      return false;
+    }
+#pragma STDC FENV_ACCESS DEFAULT
+  }
   if (opt_.isSet("-h") || (args_.empty() && !opt_.isSet("--in")) ||
       args_.size() > 1) {
     PrintUsage();
@@ -320,25 +359,31 @@ void MainProgram::ExtractOptions() {
     log()->set_level(spdlog::level::off);
   }
 
-#pragma STDC FENV_ACCESS ON
-
   // --precision
   if (opt_.isSet("--precision")) {
+#pragma STDC FENV_ACCESS ON
+    if (opt_.isSet("--exhaustive")) {
+      throw DREAL_RUNTIME_ERROR("Can't have --precision and --exhaustive");
+    }
     string precision_str;
     opt_.get("--precision")->getString(precision_str);
     RoundingModeGuard guard(FE_DOWNWARD);
     double precision = stod(precision_str);
     // This allows us to replace strict inequalities with non-strict ones
     precision = nextafter(precision, -numeric_limits<double>::infinity());
-    if (precision < 0) {
-      throw DREAL_RUNTIME_ERROR("Can't set --precision 0");
-    }
+    DREAL_ASSERT(precision >= 0);
     config_.mutable_precision().set_from_command_line(precision);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --precision = {}",
                     config_.precision());
+#pragma STDC FENV_ACCESS DEFAULT
   }
 
-#pragma STDC FENV_ACCESS DEFAULT
+  // --exhaustive
+  if (opt_.isSet("--exhaustive")) {
+    config_.mutable_precision().set_from_command_line(0.0);
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --precision = {} (--exhaustive)",
+                    config_.precision());
+  }
 
   // --produce-model
   if (opt_.isSet("--produce-models")) {
