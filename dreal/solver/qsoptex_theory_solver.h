@@ -15,6 +15,13 @@
 
 namespace dreal {
 
+extern "C"
+void QsoptexCheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* prob,
+                                    mpq_t* const x,
+                                    const mpq_t infeas,
+                                    const mpq_t delta,
+                                    void* data);
+
 /// Theory solver for linear theory over the Reals.
 class QsoptexTheorySolver {
  public:
@@ -46,6 +53,12 @@ class QsoptexTheorySolver {
   Box model_;
   LiteralSet explanation_;
   mpq_class precision_;
+
+  friend void QsoptexCheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* prob,
+                                             mpq_t* const x,
+                                             const mpq_t infeas,
+                                             const mpq_t delta,
+                                             void* data);
 };
 
 }  // namespace dreal

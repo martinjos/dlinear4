@@ -9,6 +9,7 @@
 #include <limits>
 
 #include "dreal/smt2/scanner.h"
+#include "dreal/util/timer.h"
 
 namespace dreal {
 
@@ -71,17 +72,21 @@ void Smt2Driver::CheckSat() {
     if (LP_DELTA_OPTIMAL == status) {
       mpq_class diff = obj_up - obj_lo;
       // fmt::print uses shortest round-trip format for doubles, by default
-      fmt::print("delta-optimal with delta = {} ( = {}), range = [{}, {}]\n",
+      fmt::print("delta-optimal with delta = {} ( = {}), range = [{}, {}]",
                  diff.get_d(), diff, obj_lo, obj_up);
-      if (context_.config().produce_models()) {
-        cout << model << endl;
-      }
     } else if (LP_UNBOUNDED == status) {
-      cout << "unbounded" << endl;
+      fmt::print("unbounded");
     } else if (LP_INFEASIBLE == status) {
-      cout << "infeasible" << endl;
+      fmt::print("infeasible");
     } else {
       DREAL_UNREACHABLE();
+    }
+    if (context_.config().with_timings()) {
+      fmt::print(" after {} seconds", main_timer.seconds());
+    }
+    fmt::print("\n");
+    if (LP_DELTA_OPTIMAL == status && context_.config().produce_models()) {
+      fmt::print("{}\n", model);
     }
   } else {
     mpq_class actual_precision = context_.config().precision();
@@ -90,13 +95,17 @@ void Smt2Driver::CheckSat() {
                                               numeric_limits<double>::infinity());
     if (model) {
       // fmt::print uses shortest round-trip format for doubles, by default
-      fmt::print("delta-sat with delta = {} ( > {})\n",
+      fmt::print("delta-sat with delta = {} ( > {})",
                  actual_precision_upper, actual_precision);
-      if (context_.config().produce_models()) {
-        cout << *model << endl;
-      }
     } else {
-      cout << "unsat" << endl;
+      fmt::print("unsat");
+    }
+    if (context_.config().with_timings()) {
+      fmt::print(" after {} seconds", main_timer.seconds());
+    }
+    fmt::print("\n");
+    if (model && context_.config().produce_models()) {
+      fmt::print("{}\n", *model);
     }
   }
 }

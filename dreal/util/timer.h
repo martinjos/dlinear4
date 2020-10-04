@@ -79,4 +79,6 @@ class TimerGuard {
   const bool enabled_{false};
 };
 
+extern Timer main_timer;
+
 }  // namespace dreal

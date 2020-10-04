@@ -16,6 +16,7 @@
 #include "dreal/util/logging.h"
 #include "dreal/util/rounding_mode_guard.h"
 #include "dreal/util/infty.h"
+#include "dreal/util/timer.h"
 #include "dreal/qsopt_ex.h"
 
 #if HAVE_SOPLEX
@@ -625,6 +626,7 @@ void HandleSigInt(const int) {
 
 int main(int argc, const char* argv[]) {
   std::signal(SIGINT, HandleSigInt);
+  dreal::main_timer.start();
   dreal::MainProgram main_program{argc, argv};
   return main_program.Run();
 }

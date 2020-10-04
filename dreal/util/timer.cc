@@ -74,4 +74,6 @@ void TimerGuard::resume() {
   }
 }
 
+Timer main_timer;
+
 }  // namespace dreal

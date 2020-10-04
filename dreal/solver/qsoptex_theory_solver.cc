@@ -206,17 +206,22 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   return lp_status;
 }
 
-extern "C" {
-static void CheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* /*prob*/,
+extern "C"
+void QsoptexCheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* /*prob*/,
                                     mpq_t* const /*x*/,
                                     const mpq_t infeas,
-                                    const mpq_t /*delta*/) {
+                                    const mpq_t /*delta*/,
+                                    void* data) {
+  QsoptexTheorySolver* theory_solver = static_cast<QsoptexTheorySolver*>(data);
   // mpq_get_d() rounds towards 0.  This code guarantees infeas_gt > infeas.
   double infeas_gt = nextafter(mpq_get_d(infeas), numeric_limits<double>::infinity());
   // fmt::print uses shortest round-trip format for doubles, by default
-  fmt::print("PARTIAL: delta-sat with delta = {} ( > {})\n",
+  fmt::print("PARTIAL: delta-sat with delta = {} ( > {})",
              infeas_gt, mpq_class(infeas));
-}
+  if (theory_solver->config_.with_timings()) {
+    fmt::print(" after {} seconds", main_timer.seconds());
+  }
+  fmt::print("\n");
 }
 
 int QsoptexTheorySolver::CheckSat(const Box& box,
@@ -302,11 +307,13 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   if (1 == config_.simplex_sat_phase()) {
     status = qsopt_ex::QSdelta_solver(prob, actual_precision->get_mpq_t(), x, NULL, NULL,
                                       PRIMAL_SIMPLEX, &lp_status,
-                                      config_.continuous_output() ? CheckSatPartialSolution : NULL);
+                                      config_.continuous_output() ? QsoptexCheckSatPartialSolution : NULL,
+                                      this);
   } else {
     status = qsopt_ex::QSexact_delta_solver(prob, x, NULL, NULL, PRIMAL_SIMPLEX,
                                             &lp_status, actual_precision->get_mpq_t(),
-                                            config_.continuous_output() ? CheckSatPartialSolution : NULL);
+                                            config_.continuous_output() ? QsoptexCheckSatPartialSolution : NULL,
+                                            this);
   }
 
   if (status) {
