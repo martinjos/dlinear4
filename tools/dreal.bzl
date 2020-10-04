@@ -295,7 +295,6 @@ def smt2_phased_test(
     if phase not in (1, 2): fail("Phase must be 1 or 2", "phase")
     if not smt2:
         smt2 = name + ".smt2"
-    expected = smt2 + ".expected"
     data_files = native.glob([
         smt2 + "*",
     ])
@@ -304,7 +303,6 @@ def smt2_phased_test(
         args = [
             "$(location //dreal:dreal)",
             "$(location %s)" % smt2,
-            "$(location %s)" % expected,
             "$(locations //:qsopt-ex-lib)",
             lp_solver,
             str(phase),

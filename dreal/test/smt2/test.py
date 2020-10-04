@@ -18,22 +18,19 @@ dreal = sys.argv[1]
 # 2nd Argument: smt2 formula name
 smt2 = sys.argv[2]
 
-# 3rd Argument: smt2 expected output
-expected_output_filename = sys.argv[3]
+# 3rd Argument: qsopt_ex lib directory
+qsoptex_lib_dir = sys.argv[3]
 
-# 4rd Argument: qsopt_ex lib directory
-qsoptex_lib_dir = sys.argv[4]
-
-# 5th Argument: LP solver
-lp_solver = sys.argv[5]
+# 4th Argument: LP solver
+lp_solver = sys.argv[4]
 assert lp_solver in ("soplex", "qsoptex")
 
-# 6th Argument: simplex phase
-phase = sys.argv[6]
+# 5th Argument: simplex phase
+phase = sys.argv[5]
 assert phase in ("1", "2")
 
-# 7th Argument: SoPlex enabled?
-soplex_enabled = sys.argv[7]
+# 6th Argument: SoPlex enabled?
+soplex_enabled = sys.argv[6]
 if soplex_enabled != "True" and lp_solver == "soplex":
     print("SoPlex not enabled - skipping test")
     sys.exit(0)
@@ -43,6 +40,11 @@ options = sys.argv[8:]
 options = ["--simplex-sat-phase", phase] + options
 
 options = ["--lp-solver", lp_solver] + options
+
+# Use .expected if present, otherwise look for .expected_phase_*.
+expected_output_filename = smt2 + '.expected'
+if not os.path.exists(expected_output_filename):
+    expected_output_filename += '_phase_{}'.format(phase)
 
 with open(expected_output_filename, "r") as myfile:
     expected_output = myfile.read().strip().splitlines()

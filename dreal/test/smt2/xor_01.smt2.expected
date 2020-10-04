@@ -1,4 +1,4 @@
-delta-sat with delta = 0.001
+delta-sat with delta = 0.0009999999999999998 ( > 2305843009213693/2305843009213693952)
 (model
   (define-fun x () Real 10)
   (define-fun y () Real -10)
