@@ -103,7 +103,8 @@ static void do_example_test(Context& ctx) {
   // --------
   // CheckSat
   // --------
-  const auto result = ctx.CheckSat();
+  mpq_class actual_precision;
+  const auto result = ctx.CheckSat(&actual_precision);
   EXPECT_TRUE(result);
   cerr << "delta-SAT" << endl;
   cerr << *result << endl;

@@ -34,11 +34,12 @@ class ContextTest : public ::testing::Test {
 };
 
 DREAL_TEST_F_PHASES(ContextTest, MultipleCheckSat) {
+  mpq_class actual_precision;
   context_->Assert(x_ >= 0);
-  const auto result1 = context_->CheckSat();
+  const auto result1 = context_->CheckSat(&actual_precision);
   EXPECT_TRUE(result1);
   context_->Assert(x_ <= 5);
-  const auto result2 = context_->CheckSat();
+  const auto result2 = context_->CheckSat(&actual_precision);
   EXPECT_TRUE(result2);
 }
 

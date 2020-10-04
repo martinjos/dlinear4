@@ -14,6 +14,8 @@
 
 #include <gmpxx.h>
 
+#include <fmt/ostream.h>
+
 namespace std {
 
 template <>

@@ -70,7 +70,9 @@ void Smt2Driver::CheckSat() {
     int status = context_.CheckOpt(&obj_lo, &obj_up, &model);
     if (LP_DELTA_OPTIMAL == status) {
       mpq_class diff = obj_up - obj_lo;
-      cout << "delta-optimal with delta = " << diff.get_d() << " ( = " << diff << "), range = [" << obj_lo << ", " << obj_up << "]" << endl;
+      // fmt::print uses shortest round-trip format for doubles, by default
+      fmt::print("delta-optimal with delta = {} ( = {}), range = [{}, {}]\n",
+                 diff.get_d(), diff, obj_lo, obj_up);
       if (context_.config().produce_models()) {
         cout << model << endl;
       }
@@ -87,8 +89,9 @@ void Smt2Driver::CheckSat() {
     double actual_precision_upper = nextafter(actual_precision.get_d(),
                                               numeric_limits<double>::infinity());
     if (model) {
-      cout << "delta-sat with delta = " << actual_precision_upper
-           << " ( > " << actual_precision << ")" << endl;
+      // fmt::print uses shortest round-trip format for doubles, by default
+      fmt::print("delta-sat with delta = {} ( > {})\n",
+                 actual_precision_upper, actual_precision);
       if (context_.config().produce_models()) {
         cout << *model << endl;
       }

@@ -373,8 +373,8 @@ void MainProgram::ExtractOptions() {
     precision = nextafter(precision, -numeric_limits<double>::infinity());
     DREAL_ASSERT(precision >= 0);
     config_.mutable_precision().set_from_command_line(precision);
-    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --precision = {}",
-                    config_.precision());
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --precision = {} ({})",
+                    config_.precision(), mpq_class(config_.precision()));
 #pragma STDC FENV_ACCESS DEFAULT
   }
 

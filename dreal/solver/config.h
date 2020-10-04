@@ -162,7 +162,7 @@ class Config {
 
   /// @}
 
-  static constexpr double kDefaultPrecision{0.001};
+  static constexpr double kDefaultPrecision{9.999999999999996e-4};  // pred(floor("0.001"))
   static constexpr double kDefaultNloptFtolRel{1e-6};
   static constexpr double kDefaultNloptFtolAbs{1e-6};
   static constexpr int kDefaultNloptMaxEval{100};

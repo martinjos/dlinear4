@@ -18,7 +18,8 @@ optional<Box> CheckSatisfiability(const Formula& f, Config config) {
     context.DeclareVariable(v);
   }
   context.Assert(f);
-  return context.CheckSat();
+  mpq_class actual_precision;
+  return context.CheckSat(&actual_precision);
 }
 
 bool CheckSatisfiability(const Formula& f, const double delta, Box* const box) {

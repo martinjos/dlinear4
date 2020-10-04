@@ -213,7 +213,9 @@ static void CheckSatPartialSolution(dreal::qsopt_ex::mpq_QSdata const* /*prob*/,
                                     const mpq_t /*delta*/) {
   // mpq_get_d() rounds towards 0.  This code guarantees infeas_gt > infeas.
   double infeas_gt = nextafter(mpq_get_d(infeas), numeric_limits<double>::infinity());
-  cout << "PARTIAL: delta-sat with delta = " << infeas_gt << " ( > " << infeas << ")" << endl;
+  // fmt::print uses shortest round-trip format for doubles, by default
+  fmt::print("PARTIAL: delta-sat with delta = {} ( > {})\n",
+             infeas_gt, mpq_class(infeas));
 }
 }
 
