@@ -90,6 +90,12 @@ class Config {
   /// Returns a mutable OptionValue for 'continuous_output'.
   OptionValue<bool>& mutable_continuous_output();
 
+  /// Returns whether it outputs timings alongside the results.
+  bool with_timings() const;
+
+  /// Returns a mutable OptionValue for 'with_timings'.
+  OptionValue<bool>& mutable_with_timings();
+
   /// Returns the number of parallel jobs.
   int number_of_jobs() const;
 
@@ -178,6 +184,7 @@ class Config {
   OptionValue<bool> use_worklist_fixpoint_{false};
   OptionValue<bool> use_local_optimization_{false};
   OptionValue<bool> continuous_output_{false};
+  OptionValue<bool> with_timings_{false};
   OptionValue<LPSolver> lp_solver_{LPSolver::QSOPTEX};
   OptionValue<int> simplex_sat_phase_{1};
   OptionValue<int> verbose_simplex_{0};

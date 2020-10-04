@@ -75,6 +75,13 @@ OptionValue<bool>& Config::mutable_continuous_output() {
   return continuous_output_;
 }
 
+bool Config::with_timings() const {
+  return with_timings_.get();
+}
+OptionValue<bool>& Config::mutable_with_timings() {
+  return with_timings_;
+}
+
 int Config::number_of_jobs() const { return number_of_jobs_.get(); }
 OptionValue<int>& Config::mutable_number_of_jobs() { return number_of_jobs_; }
 
@@ -149,6 +156,7 @@ ostream& operator<<(ostream& os, const Config& config) {
              "lp_solver = {}, "
              "verbose_simplex = {}, "
              "continuous_output = {}, "
+             "with_timings = {}, "
              "number_of_jobs = {}, "
              "nlopt_ftol_rel = {}, "
              "nlopt_ftol_abs = {}, "
@@ -161,7 +169,8 @@ ostream& operator<<(ostream& os, const Config& config) {
              config.use_polytope_in_forall(), config.use_worklist_fixpoint(),
              config.use_local_optimization(), config.simplex_sat_phase(),
              config.lp_solver(), config.verbose_simplex(),
-             config.continuous_output(), config.number_of_jobs(),
+             config.continuous_output(), config.with_timings(),
+             config.number_of_jobs(),
              config.nlopt_ftol_rel(), config.nlopt_ftol_abs(),
              config.nlopt_maxeval(), config.nlopt_maxtime(),
              config.sat_default_phase(), config.random_seed());

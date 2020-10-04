@@ -189,6 +189,12 @@ void MainProgram::AddOptions() {
            "Report partial results continuously, as and when available.\n",
            "--continuous-output");
 
+  opt_.add("false" /* Default */, false /* Required? */,
+           0 /* Number of args expected. */,
+           0 /* Delimiter if expecting multiple args. */,
+           "Report timings alongside results.\n",
+           "--timings");
+
   opt_.add("1" /* Default */, false /* Required? */,
            1 /* Number of args expected. */,
            0 /* Delimiter if expecting multiple args. */, "Number of jobs.\n",
@@ -463,6 +469,13 @@ void MainProgram::ExtractOptions() {
     config_.mutable_continuous_output().set_from_command_line(true);
     DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --continuous-output = {}",
                     config_.continuous_output());
+  }
+
+  // --timings
+  if (opt_.isSet("--timings")) {
+    config_.mutable_with_timings().set_from_command_line(true);
+    DREAL_LOG_DEBUG("MainProgram::ExtractOptions() --timings = {}",
+                    config_.with_timings());
   }
 
   // --nlopt-ftol-rel
