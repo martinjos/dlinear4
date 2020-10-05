@@ -76,6 +76,7 @@ dreal_cc_library(
     ],
     deps = [
         "@linux_libs//:gmpxx",
+        "@fmt",
     ],
 )
 
