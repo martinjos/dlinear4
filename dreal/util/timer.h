@@ -3,17 +3,19 @@
 #include <chrono>
 #include <iostream>
 #include <type_traits>
+#include <cstdint>
 
 namespace dreal {
 
 /// Simple timer class to profile performance.
-class Timer {
+template <class T>
+class TimerBase {
  public:
-  // Use high_resolution clock if it's steady. Otherwise use steady_clock.
-  using clock = std::conditional<std::chrono::high_resolution_clock::is_steady,
-                                 std::chrono::high_resolution_clock,
-                                 std::chrono::steady_clock>::type;
-  Timer();
+  using clock = T;
+  typedef typename clock::duration duration;
+  typedef typename clock::time_point time_point;
+
+  TimerBase();
 
   /// Starts the timer.
   void start();
@@ -28,24 +30,48 @@ class Timer {
   bool is_running() const;
 
   /// Returns the elapsed time as duration.
-  clock::duration elapsed() const;
+  duration elapsed() const;
 
   /// Returns the elapsed time in secionds.
   std::chrono::duration<double>::rep seconds() const;
+
+ protected:
+  time_point now() const { return clock::now(); }
 
  private:
   // Whether the timer is running or not.
   bool running_{false};
 
   // Last time_point when the timer is started or resumed.
-  clock::time_point last_start_{};
+  time_point last_start_{};
 
   // Elapsed time so far. This doesn't include the current fragment if
   // it is running.
-  clock::duration elapsed_{};
+  duration elapsed_{};
 };
 
-std::ostream& operator<<(std::ostream& os, const Timer& timer);
+template<class T>
+std::ostream& operator<<(std::ostream& os, const TimerBase<T>& timer);
+
+// Use high_resolution clock if it's steady. Otherwise use steady_clock.
+using chosen_steady_clock = std::conditional<std::chrono::high_resolution_clock::is_steady,
+                                             std::chrono::high_resolution_clock,
+                                             std::chrono::steady_clock>::type;
+
+extern template class TimerBase<chosen_steady_clock>;
+class Timer : public TimerBase<chosen_steady_clock> {};
+
+struct user_clock {  // Implements the Clock interface of std::chrono
+  typedef uint64_t rep;
+  typedef std::micro period;
+  typedef std::chrono::duration<rep, period> duration;
+  typedef std::chrono::time_point<user_clock> time_point;
+  const bool is_steady = false;  // Not sure how this should be interpreted here
+  static time_point now();
+};
+
+extern template class TimerBase<user_clock>;
+class UserTimer : public TimerBase<user_clock> {};
 
 /// Pauses the passed timer object when the guard object is destructed
 /// (e.g. going out of scope).
@@ -79,6 +105,6 @@ class TimerGuard {
   const bool enabled_{false};
 };
 
-extern Timer main_timer;
+extern UserTimer main_timer;
 
 }  // namespace dreal
