@@ -9,6 +9,7 @@ git submodule init
 git submodule update
 
 cd submodules/qsopt-ex
+git fetch origin 'refs/tags/*:refs/tags/*'  # Need the tags for version-stamping
 ./bootstrap
 
 mkdir -p build
