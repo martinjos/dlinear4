@@ -154,7 +154,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
 
   status = qsopt_ex::QSdelta_full_solver(prob, precision_.get_mpq_t(), x, y,
                                          obj_lo->get_mpq_t(), obj_up->get_mpq_t(), NULL,
-                                         PRIMAL_SIMPLEX, &qs_lp_status);
+                                         PRIMAL_SIMPLEX, &qs_lp_status, NULL, NULL);
 
   if (status) {
     throw DREAL_RUNTIME_ERROR("QSopt_ex returned {}", status);
