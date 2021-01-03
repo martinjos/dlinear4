@@ -1,0 +1,5 @@
+delta-sat with delta = 5e-324 ( > 0)
+(model
+  (define-fun x () Real 10)
+  (define-fun y () Real -10)
+)

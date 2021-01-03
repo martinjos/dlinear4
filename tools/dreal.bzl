@@ -276,10 +276,15 @@ def dreal_cc_googletest(
 
 def smt2_test(
         name,
+        options=[],
         **kwargs):
     for lp_solver in ("soplex", "qsoptex"):
         for phase in (1, 2):
-            smt2_phased_test(name, lp_solver=lp_solver, phase=phase, **kwargs)
+            smt2_phased_test(name, lp_solver=lp_solver, phase=phase,
+                             options=options, **kwargs)
+    for phase in (1, 2):
+        smt2_phased_test(name, lp_solver="qsoptex", phase=phase,
+                         options=options, continuous=True, **kwargs)
 
 def smt2_phased_test(
         name,
@@ -288,6 +293,8 @@ def smt2_phased_test(
         tags = [],
         lp_solver = "qsoptex",
         phase = None,
+        continuous=False,
+        exhaustive_ok=True,
         **kwargs):
     """Create smt2 test."""
     if lp_solver not in ("soplex", "qsoptex"):
@@ -298,8 +305,9 @@ def smt2_phased_test(
     data_files = native.glob([
         smt2 + "*",
     ])
+    name_extra = "_continuous" if continuous else ""
     native.py_test(
-        name = "{}_{}_phase_{}".format(name, lp_solver, phase),
+        name = "{}_{}_phase_{}{}".format(name, lp_solver, phase, name_extra),
         args = [
             "$(location //dreal:dreal)",
             "$(location %s)" % smt2,
@@ -307,6 +315,7 @@ def smt2_phased_test(
             lp_solver,
             str(phase),
             "$(SOPLEX_ENABLED)",
+            ("X" if exhaustive_ok else "C") if continuous else "N",
         ] + options,
         tags = tags + ["smt2"],
         srcs = ["test.py"],
