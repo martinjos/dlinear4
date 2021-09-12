@@ -157,6 +157,16 @@ pkg_tar(
 )
 
 pkg_tar(
+    name = "package_qsoptex_sharedlib",
+    srcs = ["install/qsopt-ex/lib/libqsopt_ex.so",
+            "install/qsopt-ex/lib/libqsopt_ex.so.2",
+            "install/qsopt-ex/lib/libqsopt_ex.so.2.1.0"],
+    extension = "tar.gz",
+    package_dir = "lib",
+    tags = ["manual"],
+)
+
+pkg_tar(
     name = "archive",
     extension = "tar.gz",
     package_dir = DREAL_PREFIX,
@@ -164,6 +174,7 @@ pkg_tar(
     deps = [
         ":package_license_file",
         ":package_pkg_file",
+        ":package_qsoptex_sharedlib",
         "//dreal:package_bin",
         "//dreal:package_headers",
         "//dreal:package_sharedlib",

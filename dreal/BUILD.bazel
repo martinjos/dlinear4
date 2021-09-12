@@ -87,6 +87,7 @@ dreal_cc_binary(
         "dreal_main.h",
     ],
     copts = ["-frounding-math", "-Wno-unknown-pragmas"],
+    linkopts = ["-Wl,--enable-new-dtags", "-Wl,-rpath='$$ORIGIN/../lib'"],
     local_defines = select({
         "//:soplex-enabled": ["HAVE_SOPLEX=1"],
         "//conditions:default": ["HAVE_SOPLEX=0"],
